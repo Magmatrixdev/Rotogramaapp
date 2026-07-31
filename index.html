@@ -3,1097 +3,405 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#1a1a1a">
+<meta name="theme-color" content="#1c1c1c">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Rotogramas — Rodoviário Confiança</title>
+<title>Rotogramas — Confiança</title>
 <link rel="manifest" href="./manifest.json">
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: #f0f0f0; font-family: 'Barlow', sans-serif; color: #1a1a1a;
-    -webkit-text-size-adjust: 100%; min-height: 100vh;
-    overscroll-behavior-y: contain;
-  }
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+::-webkit-scrollbar{width:0;height:0}
+body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;min-height:100vh;overscroll-behavior-y:contain}
+@keyframes slideUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
 
-  /* ═══ HEADER ═══ */
-  .header {
-    background: #1a1a1a; padding: 14px 16px;
-    display: flex; align-items: center; gap: 12px;
-    position: sticky; top: 0; z-index: 100;
-  }
-  .header-back {
-    background: none; border: none; color: #fff; font-size: 24px;
-    cursor: pointer; padding: 4px 8px; margin: -4px -4px -4px -8px;
-    display: none; min-width: 40px; min-height: 40px;
-    align-items: center; justify-content: center;
-  }
-  .header-back.visible { display: flex; }
-  .logo-c { font-family:'Barlow Condensed',sans-serif; font-size:32px; font-weight:700; color:#FE2627; line-height:1; }
-  .logo-text { display:flex; flex-direction:column; }
-  .logo-name { font-family:'Barlow Condensed',sans-serif; font-size:13px; font-weight:700; color:#fff; letter-spacing:.8px; }
-  .logo-slogan { font-size:9px; color:#aaa; letter-spacing:.4px; }
-  .header-title { margin-left:auto; text-align:right; }
-  .header-title h1 { font-family:'Barlow Condensed',sans-serif; font-size:13px; font-weight:700; color:#FE2627; letter-spacing:.8px; text-transform:uppercase; }
-  .header-title p { font-size:10px; color:#888; }
+.screen{display:none;flex-direction:column;min-height:100vh}
+.screen.active{display:flex}
 
-  /* ═══ TELA: LISTA DE ROTAS ═══ */
-  .screen { display: none; }
-  .screen.active { display: block; }
+/* ═══ HOME ═══ */
+.home-top{padding:20px 22px 0}
+.logo-row{display:flex;align-items:center;gap:11px;margin-bottom:22px}
+.logo-box{width:42px;height:42px;background:#fe2627;border-radius:11px;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(254,38,39,.28)}
+.logo-box span{font-weight:800;font-size:27px;color:#fff;line-height:1}
+.logo-title{font-weight:700;font-size:20px;letter-spacing:.06em;color:#1c1c1c;line-height:1}
+.logo-sub{font-family:'Barlow',sans-serif;font-weight:500;font-size:9.5px;letter-spacing:.28em;color:#9a9894;margin-top:3px}
+.home-heading{font-weight:700;font-size:34px;color:#1c1c1c;line-height:.95;text-transform:uppercase}
+.home-subtext{font-family:'Barlow',sans-serif;font-size:13px;color:#8a8886;margin-top:6px}
 
-  .home-banner {
-    background: linear-gradient(135deg, #1a6fb5, #0d4f82);
-    padding: 24px 16px 20px; text-align: center;
-  }
-  .home-banner h2 {
-    font-family:'Barlow Condensed',sans-serif; font-size: 22px; font-weight: 700;
-    color: #fff; letter-spacing: .8px;
-  }
-  .home-banner p { font-size: 13px; color: #9dd5ff; margin-top: 4px; }
+.search-wrap{margin-top:18px;position:relative}
+.search-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);width:15px;height:15px;border:2px solid #b0aea9;border-radius:50%}
+.search-icon::after{content:'';position:absolute;left:11px;top:12px;width:7px;height:2px;background:#b0aea9;transform:rotate(45deg);transform-origin:left}
+.search-input{width:100%;height:50px;background:#fff;border:1.5px solid #e4e2dd;border-radius:14px;padding:0 18px 0 44px;font-family:'Barlow',sans-serif;font-size:14.5px;color:#1c1c1c;outline:none;box-shadow:0 2px 8px rgba(40,38,34,.04);-webkit-appearance:none}
+.search-input:focus{border-color:#fe2627}
+.search-input::placeholder{color:#b0aea9}
+.search-clear{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:#e4e2dd;border:none;width:28px;height:28px;border-radius:50%;font-size:14px;color:#8a8886;cursor:pointer;display:none;align-items:center;justify-content:center}
+.search-clear.vis{display:flex}
 
-  .home-status {
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-    padding: 10px 16px; background: #e6f7e9; font-size: 12px; color: #1a7a2e; font-weight: 600;
-  }
-  .home-status.offline { background: #fff4e0; color: #b8860b; }
-  .home-status.error { background: #ffe6e6; color: #c0392b; }
-  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #27963c; }
-  .home-status.offline .status-dot { background: #f39c12; }
-  .home-status.error .status-dot { background: #c0392b; }
+.home-scroll{flex:1;overflow-y:auto;padding:20px 22px 28px}
 
-  /* ═══ SEARCH BAR ═══ */
-  .search-bar {
-    padding: 12px 12px 0; max-width: 480px; margin: 0 auto;
-  }
-  .search-wrap {
-    position: relative; display: flex; align-items: center;
-  }
-  .search-icon {
-    position: absolute; left: 14px; font-size: 18px; color: #999;
-    pointer-events: none;
-  }
-  .search-input {
-    width: 100%; padding: 14px 44px 14px 42px;
-    border: 2px solid #e0e0e0; border-radius: 12px;
-    font-family: 'Barlow', sans-serif; font-size: 15px; color: #333;
-    background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.04);
-    transition: border-color .15s;
-    -webkit-appearance: none; appearance: none;
-  }
-  .search-input:focus { outline: none; border-color: #1a6fb5; }
-  .search-input::placeholder { color: #bbb; }
-  .search-clear {
-    position: absolute; right: 10px;
-    background: #ddd; border: none; color: #666;
-    width: 32px; height: 32px; border-radius: 50%;
-    font-size: 16px; cursor: pointer;
-    display: none; align-items: center; justify-content: center;
-  }
-  .search-clear.visible { display: flex; }
-  .search-clear:active { background: #ccc; }
-  .search-count {
-    font-size: 12px; color: #999; text-align: center;
-    padding: 8px 0 0; font-weight: 500;
-  }
-  .search-count.hidden { display: none; }
-  .route-card.hidden { display: none; }
-  .no-results {
-    text-align: center; padding: 40px 20px;
-    font-size: 15px; color: #999;
-  }
-  .no-results span { font-size: 36px; display: block; margin-bottom: 10px; }
+/* REGION */
+.region{margin-bottom:26px}
+.region-hd{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.region-bar{width:4px;height:17px;background:#fe2627;border-radius:2px;flex-shrink:0}
+.region-name{font-weight:700;font-size:15px;letter-spacing:.16em;color:#1c1c1c;text-transform:uppercase}
+.region-count{font-family:'Barlow',sans-serif;font-size:11px;color:#8a8886;background:#eae8e3;padding:2px 9px;border-radius:20px}
+.region-line{flex:1;height:1px;background:#e4e2dd}
 
-  .route-list { padding: 16px 12px 32px; max-width: 480px; margin: 0 auto; }
+/* ROUTE CARD */
+.rcard{cursor:pointer;background:#fff;border:1.5px solid #e8e6e1;border-radius:16px;padding:15px 16px;display:flex;align-items:center;gap:14px;margin-bottom:10px;box-shadow:0 2px 10px rgba(40,38,34,.04);transition:border-color .15s,transform .1s}
+.rcard:active{transform:scale(.98);border-color:#fe2627}
+.rcard-uf{flex:0 0 auto;width:46px;height:46px;border-radius:12px;background:#262625;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;color:#f4f4f2;line-height:1}
+.rcard-info{flex:1;min-width:0}
+.rcard-nome{font-weight:700;font-size:18px;color:#1c1c1c;line-height:1.05;text-transform:uppercase}
+.rcard-detail{font-family:'Barlow',sans-serif;font-size:12px;color:#8a8886;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rcard-stats{display:flex;gap:8px;margin-top:7px;font-family:'Barlow',sans-serif;font-size:11.5px;color:#9a9894}
+.rcard-stats .red{color:#fe2627;font-weight:600}
+.rcard-stats .dot{color:#cfcdc7}
+.rcard-arrow{flex:0 0 auto;color:#c2c0ba;font-size:22px;font-weight:300}
 
-  /* REGION HEADERS */
-  .region-header {
-    display: flex; align-items: center; gap: 10px;
-    padding: 4px 4px 8px; margin-top: 16px;
-  }
-  .region-header:first-child { margin-top: 0; }
-  .region-icon { font-size: 20px; }
-  .region-name {
-    font-family:'Barlow Condensed',sans-serif; font-size: 16px; font-weight: 700;
-    color: #1a6fb5; letter-spacing: .8px; text-transform: uppercase;
-  }
-  .region-line { flex: 1; height: 2px; background: #ddd; border-radius: 1px; }
-  .region-count { font-size: 11px; color: #999; font-weight: 600; }
-  .route-list-title {
-    font-family:'Barlow Condensed',sans-serif; font-size: 14px; font-weight: 700;
-    color: #999; letter-spacing: 1px; text-transform: uppercase;
-    margin-bottom: 12px; padding: 0 4px;
-  }
+.no-results{text-align:center;padding:50px 20px;color:#9a9894;font-family:'Barlow',sans-serif;display:none}
+.no-results span{font-size:40px;display:block;margin-bottom:8px}
 
-  .route-card {
-    background: #fff; border-radius: 14px; padding: 16px;
-    margin-bottom: 10px; box-shadow: 0 1px 6px rgba(0,0,0,.07);
-    display: flex; align-items: center; gap: 14px;
-    cursor: pointer; border-left: 5px solid #1a6fb5;
-    transition: transform .1s; -webkit-tap-highlight-color: transparent;
-  }
-  .route-card:active { transform: scale(.98); }
-  .route-num {
-    font-family:'Barlow Condensed',sans-serif; font-size: 28px; font-weight: 700;
-    color: #1a6fb5; min-width: 36px; text-align: center;
-  }
-  .route-info { flex: 1; }
-  .route-name {
-    font-family:'Barlow Condensed',sans-serif; font-size: 18px; font-weight: 700;
-    color: #1a1a1a; line-height: 1.2;
-  }
-  .route-detail { font-size: 12px; color: #888; margin-top: 2px; }
-  .route-stops { font-size: 11px; color: #1a6fb5; font-weight: 600; margin-top: 4px; }
-  .route-arrow { font-size: 20px; color: #ccc; }
+/* STATUS */
+.home-status{font-family:'Barlow',sans-serif;font-size:11px;color:#9a9894;text-align:center;padding:8px 22px 0}
+.home-status .dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:5px;vertical-align:middle}
+.home-status .dot.on{background:#1f8a3d}
+.home-status .dot.demo{background:#e8a020}
 
-  /* ═══ TELA: ROTOGRAMA ═══ */
-  .rota-banner {
-    background: linear-gradient(135deg, #1a6fb5, #0d4f82);
-    padding: 16px; display: flex; flex-direction: column; gap: 8px;
-  }
-  .rota-banner h2 {
-    font-family:'Barlow Condensed',sans-serif; font-size: 24px; font-weight: 700;
-    color: #fff; letter-spacing: .8px;
-  }
-  .rota-banner h2 span { color: #9dd5ff; }
-  .rota-badges { display: flex; gap: 8px; flex-wrap: wrap; }
-  .badge {
-    font-family:'Barlow Condensed',sans-serif; font-size: 12px; font-weight: 600;
-    padding: 4px 12px; border-radius: 20px; letter-spacing: .5px;
-    background: rgba(255,255,255,.15); color: #fff;
-  }
+/* CONFIG */
+.config-bar{padding:16px 22px 28px}
+.config-bar label{font-family:'Barlow',sans-serif;font-size:10px;font-weight:600;letter-spacing:.1em;color:#9a9894;text-transform:uppercase;display:block;margin-bottom:6px}
+.config-bar input{width:100%;padding:12px;border:1.5px solid #e4e2dd;border-radius:10px;font-size:13px;font-family:'Barlow',sans-serif;background:#fff;color:#1c1c1c}
+.config-bar input:focus{outline:none;border-color:#fe2627}
+.config-bar .hint{font-family:'Barlow',sans-serif;font-size:10px;color:#b0aea9;margin-top:5px;line-height:1.4}
+.config-bar button{margin-top:10px;width:100%;padding:13px;background:#fe2627;color:#fff;border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;min-height:48px}
+.config-bar button:active{background:#e01f20}
 
-  .wrap { max-width: 480px; margin: 0 auto; padding: 16px 12px 32px; }
+/* ═══ ROTOGRAMA ═══ */
+.roto-top{flex:0 0 auto;padding:14px 20px 0}
+.back-btn{cursor:pointer;width:42px;height:42px;border-radius:12px;background:#eae8e3;border:none;display:flex;align-items:center;justify-content:center;color:#1c1c1c;font-size:24px;font-weight:700}
+.back-btn:active{background:#e4e2dd}
+.roto-header{margin-top:14px}
+.roto-route-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.roto-chip{background:#eae8e3;border-radius:10px;padding:8px 14px;text-align:center}
+.roto-chip .city{font-weight:700;font-size:15px;color:#1c1c1c;text-transform:uppercase;line-height:1}
+.roto-chip .lbl{font-family:'Barlow',sans-serif;font-size:10px;color:#9a9894;letter-spacing:.1em;margin-top:2px}
+.roto-arrow{font-size:20px;color:#b0aea9}
+.roto-stats{display:flex;gap:8px;margin-top:14px}
+.roto-stat{flex:1;background:#fff;border:1px solid #e8e6e1;border-radius:11px;padding:9px 8px;text-align:center}
+.roto-stat .val{font-weight:700;font-size:19px;color:#1c1c1c}
+.roto-stat .val.red{color:#fe2627}
+.roto-stat .lbl{font-family:'Barlow',sans-serif;font-size:9.5px;color:#9a9894;letter-spacing:.1em;margin-top:1px}
 
-  .legenda {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; padding: 12px 14px;
-    background: #fff; border-radius: 12px; margin-bottom: 16px;
-    box-shadow: 0 1px 4px rgba(0,0,0,.06);
-  }
-  .leg-item { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; color: #555; }
-  .leg-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+/* LINK ROTA */
+.rota-link{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:12px;padding:12px;background:#262625;border-radius:10px;color:#f4f4f2;font-weight:700;font-size:13px;text-decoration:none;min-height:46px}
+.rota-link:active{background:#3a3a38}
 
-  /* TIMELINE */
-  .timeline { display: flex; flex-direction: column; gap: 0; }
+/* TIMELINE */
+.roto-scroll{flex:1;overflow-y:auto;padding:16px 20px 28px}
+.timeline-wrap{position:relative}
+.timeline-line{position:absolute;left:26px;top:10px;bottom:10px;width:2px;background:linear-gradient(#fe2627,#4a4a49)}
+.timeline-stops{display:flex;flex-direction:column;gap:16px}
 
-  .step { display: flex; flex-direction: column; }
-  .step-icon-row {
-    display: flex; align-items: center; gap: 10px;
-    padding: 0 4px; margin-bottom: 8px;
-  }
-  .step-icon {
-    width: 48px; height: 48px; border-radius: 50%; display: flex;
-    align-items: center; justify-content: center;
-    font-size: 22px; color: #fff; font-weight: 700;
-    box-shadow: 0 2px 8px rgba(0,0,0,.18); flex-shrink: 0;
-  }
-  .step-km {
-    font-family:'Barlow Condensed',sans-serif; font-size: 13px; font-weight: 600; color: #999;
-  }
-  .step-connector { flex: 1; height: 2px; background: #ddd; border-radius: 1px; }
+/* STOP */
+.stop{position:relative;padding-left:56px}
+.stop-node{position:absolute;left:15px;top:8px;width:24px;height:24px;border-radius:50%;background:#f4f4f2;border:2px solid #fe2627;display:flex;align-items:center;justify-content:center}
+.stop-node-dot{width:8px;height:8px;border-radius:50%;background:#fe2627}
+.stop-node.parcial{border-color:#e8a020}
+.stop-node.parcial .stop-node-dot{background:#e8a020}
+.stop-node.dest{border-color:#4a4a49;background:#4a4a49}
+.stop-node.dest .stop-node-dot{background:#fff;width:9px;height:9px;border-radius:2px}
+.stop-km{position:absolute;left:50px;top:6px;font-family:'Barlow',sans-serif;font-weight:700;font-size:10px;color:#fe2627;background:#f4f4f2;padding:2px 0}
+.stop-km.parcial{color:#e8a020}
+.stop-km.dest{color:#4a4a49}
 
-  .step-card {
-    background: #fff; border-radius: 14px; padding: 16px;
-    box-shadow: 0 1px 6px rgba(0,0,0,.07); margin-bottom: 12px;
-    border-left: 5px solid transparent;
-  }
+/* STOP CARD */
+.scard{margin-top:18px;background:#fff;border:1.5px solid #e8e6e1;border-radius:16px;overflow:hidden;box-shadow:0 2px 10px rgba(40,38,34,.05)}
+.scard.dashed{border-style:dashed}
+.scard-body{padding:14px 15px 12px}
+.scard-brand-row{display:flex;align-items:center;gap:7px;margin-bottom:5px}
+.scard-brand-dot{width:9px;height:9px;border-radius:3px}
+.scard-brand-name{font-family:'Barlow',sans-serif;font-weight:600;font-size:11px;letter-spacing:.06em;color:#9a9894;text-transform:uppercase}
+.scard-nome{font-weight:700;font-size:18px;color:#1c1c1c;line-height:1.05;text-transform:uppercase}
+.scard-cidade{font-family:'Barlow',sans-serif;font-size:12px;color:#8a8886;margin-top:4px;line-height:1.3}
+.scard-details{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+.scard-detail{display:flex;align-items:center;gap:7px;font-family:'Barlow',sans-serif;font-size:12.5px;color:#8a8886}
+.scard-detail strong{color:#1c1c1c;font-weight:600}
 
-  .step-header { display: flex; flex-direction: column; gap: 6px; }
-  .step-tipo {
-    font-family:'Barlow Condensed',sans-serif; font-size: 12px; font-weight: 600;
-    letter-spacing: 1px; text-transform: uppercase;
-  }
-  .step-nome {
-    font-family:'Barlow Condensed',sans-serif; font-size: 22px; font-weight: 700;
-    line-height: 1.15; color: #1a1a1a;
-  }
-  .step-cidade { font-size: 14px; color: #777; margin-top: 1px; }
+/* BADGES */
+.badge-row{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.badge-conv{display:inline-flex;align-items:center;gap:5px;background:rgba(31,138,61,.12);color:#1f8a3d;font-family:'Barlow',sans-serif;font-weight:600;font-size:10.5px;padding:5px 9px;border-radius:8px;white-space:nowrap}
+.badge-conv::before{content:'';width:6px;height:6px;border-radius:50%;background:#1f8a3d}
+.badge-cartao{font-family:'Barlow',sans-serif;font-weight:600;font-size:10.5px;padding:5px 9px;border-radius:8px;white-space:nowrap}
+.badge-truckpag{background:rgba(31,138,61,.12);color:#1f8a3d}
+.badge-shell{background:rgba(224,168,20,.12);color:#b8860b}
 
-  .step-details { margin-top: 14px; display: flex; flex-direction: column; gap: 10px; }
-  .detail-row { display: flex; align-items: flex-start; gap: 8px; font-size: 14px; line-height: 1.4; }
-  .detail-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
-  .detail-label { font-weight: 600; color: #555; min-width: 75px; flex-shrink: 0; }
-  .detail-value { color: #333; }
+/* NOTE */
+.scard-note{margin:10px 0 0;background:#f4f4f2;border-left:3px solid #1a6fb5;border-radius:8px;padding:10px 12px;font-family:'Barlow',sans-serif;font-size:12px;color:#8a8886;line-height:1.4}
+.scard-note strong{color:#1a6fb5}
 
-  .card-badge {
-    display: inline-flex; align-items: center; gap: 5px;
-    font-family:'Barlow Condensed',sans-serif; font-size: 14px; font-weight: 600;
-    padding: 6px 14px; border-radius: 8px; letter-spacing: .3px; margin-top: 4px;
-  }
-  .card-truckpag { background: #e6f7e9; color: #1a7a2e; }
-  .card-shell { background: #fff4e0; color: #b8860b; }
-  .card-redefrota { background: #e6eeff; color: #2c5aa0; }
+/* BRAND TABLE */
+.brand-tbl{width:100%;border-collapse:collapse;margin-top:10px}
+.brand-tbl th{font-family:'Barlow',sans-serif;font-size:10px;font-weight:700;letter-spacing:.08em;color:#9a9894;text-transform:uppercase;padding:6px 10px;text-align:left;border-bottom:1px solid #eae8e3}
+.brand-tbl td{padding:8px 10px;font-family:'Barlow',sans-serif;font-size:13px;border-bottom:1px solid #f4f4f2}
+.brand-tbl tr:last-child td{border:none}
+.brand-tbl .bname{font-weight:700;color:#1c1c1c}
+.brand-tbl .bqty{font-weight:700;color:#1a6fb5}
+.brand-tbl .bqty.zero{color:#1f8a3d}
 
-  .maps-link {
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-    font-size: 14px; color: #fff; text-decoration: none;
-    font-weight: 600; margin-top: 14px;
-    background: #1a6fb5; border-radius: 10px;
-    padding: 12px 16px; min-height: 48px; text-align: center;
-    box-shadow: 0 2px 6px rgba(26,111,181,.25);
-  }
-  .maps-link:active { background: #155a96; }
-  .maps-link-rota { background: #27963c; box-shadow: 0 2px 6px rgba(39,150,60,.25); }
-  .maps-link-rota:active { background: #1f7a31; }
+/* ACTIONS */
+.scard-actions{display:flex;border-top:1px solid #eeece7}
+.scard-actions a,.scard-actions button{flex:1;text-align:center;padding:11px 0;font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:12.5px;color:#262625;text-decoration:none;border:none;background:none;cursor:pointer;border-right:1px solid #eeece7}
+.scard-actions a:last-child,.scard-actions button:last-child{border-right:none}
+.scard-actions a:active,.scard-actions button:active{background:#f4f4f2}
+.scard-actions .red{color:#fe2627}
 
-  .ou-divider {
-    display: flex; align-items: center; gap: 10px; padding: 4px 0;
-  }
-  .ou-line { flex: 1; height: 2px; background: #ddd; border-radius: 1px; }
-  .ou-text {
-    font-family:'Barlow Condensed',sans-serif; font-size: 15px; font-weight: 700;
-    color: #FE2627; background: #f0f0f0; padding: 4px 16px; border-radius: 12px;
-  }
+/* OU DIVIDER */
+.ou-div{display:flex;align-items:center;gap:10px;padding:4px 0;margin-left:56px}
+.ou-line{flex:1;height:1px;background:#e4e2dd}
+.ou-pill{font-weight:700;font-size:13px;color:#fe2627;background:#eae8e3;padding:3px 14px;border-radius:10px}
 
-  .note-box {
-    background: #eef6ff; border-left: 4px solid #1a6fb5; border-radius: 10px;
-    padding: 12px 14px; margin-top: 12px;
-  }
-  .note-box p { font-size: 13.5px; color: #333; line-height: 1.45; }
-  .note-box strong { color: #1a6fb5; }
+/* DEST STOP */
+.dest-stop{position:relative;padding-left:56px;margin-top:4px}
+.dest-stop .stop-node{top:2px}
+.dest-nome{padding:3px 0;font-weight:700;font-size:15px;color:#1c1c1c;text-transform:uppercase}
 
-  /* FOOTER */
-  .footer {
-    background: #1a1a1a; padding: 18px 16px; margin-top: 8px;
-  }
-  .footer-title {
-    font-family:'Barlow Condensed',sans-serif; font-size: 14px; font-weight: 700;
-    color: #FE2627; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px;
-  }
-  .footer-grid { display: flex; flex-direction: column; gap: 8px; }
-  .footer-item {
-    background: rgba(255,255,255,.06); border-radius: 10px; padding: 12px 14px;
-    display: flex; align-items: center; gap: 12px;
-  }
-  .footer-num {
-    font-family:'Barlow Condensed',sans-serif; font-size: 20px; font-weight: 700;
-    color: #FE2627; min-width: 28px; text-align: center;
-  }
-  .footer-info { flex: 1; }
-  .footer-step-name {
-    font-family:'Barlow Condensed',sans-serif; font-size: 15px; font-weight: 700; color: #fff;
-  }
-  .footer-step-detail { font-size: 12px; color: #aaa; margin-top: 2px; }
-
-  /* LOADING */
-  .loading {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    padding: 60px 20px; gap: 16px;
-  }
-  .spinner {
-    width: 40px; height: 40px; border: 4px solid #ddd;
-    border-top-color: #FE2627; border-radius: 50%;
-    animation: spin .8s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .loading p { font-size: 14px; color: #888; }
-
-  /* CONFIG BAR */
-  .config-bar {
-    background: #fff; padding: 12px 16px; margin: 12px 12px 0;
-    border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.06);
-    max-width: 456px; margin-left: auto; margin-right: auto;
-  }
-  .config-bar label {
-    font-family:'Barlow Condensed',sans-serif; font-size: 12px; font-weight: 600;
-    color: #999; letter-spacing: .5px; text-transform: uppercase;
-    display: block; margin-bottom: 6px;
-  }
-  .config-bar input {
-    width: 100%; padding: 10px 12px; border: 2px solid #ddd;
-    border-radius: 8px; font-size: 13px; font-family: 'Barlow', sans-serif;
-  }
-  .config-bar input:focus { outline: none; border-color: #1a6fb5; }
-  .config-bar .config-hint { font-size: 11px; color: #aaa; margin-top: 6px; line-height: 1.4; }
-  .config-bar button {
-    margin-top: 10px; width: 100%; padding: 12px;
-    background: #1a6fb5; color: #fff; border: none; border-radius: 8px;
-    font-family:'Barlow Condensed',sans-serif; font-size: 15px; font-weight: 700;
-    cursor: pointer; min-height: 48px;
-  }
-  .config-bar button:active { background: #155a96; }
-
-  /* INSTALL PROMPT */
-  .install-banner {
-    display: none; background: #1a1a1a; padding: 12px 16px;
-    align-items: center; gap: 12px;
-  }
-  .install-banner.show { display: flex; }
-  .install-banner p { flex: 1; font-size: 13px; color: #fff; }
-  .install-btn {
-    background: #FE2627; color: #fff; border: none; border-radius: 8px;
-    padding: 10px 18px; font-family:'Barlow Condensed',sans-serif;
-    font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap;
-    min-height: 44px;
-  }
-  .install-dismiss {
-    background: none; border: none; color: #888; font-size: 20px;
-    cursor: pointer; padding: 4px;
-  }
-
-  @media (min-width: 600px) {
-    .wrap, .route-list { max-width: 640px; }
-    .footer-grid { display: grid; grid-template-columns: 1fr 1fr; }
-  }
+/* INSTALL */
+.install-bar{display:none;background:#1c1c1c;padding:12px 16px;align-items:center;gap:12px}
+.install-bar.show{display:flex}
+.install-bar p{flex:1;font-family:'Barlow',sans-serif;font-size:13px;color:#fff}
+.install-btn{background:#fe2627;color:#fff;border:none;border-radius:8px;padding:10px 18px;font-weight:700;font-size:14px;cursor:pointer;min-height:44px}
+.install-x{background:none;border:none;color:#666;font-size:20px;cursor:pointer}
 </style>
 </head>
 <body>
 
-<!-- HEADER -->
-<div class="header">
-  <button class="header-back" id="btnBack" onclick="showHome()">←</button>
-  <div class="logo-c">C</div>
-  <div class="logo-text">
-    <div class="logo-name">RODOVIÁRIO CONFIANÇA</div>
-    <div class="logo-slogan">Segurança que move</div>
-  </div>
-  <div class="header-title">
-    <h1 id="headerLabel">Rotogramas</h1>
-    <p id="headerSub">Abastecimento da frota</p>
-  </div>
-</div>
-
-<!-- INSTALL BANNER -->
-<div class="install-banner" id="installBanner">
+<div class="install-bar" id="installBanner">
   <p>Instale o app na tela inicial</p>
   <button class="install-btn" id="installBtn">Instalar</button>
-  <button class="install-dismiss" id="installDismiss">✕</button>
+  <button class="install-x" id="installDismiss">✕</button>
 </div>
 
-<!-- ═══════════════════════
-     TELA 1: LISTA DE ROTAS
-═══════════════════════ -->
+<!-- HOME -->
 <div class="screen active" id="screenHome">
-
-  <div class="home-banner">
-    <h2>Rotogramas de Abastecimento</h2>
-    <p>Toque na rota para ver os pontos de parada</p>
-  </div>
-
-  <div id="statusBar" class="home-status">
-    <div class="status-dot"></div>
-    <span id="statusText">Dados carregados</span>
-  </div>
-
-  <!-- SEARCH BAR -->
-  <div class="search-bar">
+  <div class="home-top">
+    <div class="logo-row">
+      <div class="logo-box"><span>C</span></div>
+      <div>
+        <div class="logo-title">CONFIANÇA</div>
+        <div class="logo-sub">SEGURANÇA QUE MOVE</div>
+      </div>
+    </div>
+    <div class="home-heading">Rotogramas</div>
+    <div class="home-subtext" id="routeCountText">Carregando...</div>
     <div class="search-wrap">
-      <span class="search-icon">🔍</span>
-      <input type="text" class="search-input" id="searchInput"
-             placeholder="Buscar rota, cidade, estado..."
-             autocomplete="off" autocorrect="off" spellcheck="false">
+      <div class="search-icon"></div>
+      <input class="search-input" id="searchInput" placeholder="Buscar rota, cidade ou destino" autocomplete="off" autocorrect="off" spellcheck="false">
       <button class="search-clear" id="searchClear" onclick="clearSearch()">✕</button>
     </div>
-    <div class="search-count hidden" id="searchCount"></div>
   </div>
 
-  <div class="route-list" id="routeList">
-    <div class="loading" id="homeLoading">
-      <div class="spinner"></div>
-      <p>Carregando rotas...</p>
-    </div>
+  <div class="home-status" id="statusBar">
+    <span class="dot demo"></span><span id="statusText">Carregando...</span>
   </div>
 
-  <!-- CONFIG: URL DA PLANILHA -->
+  <div class="home-scroll" id="routeList">
+    <div style="text-align:center;padding:40px"><div style="width:36px;height:36px;border:3px solid #e4e2dd;border-top-color:#fe2627;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto"></div><p style="font-family:'Barlow',sans-serif;font-size:13px;color:#9a9894;margin-top:12px">Carregando rotas...</p></div>
+    <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+  </div>
+
   <div class="config-bar">
-    <label>🔗 URL da Planilha Google</label>
-    <input type="url" id="sheetUrl" placeholder="Cole aqui a URL da planilha publicada">
-    <div class="config-hint">
-      No Google Planilhas: Arquivo → Compartilhar → Publicar na Web → Publicar como CSV.
-      Cole a URL gerada aqui. Deixe vazio para usar dados de demonstração.
-    </div>
+    <label>Planilha Google (opcional)</label>
+    <input type="url" id="sheetUrl" placeholder="Cole a URL da planilha publicada como CSV">
+    <div class="hint">Arquivo → Publicar na Web → aba "rotogramas" → CSV</div>
     <button onclick="saveSheetUrl()">Salvar e atualizar</button>
   </div>
-
 </div>
 
-<!-- ═══════════════════════
-     TELA 2: ROTOGRAMA
-═══════════════════════ -->
+<!-- ROTOGRAMA -->
 <div class="screen" id="screenRoute">
   <div id="routeContent"></div>
 </div>
 
 <script>
-// ══════════════════════════════════════
-// DADOS DE DEMONSTRAÇÃO
-// (usados quando não há planilha conectada)
-// ══════════════════════════════════════
-const DEMO_DATA = [
-  {
-    id: 'lucas-goiania',
-    nome: 'Lucas do Rio Verde → Goiânia',
-    estados: 'MT → GO',
-    numero: '01',
-    regiao: 'Centro-Oeste',
-    subtitulo: 'Rota 01 — Centro-Oeste',
-    linkRota: 'https://maps.app.goo.gl/RQmTr6AP3kjDG65Z8',
-    paradas: [
-      {
-        ordem: 0, tipo: 'origem',
-        nome: 'Lucas do Rio Verde — MT', cidade: 'Após carregar',
-        detalhe: 'BR-163 → MT-251 (Chapada dos Guimarães) → BR-070 → BR-060 → Goiânia',
-        km: 'KM 0'
-      },
-      {
-        ordem: 1, tipo: 'completa',
-        nome: 'Rede São Roque — Sabiá', cidade: 'Lucas do Rio Verde — MT',
-        razaoSocial: 'Posto São Roque — Sabiá',
-        litragem: 'Completa o tanque', cartao: 'truckpag',
-        km: '~5 km',
-        link: 'https://maps.app.goo.gl/d8JaW8EZnRMyyaVR9',
-        alternativa: {
-          nome: 'Rede São Roque — 29', cidade: 'Nova Mutum — MT',
-          litragem: 'Completa o tanque', cartao: 'truckpag',
-          km: '~100 km',
-          link: 'https://maps.app.goo.gl/Gg3S1rtRuDcJf7zZ6'
-        }
-      },
-      {
-        ordem: 2, tipo: 'parcial',
-        nome: 'Rede São Roque — Alvorada', cidade: 'Primavera do Leste — MT',
-        litragem: 'Obrigatório (exceto Scania): Volvo 200L · Meteor 200L · Mercedes 300L',
-        cartao: 'truckpag',
-        km: '~450 km',
-        nota: 'Abastecimento obrigatório para todas as marcas, exceto Scania que segue direto para Goiânia. Litragem varia conforme a marca.',
-        link: 'https://maps.app.goo.gl/QGC9w92uvcmApJmc9'
-      },
-      {
-        ordem: 3, tipo: 'destino',
-        nome: 'Goiânia — GO', cidade: 'Chegada à garagem',
-        km: '~900 km'
-      }
-    ]
-  },
-  {
-    id: 'goiania-cabedelo',
-    nome: 'Goiânia → Cabedelo',
-    estados: 'GO → BA → SE → PE → PB',
-    numero: '02',
-    regiao: 'Nordeste',
-    subtitulo: 'Rota 02 — Nordeste',
-    linkRota: 'https://maps.app.goo.gl/fvaMjeExq6nCp8yi6',
-    paradas: [
-      {
-        ordem: 0, tipo: 'origem',
-        nome: 'Goiânia — GO', cidade: 'Saída da garagem',
-        detalhe: 'BR-153 → BR-020 → BR-242 → BR-116 → BR-101',
-        km: 'KM 0'
-      },
-      {
-        ordem: 1, tipo: 'completa',
-        nome: 'Posto Cerradão', cidade: 'Luís Eduardo Magalhães — BA',
-        razaoSocial: 'Auto Posto São Roque — Cerradão',
-        litragem: 'Completa o tanque', cartao: 'truckpag',
-        km: '~850 km',
-        link: 'https://maps.app.goo.gl/Z5kyJdDhnuRHzedv6'
-      },
-      {
-        ordem: 2, tipo: 'parcial',
-        nome: 'Posto Irmão Caminhoneiro II', cidade: 'Itaberaba — BA',
-        litragem: '200 litros', cartao: 'truckpag',
-        km: '~1.400 km',
-        nota: 'Abastecer somente 200L para chegar até Sergipe, onde o diesel é mais barato, e completar o tanque lá.',
-        link: 'https://maps.app.goo.gl/CNqGn28QPT3yDFpd8',
-        alternativa: {
-          nome: 'Posto São Caetano', cidade: 'Santo Estêvão — BA',
-          litragem: '200 litros', cartao: 'truckpag',
-          km: '~1.500 km',
-          nota: 'Mesma lógica — 200L para chegar até Sergipe e completar tanque em posto mais barato.',
-          link: 'https://maps.app.goo.gl/CNqGn28QPT3yDFpd8'
-        }
-      },
-      {
-        ordem: 3, tipo: 'completa',
-        nome: 'Posto Azul — Atalaia', cidade: 'Santa Luzia do Itanhi — SE',
-        litragem: 'Completa o tanque', cartao: 'shell',
-        km: '~1.900 km',
-        vantagem: 'Diesel mais barato na região de Sergipe',
-        link: 'https://maps.app.goo.gl/eApQPbcLipGX6tsi6'
-      },
-      {
-        ordem: 4, tipo: 'completa',
-        nome: 'Posto CJCM', cidade: 'Igarassu — PE',
-        razaoSocial: 'Posto Shell (Igarassu)',
-        litragem: 'Completa o tanque', cartao: 'shell',
-        km: '~2.300 km',
-        link: 'https://maps.app.goo.gl/ynhhNNWJTvuyi5Jt9'
-      },
-      {
-        ordem: 5, tipo: 'destino',
-        nome: 'Cabedelo — PB', cidade: 'Chegada ao destino',
-        km: '~2.450 km'
-      }
-    ]
-  },
-  {
-    id: 'cabedelo-suape',
-    nome: 'Cabedelo → Suape',
-    estados: 'PB → PE',
-    numero: '03',
-    regiao: 'Nordeste',
-    subtitulo: 'Rota 03 — Nordeste (trecho)',
-    linkRota: 'https://maps.app.goo.gl/6QCtNdYNuezqKs2BA',
-    paradas: [
-      {
-        ordem: 0, tipo: 'origem',
-        nome: 'Cabedelo — PB', cidade: 'Saída do ponto de carga/descarga',
-        detalhe: 'Seguir BR-101 sentido sul',
-        km: 'KM 0'
-      },
-      {
-        ordem: 1, tipo: 'completa',
-        nome: 'Posto Petroconde', cidade: 'Conde — PB',
-        razaoSocial: 'Eco Postos Conde',
-        litragem: 'Completa o tanque', cartao: 'shell_expers',
-        km: '~25 km',
-        link: 'https://maps.app.goo.gl/Xbqi8GrwEGvQgXV17'
-      },
-      {
-        ordem: 2, tipo: 'destino',
-        nome: 'Suape — PE', cidade: 'Chegada ao destino',
-        km: '~150 km'
-      }
-    ]
-  },
-  {
-    id: 'goiania-sjcampos',
-    nome: 'Goiânia → São José dos Campos',
-    estados: 'GO → MG → SP',
-    numero: '04',
-    regiao: 'Sudeste',
-    subtitulo: 'Rota 04 — Sudeste',
-    linkRota: '',
-    paradas: [
-      { ordem: 0, tipo: 'origem', nome: 'Goiânia — GO', cidade: 'Saída da garagem', km: 'KM 0' },
-      { ordem: 1, tipo: 'destino', nome: 'São José dos Campos — SP', cidade: 'Sem abastecer na ida — abastece no CAVAP', km: '~900 km' }
-    ]
-  },
-  {
-    id: 'goiania-smateus',
-    nome: 'Goiânia → São Mateus do Sul',
-    estados: 'GO → SP → PR',
-    numero: '05',
-    regiao: 'Sul',
-    subtitulo: 'Rota 05 — Sul',
-    linkRota: '',
-    paradas: [
-      { ordem: 0, tipo: 'origem', nome: 'Goiânia — GO', cidade: 'Saída da garagem', km: 'KM 0' },
-      { ordem: 1, tipo: 'destino', nome: 'São Mateus do Sul — PR', cidade: 'Sem abastecer na ida — abastece no Cais Ponta Grossa na volta', km: '~1.200 km' }
-    ]
-  }
+// ══════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════
+const DEMO_DATA=[
+{id:'lucas-goiania',nome:'Lucas do Rio Verde → Goiânia',estados:'MT → GO',numero:'01',regiao:'Centro-Oeste',subtitulo:'Rota 01 — Centro-Oeste',linkRota:'https://maps.app.goo.gl/RQmTr6AP3kjDG65Z8',distancia:'~900 km',tempo:'~12h',paradas:[
+{ordem:0,tipo:'origem',nome:'Lucas do Rio Verde — MT',cidade:'Após carregar',detalhe:'BR-163 → MT-251 → BR-070 → BR-060',km:'0'},
+{ordem:1,tipo:'completa',nome:'Rede São Roque — Sabiá',cidade:'Lucas do Rio Verde — MT',razaoSocial:'Posto São Roque — Sabiá',litragem:'Completa o tanque',cartao:'truckpag',km:'5',link:'https://maps.app.goo.gl/d8JaW8EZnRMyyaVR9',alternativa:{nome:'Rede São Roque — 29',cidade:'Nova Mutum — MT',litragem:'Completa o tanque',cartao:'truckpag',km:'100',link:'https://maps.app.goo.gl/Gg3S1rtRuDcJf7zZ6'}},
+{ordem:2,tipo:'parcial',nome:'Rede São Roque — Alvorada',cidade:'Primavera do Leste — MT',litragem:'Obrigatório (exceto Scania)',cartao:'truckpag',km:'450',nota:'Abastecimento obrigatório para todas as marcas, exceto Scania que segue direto para Goiânia.',link:'https://maps.app.goo.gl/QGC9w92uvcmApJmc9',marcas:[{marca:'Volvo',litros:'200L'},{marca:'Scania',litros:'Não abastece'},{marca:'Meteor',litros:'200L'},{marca:'Mercedes',litros:'300L'}]},
+{ordem:3,tipo:'destino',nome:'Goiânia — GO',cidade:'Chegada à garagem',km:'900'}]},
+{id:'goiania-cabedelo',nome:'Goiânia → Cabedelo',estados:'GO → BA → SE → PE → PB',numero:'02',regiao:'Nordeste',subtitulo:'Rota 02 — Nordeste',linkRota:'https://maps.app.goo.gl/fvaMjeExq6nCp8yi6',distancia:'~2.450 km',tempo:'~30h',paradas:[
+{ordem:0,tipo:'origem',nome:'Goiânia — GO',cidade:'Saída da garagem',detalhe:'BR-153 → BR-020 → BR-242 → BR-116 → BR-101',km:'0'},
+{ordem:1,tipo:'completa',nome:'Posto Cerradão',cidade:'Luís Eduardo Magalhães — BA',razaoSocial:'Auto Posto São Roque — Cerradão',litragem:'Completa o tanque',cartao:'truckpag',km:'850',link:'https://maps.app.goo.gl/Z5kyJdDhnuRHzedv6'},
+{ordem:2,tipo:'parcial',nome:'Posto Irmão Caminhoneiro II',cidade:'Itaberaba — BA',litragem:'200 litros',cartao:'truckpag',km:'1.400',nota:'Abastecer somente 200L para chegar até Sergipe, onde o diesel é mais barato.',link:'https://maps.app.goo.gl/CNqGn28QPT3yDFpd8',alternativa:{nome:'Posto São Caetano',cidade:'Santo Estêvão — BA',litragem:'200 litros',cartao:'truckpag',km:'1.500',nota:'Mesma lógica — 200L para chegar até Sergipe.',link:'https://maps.app.goo.gl/xtAuqcusfpnvVxuT7'}},
+{ordem:3,tipo:'completa',nome:'Posto Azul — Atalaia',cidade:'Santa Luzia do Itanhi — SE',litragem:'Completa o tanque',cartao:'shell',km:'1.900',vantagem:'Diesel mais barato na região de Sergipe',link:'https://maps.app.goo.gl/eApQPbcLipGX6tsi6'},
+{ordem:4,tipo:'completa',nome:'Posto CJCM',cidade:'Igarassu — PE',razaoSocial:'Posto Shell (Igarassu)',litragem:'Completa o tanque',cartao:'shell',km:'2.300',link:'https://maps.app.goo.gl/ynhhNNWJTvuyi5Jt9'},
+{ordem:5,tipo:'destino',nome:'Cabedelo — PB',cidade:'Chegada ao destino',km:'2.450'}]},
+{id:'cabedelo-suape',nome:'Cabedelo → Suape',estados:'PB → PE',numero:'03',regiao:'Nordeste',subtitulo:'Rota 03 — Nordeste (trecho)',linkRota:'https://maps.app.goo.gl/6QCtNdYNuezqKs2BA',distancia:'~150 km',tempo:'~2h30',paradas:[
+{ordem:0,tipo:'origem',nome:'Cabedelo — PB',cidade:'Saída do ponto de carga/descarga',detalhe:'BR-101 sentido sul',km:'0'},
+{ordem:1,tipo:'completa',nome:'Posto Petroconde',cidade:'Conde — PB',razaoSocial:'Eco Postos Conde',litragem:'Completa o tanque',cartao:'shell_expers',km:'25',link:'https://maps.app.goo.gl/Xbqi8GrwEGvQgXV17'},
+{ordem:2,tipo:'destino',nome:'Suape — PE',cidade:'Chegada ao destino',km:'150'}]},
+{id:'goiania-sjcampos',nome:'Goiânia → São José dos Campos',estados:'GO → MG → SP',numero:'04',regiao:'Sudeste',subtitulo:'Rota 04 — Sudeste',linkRota:'',distancia:'~900 km',tempo:'~11h',paradas:[
+{ordem:0,tipo:'origem',nome:'Goiânia — GO',cidade:'Saída da garagem',km:'0'},
+{ordem:1,tipo:'destino',nome:'São José dos Campos — SP',cidade:'Sem abastecer na ida — abastece no CAVAP',km:'900'}]},
+{id:'goiania-smateus',nome:'Goiânia → São Mateus do Sul',estados:'GO → SP → PR',numero:'05',regiao:'Sul',subtitulo:'Rota 05 — Sul',linkRota:'',distancia:'~1.200 km',tempo:'~15h',paradas:[
+{ordem:0,tipo:'origem',nome:'Goiânia — GO',cidade:'Saída da garagem',km:'0'},
+{ordem:1,tipo:'destino',nome:'São Mateus do Sul — PR',cidade:'Sem abastecer na ida — abastece no Cais Ponta Grossa na volta',km:'1.200'}]}
 ];
 
-// ══════════════════════════════════════
-// STATE
-// ══════════════════════════════════════
-let routes = [];
-let dataSource = 'demo'; // 'demo' | 'sheet'
+const REGION_ORDER=['Centro-Oeste','Nordeste','Sudeste','Sul'];
+let routes=[],dataSource='demo';
 
-// ══════════════════════════════════════
-// GOOGLE SHEETS PARSER
-// ══════════════════════════════════════
-async function fetchFromSheet(url) {
-  try {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('Fetch failed');
-    const text = await res.text();
-    return parseCSV(text);
-  } catch (e) {
-    console.error('Sheet fetch error:', e);
-    return null;
-  }
-}
+// ══════════════════════════════════════════
+// SHEETS PARSER
+// ══════════════════════════════════════════
+async function fetchFromSheet(url){try{const r=await fetch(url);if(!r.ok)throw 0;return parseCSV(await r.text())}catch(e){return null}}
+function parseCSV(t){const ls=t.split('\n').map(l=>{const r=[];let c='',q=false;for(let i=0;i<l.length;i++){const ch=l[i];if(ch==='"')q=!q;else if(ch===','&&!q){r.push(c.trim());c=''}else c+=ch}r.push(c.trim());return r});if(ls.length<2)return null;const h=ls[0].map(x=>x.toLowerCase().replace(/\s+/g,'_'));const rows=ls.slice(1).filter(r=>r.length>=3&&r[0]);const rm={};for(const row of rows){const o={};h.forEach((k,i)=>{o[k]=row[i]||''});const id=o.rota_id||'default';if(!rm[id])rm[id]={id,nome:o.rota_nome||id,estados:o.estados||'',numero:o.rota_numero||'?',regiao:o.regiao||'',subtitulo:o.subtitulo||'',linkRota:o.link_rota||'',distancia:o.distancia||'',tempo:o.tempo||'',paradas:[]};const p={ordem:parseInt(o.ordem)||0,tipo:o.tipo||'completa',nome:o.posto||o.nome||'',cidade:o.cidade||'',litragem:o.litragem||'',cartao:(o.cartao||'').toLowerCase(),km:o.km||'',link:o.link_maps||o.link||'',razaoSocial:o.razao_social||'',vantagem:o.vantagem||'',nota:o.nota||'',detalhe:o.detalhe||''};if(o.alt_posto)p.alternativa={nome:o.alt_posto,cidade:o.alt_cidade||'',litragem:o.alt_litragem||p.litragem,cartao:(o.alt_cartao||p.cartao).toLowerCase(),km:o.alt_km||'',nota:o.alt_nota||'',link:o.alt_link||''};rm[id].paradas.push(p)}const res=Object.values(rm);res.forEach(r=>r.paradas.sort((a,b)=>a.ordem-b.ordem));return res}
 
-function parseCSV(text) {
-  const lines = text.split('\n').map(l => {
-    const result = [];
-    let current = '', inQuote = false;
-    for (let i = 0; i < l.length; i++) {
-      const ch = l[i];
-      if (ch === '"') { inQuote = !inQuote; }
-      else if (ch === ',' && !inQuote) { result.push(current.trim()); current = ''; }
-      else { current += ch; }
+// ══════════════════════════════════════════
+// RENDER HOME
+// ══════════════════════════════════════════
+function norm(s){return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()}
+function searchText(r){const p=[r.nome,r.estados,r.subtitulo,r.numero,r.regiao||''];for(const s of r.paradas){p.push(s.nome,s.cidade,s.cartao,s.razaoSocial||'');if(s.alternativa)p.push(s.alternativa.nome,s.alternativa.cidade)}return p.join(' ').toLowerCase()}
+
+function renderHome(){
+  const el=document.getElementById('routeList');
+  const regionMap={};
+  routes.forEach((r,i)=>{const reg=r.regiao||'Outras';if(!regionMap[reg])regionMap[reg]=[];regionMap[reg].push({r,i})});
+  const sorted=Object.keys(regionMap).sort((a,b)=>{const ia=REGION_ORDER.indexOf(a),ib=REGION_ORDER.indexOf(b);return(ia<0?99:ia)-(ib<0?99:ib)});
+  let h='';
+  for(const reg of sorted){
+    const items=regionMap[reg];
+    h+=`<div class="region"><div class="region-hd"><span class="region-bar"></span><span class="region-name">${reg}</span><span class="region-count">${items.length}</span><span class="region-line"></span></div>`;
+    for(const{r,i}of items){
+      const stops=r.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino').length;
+      const st=searchText(r);
+      const orig=r.paradas.find(p=>p.tipo==='origem');
+      const dest=r.paradas.find(p=>p.tipo==='destino');
+      h+=`<div class="rcard" data-idx="${i}" data-search="${norm(st)}" onclick="showRoute(${i})"><div class="rcard-uf">${r.numero}</div><div class="rcard-info"><div class="rcard-nome">${r.nome}</div><div class="rcard-detail">${r.estados}</div><div class="rcard-stats"><span>${r.distancia||''}</span><span class="dot">·</span><span>${r.tempo||''}</span><span class="dot">·</span><span class="red">⛽ ${stops} posto${stops!==1?'s':''}</span></div></div><div class="rcard-arrow">›</div></div>`;
     }
-    result.push(current.trim());
-    return result;
-  });
-
-  if (lines.length < 2) return null;
-
-  const headers = lines[0].map(h => h.toLowerCase().replace(/\s+/g, '_'));
-  const rows = lines.slice(1).filter(r => r.length >= 3 && r[0]);
-
-  // Group by route
-  const routeMap = {};
-  for (const row of rows) {
-    const obj = {};
-    headers.forEach((h, i) => { obj[h] = row[i] || ''; });
-
-    const routeId = obj.rota_id || obj.rota || 'default';
-    if (!routeMap[routeId]) {
-      routeMap[routeId] = {
-        id: routeId,
-        nome: obj.rota_nome || routeId,
-        estados: obj.estados || '',
-        numero: obj.rota_numero || '?',
-        regiao: obj.regiao || '',
-        subtitulo: obj.subtitulo || '',
-        linkRota: obj.link_rota || '',
-        paradas: []
-      };
-    }
-
-    const parada = {
-      ordem: parseInt(obj.ordem) || 0,
-      tipo: obj.tipo || 'completa',
-      nome: obj.posto || obj.nome || '',
-      cidade: obj.cidade || '',
-      litragem: obj.litragem || '',
-      cartao: (obj.cartao || '').toLowerCase(),
-      km: obj.km || '',
-      link: obj.link_maps || obj.link || '',
-      razaoSocial: obj.razao_social || '',
-      vantagem: obj.vantagem || '',
-      nota: obj.nota || '',
-      detalhe: obj.detalhe || ''
-    };
-
-    // Check for alternativa columns
-    if (obj.alt_posto) {
-      parada.alternativa = {
-        nome: obj.alt_posto,
-        cidade: obj.alt_cidade || '',
-        litragem: obj.alt_litragem || parada.litragem,
-        cartao: (obj.alt_cartao || parada.cartao).toLowerCase(),
-        km: obj.alt_km || '',
-        nota: obj.alt_nota || '',
-        link: obj.alt_link || ''
-      };
-    }
-
-    routeMap[routeId].paradas.push(parada);
+    h+='</div>';
   }
-
-  const result = Object.values(routeMap);
-  result.forEach(r => r.paradas.sort((a, b) => a.ordem - b.ordem));
-  return result;
+  h+='<div class="no-results" id="noResults"><span>🔍</span>Nenhuma rota encontrada</div>';
+  el.innerHTML=h;
+  document.getElementById('routeCountText').textContent=`${routes.length} rotas ativas · toque para abrir o rotograma`;
+  const inp=document.getElementById('searchInput');
+  if(inp&&inp.value.trim())filterRoutes(inp.value);
 }
 
-// ══════════════════════════════════════
-// RENDER: LISTA DE ROTAS
-// ══════════════════════════════════════
-function buildSearchText(r) {
-  const parts = [r.nome, r.estados, r.subtitulo, r.numero, r.regiao || ''];
-  for (const p of r.paradas) {
-    parts.push(p.nome, p.cidade, p.cartao, p.razaoSocial || '', p.vantagem || '');
-    if (p.alternativa) {
-      parts.push(p.alternativa.nome, p.alternativa.cidade);
-    }
-  }
-  return parts.join(' ').toLowerCase();
+function filterRoutes(q){
+  const cards=document.querySelectorAll('.rcard');
+  const regions=document.querySelectorAll('.region');
+  const nr=document.getElementById('noResults');
+  const cl=document.getElementById('searchClear');
+  const n=norm(q.trim());
+  if(!n){cards.forEach(c=>c.style.display='');regions.forEach(r=>r.style.display='');nr.style.display='none';cl.classList.remove('vis');return}
+  cl.classList.add('vis');
+  const terms=n.split(/\s+/);
+  let vis=0;
+  cards.forEach(c=>{const t=c.dataset.search||'';const m=terms.every(x=>t.includes(x));c.style.display=m?'':'none';if(m)vis++});
+  regions.forEach(r=>{const hasVis=[...r.querySelectorAll('.rcard')].some(c=>c.style.display!=='none');r.style.display=hasVis?'':'none'});
+  nr.style.display=vis?'none':'block';
+}
+function clearSearch(){const i=document.getElementById('searchInput');i.value='';filterRoutes('');i.focus()}
+document.addEventListener('DOMContentLoaded',()=>{const i=document.getElementById('searchInput');if(i)i.addEventListener('input',e=>filterRoutes(e.target.value))});
+
+// ══════════════════════════════════════════
+// RENDER ROTOGRAMA
+// ══════════════════════════════════════════
+function cartaoBadge(c){const m={truckpag:['badge-truckpag','TRUCKPAG'],shell:['badge-shell','SHELL'],shell_expers:['badge-shell','SHELL EXPERS']};const v=m[c];return v?`<span class="badge-cartao ${v[0]}">${v[1]}</span>`:''}
+function cartaoLabel(c){return{truckpag:'TruckPag',shell:'Shell',shell_expers:'Shell Expers'}[c]||c}
+
+function renderStop(p){
+  const isParcial=p.tipo==='parcial';
+  const nodeClass=isParcial?'parcial':'';
+  const kmClass=isParcial?'parcial':'';
+  let details='';
+  if(p.litragem)details+=`<div class="scard-detail">⛽ <strong>${p.litragem}</strong></div>`;
+  if(p.razaoSocial)details+=`<div class="scard-detail">📋 ${p.razaoSocial}</div>`;
+  if(p.vantagem)details+=`<div class="scard-detail">💰 ${p.vantagem}</div>`;
+  if(p.detalhe)details+=`<div class="scard-detail">🛣️ ${p.detalhe}</div>`;
+  let note=p.nota?`<div class="scard-note"><strong>Estratégia:</strong> ${p.nota}</div>`:'';
+  let brandTbl='';
+  if(p.marcas&&p.marcas.length){brandTbl='<table class="brand-tbl"><thead><tr><th>Marca</th><th>Litragem</th></tr></thead><tbody>';for(const m of p.marcas){const cls=m.litros.toLowerCase().includes('não')?'bqty zero':'bqty';brandTbl+=`<tr><td class="bname">${m.marca}</td><td class="${cls}">${m.litros}</td></tr>`}brandTbl+='</tbody></table>'}
+  const tipoLabel=p.tipo==='parcial'?`${p.ordem}º Abast. · Parcial`:`${p.ordem}º Abastecimento`;
+  let actions='';
+  if(p.link)actions=`<div class="scard-actions"><a href="${p.link}" target="_blank">📍 Maps</a><a href="https://waze.com/ul?ll=${encodeURIComponent(p.link)}&navigate=yes" target="_blank">🧭 Waze</a></div>`;
+  return `<div class="stop"><div class="stop-node ${nodeClass}"><div class="stop-node-dot"></div></div><div class="stop-km ${kmClass}">KM ${p.km}</div><div class="scard"><div class="scard-body"><div class="scard-brand-row"><div class="scard-brand-dot" style="background:${isParcial?'#e8a020':'#fe2627'}"></div><span class="scard-brand-name">${tipoLabel}</span></div><div class="scard-nome">${p.nome}</div><div class="scard-cidade">${p.cidade}</div>${details?`<div class="scard-details">${details}</div>`:''}${brandTbl}<div class="badge-row">${cartaoBadge(p.cartao)}</div>${note}</div>${actions}</div></div>`;
 }
 
-const REGION_ORDER = ['Centro-Oeste', 'Nordeste', 'Sudeste', 'Sul'];
-const REGION_ICONS = {
-  'Centro-Oeste': '🌾',
-  'Nordeste': '🌴',
-  'Sudeste': '🏙️',
-  'Sul': '🌲'
-};
-
-function renderRouteList() {
-  const list = document.getElementById('routeList');
-  const loading = document.getElementById('homeLoading');
-  if (loading) loading.remove();
-
-  // Group routes by region
-  const regionMap = {};
-  routes.forEach((r, i) => {
-    const reg = r.regiao || 'Outras';
-    if (!regionMap[reg]) regionMap[reg] = [];
-    regionMap[reg].push({ route: r, globalIndex: i });
-  });
-
-  // Sort regions by predefined order
-  const sortedRegions = Object.keys(regionMap).sort((a, b) => {
-    const ia = REGION_ORDER.indexOf(a);
-    const ib = REGION_ORDER.indexOf(b);
-    return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
-  });
-
-  let html = '';
-
-  for (const region of sortedRegions) {
-    const items = regionMap[region];
-    const icon = REGION_ICONS[region] || '📍';
-    html += `
-      <div class="region-header">
-        <span class="region-icon">${icon}</span>
-        <span class="region-name">${region}</span>
-        <div class="region-line"></div>
-        <span class="region-count">${items.length} rota${items.length !== 1 ? 's' : ''}</span>
-      </div>`;
-
-    for (const { route: r, globalIndex: i } of items) {
-      const stops = r.paradas.filter(p => p.tipo !== 'origem' && p.tipo !== 'destino').length;
-      const searchText = buildSearchText(r);
-      html += `
-        <div class="route-card" data-index="${i}" data-region="${region}" data-search="${searchText.replace(/"/g, '&quot;')}" onclick="showRoute(${i})">
-          <div class="route-num">${r.numero || (i + 1)}</div>
-          <div class="route-info">
-            <div class="route-name">${r.nome}</div>
-            <div class="route-detail">${r.estados}</div>
-            <div class="route-stops">⛽ ${stops} ponto${stops !== 1 ? 's' : ''} de abastecimento</div>
-          </div>
-          <div class="route-arrow">›</div>
-        </div>`;
-    }
-  }
-
-  html += '<div class="no-results" id="noResults" style="display:none"><span>🔍</span>Nenhuma rota encontrada</div>';
-  list.innerHTML = html;
-
-  const input = document.getElementById('searchInput');
-  if (input && input.value.trim()) filterRoutes(input.value);
+function renderAlt(a){
+  let details=a.litragem?`<div class="scard-details"><div class="scard-detail">⛽ <strong>${a.litragem}</strong></div></div>`:'';
+  let note=a.nota?`<div class="scard-note"><strong>Estratégia:</strong> ${a.nota}</div>`:'';
+  let actions=a.link?`<div class="scard-actions"><a href="${a.link}" target="_blank">📍 Maps</a></div>`:'';
+  return `<div class="ou-div"><div class="ou-line"></div><div class="ou-pill">OU</div><div class="ou-line"></div></div><div class="stop"><div class="stop-node parcial"><div class="stop-node-dot"></div></div><div class="stop-km parcial">KM ${a.km}</div><div class="scard dashed"><div class="scard-body"><div class="scard-brand-row"><div class="scard-brand-dot" style="background:#e8a020"></div><span class="scard-brand-name">Opção B</span></div><div class="scard-nome">${a.nome}</div><div class="scard-cidade">${a.cidade}</div>${details}<div class="badge-row">${cartaoBadge(a.cartao)}</div>${note}</div>${actions}</div></div>`;
 }
 
-// ══════════════════════════════════════
-// SEARCH / FILTER
-// ══════════════════════════════════════
-function normalizeText(str) {
-  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+function renderRoute(r){
+  const orig=r.paradas.find(p=>p.tipo==='origem');
+  const dest=r.paradas.find(p=>p.tipo==='destino');
+  const stops=r.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino');
+  const origCity=(orig?orig.nome:'').split('—')[0].trim();
+  const destCity=(dest?dest.nome:'').split('—')[0].trim();
+
+  let h=`<div class="roto-top"><button class="back-btn" onclick="showHome()">‹</button><div class="roto-header"><div class="roto-route-row"><div class="roto-chip"><div class="city">${origCity}</div><div class="lbl">ORIGEM</div></div><span class="roto-arrow">→</span><div class="roto-chip"><div class="city">${destCity}</div><div class="lbl">DESTINO</div></div></div><div class="roto-stats"><div class="roto-stat"><div class="val">${r.distancia||'—'}</div><div class="lbl">DISTÂNCIA</div></div><div class="roto-stat"><div class="val">${r.tempo||'—'}</div><div class="lbl">ESTIMADO</div></div><div class="roto-stat"><div class="val red">${stops.length}</div><div class="lbl">POSTOS</div></div></div>`;
+  if(r.linkRota)h+=`<a class="rota-link" href="${r.linkRota}" target="_blank">📍 VER ROTA COMPLETA NO MAPS</a>`;
+  h+=`</div></div><div class="roto-scroll"><div class="timeline-wrap"><div class="timeline-line"></div><div class="timeline-stops">`;
+
+  // Origin stop
+  if(orig){
+    let originDetails=orig.detalhe?`<div class="scard-details"><div class="scard-detail">🛣️ ${orig.detalhe}</div></div>`:'';
+    h+=`<div class="stop"><div class="stop-node"><div class="stop-node-dot"></div></div><div class="stop-km">KM 0</div><div class="scard"><div class="scard-body"><div class="scard-brand-row"><div class="scard-brand-dot" style="background:#1c1c1c"></div><span class="scard-brand-name">Origem</span></div><div class="scard-nome">${orig.nome}</div><div class="scard-cidade">${orig.cidade}</div>${originDetails}</div></div></div>`;
+  }
+
+  // Fuel stops
+  for(const p of r.paradas){
+    if(p.tipo==='origem'||p.tipo==='destino')continue;
+    h+=renderStop(p);
+    if(p.alternativa)h+=renderAlt(p.alternativa);
+  }
+
+  // Destination
+  if(dest){
+    h+=`<div class="dest-stop"><div class="stop-node dest"><div class="stop-node-dot"></div></div><div class="dest-nome">Chegada · ${destCity}</div></div>`;
+  }
+
+  h+=`</div></div></div>`;
+  return h;
 }
 
-function filterRoutes(query) {
-  const cards = document.querySelectorAll('.route-card');
-  const regionHeaders = document.querySelectorAll('.region-header');
-  const noResults = document.getElementById('noResults');
-  const countEl = document.getElementById('searchCount');
-  const clearBtn = document.getElementById('searchClear');
+// ══════════════════════════════════════════
+// NAV
+// ══════════════════════════════════════════
+function showHome(){document.getElementById('screenHome').classList.add('active');document.getElementById('screenRoute').classList.remove('active');window.scrollTo(0,0)}
+function showRoute(i){document.getElementById('routeContent').innerHTML=renderRoute(routes[i]);document.getElementById('screenHome').classList.remove('active');document.getElementById('screenRoute').classList.add('active');window.scrollTo(0,0)}
 
-  const q = normalizeText(query.trim());
+// ══════════════════════════════════════════
+// SHEET CONFIG
+// ══════════════════════════════════════════
+function saveSheetUrl(){const u=document.getElementById('sheetUrl').value.trim();u?localStorage.setItem('rotograma_sheet_url',u):localStorage.removeItem('rotograma_sheet_url');loadData()}
 
-  if (!q) {
-    cards.forEach(c => c.classList.remove('hidden'));
-    regionHeaders.forEach(h => h.style.display = '');
-    noResults.style.display = 'none';
-    countEl.classList.add('hidden');
-    clearBtn.classList.remove('visible');
-    return;
-  }
-
-  clearBtn.classList.add('visible');
-  const terms = q.split(/\s+/);
-  let visible = 0;
-
-  cards.forEach(card => {
-    const text = normalizeText(card.dataset.search || '');
-    const match = terms.every(t => text.includes(t));
-    card.classList.toggle('hidden', !match);
-    if (match) visible++;
-  });
-
-  // Hide region headers that have no visible cards
-  regionHeaders.forEach(header => {
-    let next = header.nextElementSibling;
-    let hasVisible = false;
-    while (next && !next.classList.contains('region-header')) {
-      if (next.classList.contains('route-card') && !next.classList.contains('hidden')) {
-        hasVisible = true;
-        break;
-      }
-      next = next.nextElementSibling;
-    }
-    header.style.display = hasVisible ? '' : 'none';
-  });
-
-  if (visible === 0) {
-    noResults.style.display = 'block';
-    countEl.classList.add('hidden');
-  } else {
-    noResults.style.display = 'none';
-    countEl.classList.remove('hidden');
-    countEl.textContent = `${visible} de ${cards.length} rota${cards.length !== 1 ? 's' : ''}`;
-  }
-}
-
-function clearSearch() {
-  const input = document.getElementById('searchInput');
-  input.value = '';
-  filterRoutes('');
-  input.focus();
-}
-
-// Bind search input
-document.addEventListener('DOMContentLoaded', () => {
-  const input = document.getElementById('searchInput');
-  if (input) {
-    input.addEventListener('input', (e) => filterRoutes(e.target.value));
-  }
-});
-
-// ══════════════════════════════════════
-// RENDER: ROTOGRAMA
-// ══════════════════════════════════════
-const COLORS = {
-  origem: { bg: '#1a1a1a', border: '#1a1a1a', label: '#999' },
-  completa: { bg: '#FE2627', border: '#FE2627', label: '#FE2627' },
-  parcial: { bg: '#f39c12', border: '#f39c12', label: '#f39c12' },
-  destino: { bg: '#27963c', border: '#27963c', label: '#27963c' }
-};
-
-function cardBadgeHTML(cartao) {
-  const map = {
-    truckpag: '<span class="card-badge card-truckpag">💳 TruckPag</span>',
-    shell: '<span class="card-badge card-shell">💳 Shell</span>',
-    shell_expers: '<span class="card-badge card-shell">💳 Shell Expers</span>',
-    redefrota: '<span class="card-badge card-redefrota">💳 Rede Frota</span>'
-  };
-  return map[cartao] || '';
-}
-
-function tipoLabel(tipo, ordem) {
-  if (tipo === 'origem') return 'Origem';
-  if (tipo === 'destino') return 'Destino Final';
-  const sub = tipo === 'parcial' ? ' (parcial)' : '';
-  return `${ordem}º Abastecimento`;
-}
-
-function renderStop(p) {
-  const c = COLORS[p.tipo] || COLORS.completa;
-  const icon = (p.tipo === 'origem' || p.tipo === 'destino') ? '🏁' : p.ordem;
-
-  let details = '';
-  if (p.detalhe) {
-    details += `<div class="detail-row"><span class="detail-icon">🛣️</span><span class="detail-value">${p.detalhe}</span></div>`;
-  }
-  if (p.litragem) {
-    details += `<div class="detail-row"><span class="detail-icon">⛽</span><span class="detail-label">Litragem:</span><span class="detail-value"><strong>${p.litragem}</strong>${p.tipo === 'parcial' ? ' (parcial)' : ''}</span></div>`;
-  }
-  if (p.razaoSocial) {
-    details += `<div class="detail-row"><span class="detail-icon">📋</span><span class="detail-label">Razão social:</span><span class="detail-value">${p.razaoSocial}</span></div>`;
-  }
-  if (p.vantagem) {
-    details += `<div class="detail-row"><span class="detail-icon">💰</span><span class="detail-label">Vantagem:</span><span class="detail-value">${p.vantagem}</span></div>`;
-  }
-
-  let noteHTML = '';
-  if (p.nota) {
-    noteHTML = `<div class="note-box"><p><strong>Estratégia:</strong> ${p.nota}</p></div>`;
-  }
-
-  let linkHTML = '';
-  if (p.link) {
-    linkHTML = `<a class="maps-link" href="${p.link}" target="_blank">📍 Abrir localização no Maps</a>`;
-  }
-
-  return `
-    <div class="step">
-      <div class="step-icon-row">
-        <div class="step-icon" style="background:${c.bg}">${icon}</div>
-        <div class="step-km">${p.km}</div>
-        <div class="step-connector"></div>
-      </div>
-      <div class="step-card" style="border-left-color:${c.border}">
-        <div class="step-header">
-          <div class="step-tipo" style="color:${c.label}">${tipoLabel(p.tipo, p.ordem)}</div>
-          <div class="step-nome">${p.nome}</div>
-          <div class="step-cidade">${p.cidade}</div>
-          ${cardBadgeHTML(p.cartao)}
-        </div>
-        ${details ? `<div class="step-details">${details}</div>` : ''}
-        ${noteHTML}
-        ${linkHTML}
-      </div>
-    </div>`;
-}
-
-function renderAlternative(alt) {
-  let details = '';
-  if (alt.litragem) {
-    details += `<div class="detail-row"><span class="detail-icon">⛽</span><span class="detail-label">Litragem:</span><span class="detail-value"><strong>${alt.litragem}</strong> (parcial)</span></div>`;
-  }
-  let noteHTML = alt.nota ? `<div class="note-box"><p><strong>Estratégia:</strong> ${alt.nota}</p></div>` : '';
-  let linkHTML = alt.link ? `<a class="maps-link" href="${alt.link}" target="_blank">📍 Abrir localização no Maps</a>` : '';
-
-  return `
-    <div class="ou-divider"><div class="ou-line"></div><div class="ou-text">OU</div><div class="ou-line"></div></div>
-    <div class="step">
-      <div class="step-icon-row">
-        <div class="step-icon" style="background:#f39c12;font-size:16px">${alt.ordem || '2B'}</div>
-        <div class="step-km">${alt.km}</div>
-        <div class="step-connector"></div>
-      </div>
-      <div class="step-card" style="border-left-color:#f39c12;border-style:dashed">
-        <div class="step-header">
-          <div class="step-tipo" style="color:#f39c12">Opção B</div>
-          <div class="step-nome">${alt.nome}</div>
-          <div class="step-cidade">${alt.cidade}</div>
-          ${cardBadgeHTML(alt.cartao)}
-        </div>
-        ${details ? `<div class="step-details">${details}</div>` : ''}
-        ${noteHTML}
-        ${linkHTML}
-      </div>
-    </div>`;
-}
-
-function renderRoute(route) {
-  // Banner
-  let html = `
-    <div class="rota-banner">
-      <h2>${route.nome.replace('→', '<span>→</span>')}</h2>
-      <div class="rota-badges"><span class="badge">${route.estados}</span></div>
-    </div>`;
-
-  // Legenda
-  html += `
-    <div class="wrap">
-      <div class="legenda">
-        <div class="leg-item"><div class="leg-dot" style="background:#1a1a1a"></div> Origem / Destino</div>
-        <div class="leg-item"><div class="leg-dot" style="background:#FE2627"></div> Completa tanque</div>
-        <div class="leg-item"><div class="leg-dot" style="background:#f39c12"></div> Parcial (200L)</div>
-        <div class="leg-item"><div class="leg-dot" style="background:#27963c"></div> Destino final</div>
-      </div>`;
-
-  // Link rota completa
-  if (route.linkRota) {
-    html += `<a class="maps-link maps-link-rota" href="${route.linkRota}" target="_blank" style="margin-bottom:16px">📍 Ver rota completa no Maps</a>`;
-  }
-
-  // Timeline
-  html += '<div class="timeline">';
-  for (const p of route.paradas) {
-    html += renderStop(p);
-    if (p.alternativa) {
-      html += renderAlternative(p.alternativa);
-    }
-  }
-  html += '</div>';
-
-  // Footer resumo
-  const fuelStops = route.paradas.filter(p => p.tipo === 'completa' || p.tipo === 'parcial');
-  if (fuelStops.length > 0) {
-    html += `</div><div class="footer"><div class="footer-title">Resumo Rápido</div><div class="footer-grid">`;
-    for (const s of fuelStops) {
-      const cartaoName = { truckpag: 'TruckPag', shell: 'Shell', redefrota: 'Rede Frota' }[s.cartao] || s.cartao;
-      const litLabel = s.tipo === 'parcial' ? s.litragem : 'Completa';
-      html += `
-        <div class="footer-item">
-          <div class="footer-num">${s.ordem}</div>
-          <div class="footer-info">
-            <div class="footer-step-name">${s.nome}${s.alternativa ? ` <span style="color:#FE2627">ou</span> ${s.alternativa.nome}` : ''}</div>
-            <div class="footer-step-detail">${s.cidade.split('—')[0].trim()} · ${litLabel} · ${cartaoName}</div>
-          </div>
-        </div>`;
-    }
-    html += '</div></div>';
-  } else {
-    html += '</div>';
-  }
-
-  return html;
-}
-
-// ══════════════════════════════════════
-// NAVIGATION
-// ══════════════════════════════════════
-function showHome() {
-  document.getElementById('screenHome').classList.add('active');
-  document.getElementById('screenRoute').classList.remove('active');
-  document.getElementById('btnBack').classList.remove('visible');
-  document.getElementById('headerLabel').textContent = 'Rotogramas';
-  document.getElementById('headerSub').textContent = 'Abastecimento da frota';
-  // Manter o texto da busca mas não limpar, para o usuário continuar de onde parou
-  window.scrollTo(0, 0);
-}
-
-function showRoute(index) {
-  const route = routes[index];
-  document.getElementById('routeContent').innerHTML = renderRoute(route);
-  document.getElementById('screenHome').classList.remove('active');
-  document.getElementById('screenRoute').classList.add('active');
-  document.getElementById('btnBack').classList.add('visible');
-  document.getElementById('headerLabel').textContent = 'Rotograma';
-  document.getElementById('headerSub').textContent = route.subtitulo || route.nome;
-  window.scrollTo(0, 0);
-}
-
-// ══════════════════════════════════════
-// SHEET URL CONFIG
-// ══════════════════════════════════════
-function saveSheetUrl() {
-  const url = document.getElementById('sheetUrl').value.trim();
-  if (url) {
-    localStorage.setItem('rotograma_sheet_url', url);
-  } else {
-    localStorage.removeItem('rotograma_sheet_url');
-  }
-  loadData();
-}
-
-// ══════════════════════════════════════
+// ══════════════════════════════════════════
 // INIT
-// ══════════════════════════════════════
-async function loadData() {
-  const statusBar = document.getElementById('statusBar');
-  const statusText = document.getElementById('statusText');
-
-  const savedUrl = localStorage.getItem('rotograma_sheet_url');
-  if (savedUrl) {
-    document.getElementById('sheetUrl').value = savedUrl;
-    statusBar.className = 'home-status';
-    statusText.textContent = 'Buscando dados da planilha...';
-
-    const sheetData = await fetchFromSheet(savedUrl);
-    if (sheetData && sheetData.length > 0) {
-      routes = sheetData;
-      dataSource = 'sheet';
-      statusBar.className = 'home-status';
-      statusText.textContent = `✓ ${routes.length} rota(s) da planilha · Atualizado agora`;
-    } else {
-      routes = DEMO_DATA;
-      dataSource = 'demo';
-      statusBar.className = 'home-status error';
-      statusText.textContent = '✕ Erro na planilha — usando dados de demonstração';
-    }
-  } else {
-    routes = DEMO_DATA;
-    dataSource = 'demo';
-    statusBar.className = 'home-status offline';
-    statusText.textContent = 'Dados de demonstração — conecte uma planilha';
-  }
-
-  renderRouteList();
+// ══════════════════════════════════════════
+async function loadData(){
+  const sb=document.getElementById('statusBar'),st=document.getElementById('statusText'),dot=sb.querySelector('.dot');
+  const url=localStorage.getItem('rotograma_sheet_url');
+  if(url){document.getElementById('sheetUrl').value=url;st.textContent='Buscando planilha...';const d=await fetchFromSheet(url);if(d&&d.length){routes=d;dataSource='sheet';dot.className='dot on';st.textContent=`✓ ${routes.length} rota(s) da planilha`}else{routes=DEMO_DATA;dataSource='demo';dot.className='dot demo';st.textContent='Erro na planilha — dados de demonstração'}}
+  else{routes=DEMO_DATA;dataSource='demo';dot.className='dot demo';st.textContent='Dados de demonstração'}
+  renderHome();
 }
 
-// PWA Install
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault();
-  deferredPrompt = e;
-  document.getElementById('installBanner').classList.add('show');
-});
-
-document.getElementById('installBtn')?.addEventListener('click', async () => {
-  if (!deferredPrompt) return;
-  deferredPrompt.prompt();
-  await deferredPrompt.userChoice;
-  deferredPrompt = null;
-  document.getElementById('installBanner').classList.remove('show');
-});
-
-document.getElementById('installDismiss')?.addEventListener('click', () => {
-  document.getElementById('installBanner').classList.remove('show');
-});
-
-// Register SW
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js').catch(() => {});
-}
-
-// Boot
+// PWA
+let dp;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();dp=e;document.getElementById('installBanner').classList.add('show')});
+document.getElementById('installBtn')?.addEventListener('click',async()=>{if(!dp)return;dp.prompt();await dp.userChoice;dp=null;document.getElementById('installBanner').classList.remove('show')});
+document.getElementById('installDismiss')?.addEventListener('click',()=>{document.getElementById('installBanner').classList.remove('show')});
+if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 loadData();
 </script>
 </body>
