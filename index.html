@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1a1a1a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Rotogramas — Rodoviário Confiança</title>
+<link rel="manifest" href="./manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #f0f0f0; font-family: 'Barlow', sans-serif; color: #1a1a1a;
+    -webkit-text-size-adjust: 100%; min-height: 100vh;
+    overscroll-behavior-y: contain;
+  }
+
+  /* ═══ HEADER ═══ */
+  .header {
+    background: #1a1a1a; padding: 14px 16px;
+    display: flex; align-items: center; gap: 12px;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .header-back {
+    background: none; border: none; color: #fff; font-size: 24px;
+    cursor: pointer; padding: 4px 8px; margin: -4px -4px -4px -8px;
+    display: none; min-width: 40px; min-height: 40px;
+    align-items: center; justify-content: center;
+  }
+  .header-back.visible { display: flex; }
+  .logo-c { font-family:'Barlow Condensed',sans-serif; font-size:32px; font-weight:700; color:#FE2627; line-height:1; }
+  .logo-text { display:flex; flex-direction:column; }
+  .logo-name { font-family:'Barlow Condensed',sans-serif; font-size:13px; font-weight:700; color:#fff; letter-spacing:.8px; }
+  .logo-slogan { font-size:9px; color:#aaa; letter-spacing:.4px; }
+  .header-title { margin-left:auto; text-align:right; }
+  .header-title h1 { font-family:'Barlow Condensed',sans-serif; font-size:13px; font-weight:700; color:#FE2627; letter-spacing:.8px; text-transform:uppercase; }
+  .header-title p { font-size:10px; color:#888; }
+
+  /* ═══ TELA: LISTA DE ROTAS ═══ */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  .home-banner {
+    background: linear-gradient(135deg, #1a6fb5, #0d4f82);
+    padding: 24px 16px 20px; text-align: center;
+  }
+  .home-banner h2 {
+    font-family:'Barlow Condensed',sans-serif; font-size: 22px; font-weight: 700;
+    color: #fff; letter-spacing: .8px;
+  }
+  .home-banner p { font-size: 13px; color: #9dd5ff; margin-top: 4px; }
+
+  .home-status {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 10px 16px; background: #e6f7e9; font-size: 12px; color: #1a7a2e; font-weight: 600;
+  }
+  .home-status.offline { background: #fff4e0; color: #b8860b; }
+  .home-status.error { background: #ffe6e6; color: #c0392b; }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #27963c; }
+  .home-status.offline .status-dot { background: #f39c12; }
+  .home-status.error .status-dot { background: #c0392b; }
+
+  /* ═══ SEARCH BAR ═══ */
+  .search-bar {
+    padding: 12px 12px 0; max-width: 480px; margin: 0 auto;
+  }
+  .search-wrap {
+    position: relative; display: flex; align-items: center;
+  }
+  .search-icon {
+    position: absolute; left: 14px; font-size: 18px; color: #999;
+    pointer-events: none;
+  }
+  .search-input {
+    width: 100%; padding: 14px 44px 14px 42px;
+    border: 2px solid #e0e0e0; border-radius: 12px;
+    font-family: 'Barlow', sans-serif; font-size: 15px; color: #333;
+    background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.04);
+    transition: border-color .15s;
+    -webkit-appearance: none; appearance: none;
+  }
+  .search-input:focus { outline: none; border-color: #1a6fb5; }
+  .search-input::placeholder { color: #bbb; }
+  .search-clear {
+    position: absolute; right: 10px;
+    background: #ddd; border: none; color: #666;
+    width: 32px; height: 32px; border-radius: 50%;
+    font-size: 16px; cursor: pointer;
+    display: none; align-items: center; justify-content: center;
+  }
+  .search-clear.visible { display: flex; }
+  .search-clear:active { background: #ccc; }
+  .search-count {
+    font-size: 12px; color: #999; text-align: center;
+    padding: 8px 0 0; font-weight: 500;
+  }
+  .search-count.hidden { display: none; }
+  .route-card.hidden { display: none; }
+  .no-results {
+    text-align: center; padding: 40px 20px;
+    font-size: 15px; color: #999;
+  }
+  .no-results span { font-size: 36px; display: block; margin-bottom: 10px; }
+
+  .route-list { padding: 16px 12px 32px; max-width: 480px; margin: 0 auto; }
+  .route-list-title {
+    font-family:'Barlow Condensed',sans-serif; font-size: 14px; font-weight: 700;
+    color: #999; letter-spacing: 1px; text-transform: uppercase;
+    margin-bottom: 12px; padding: 0 4px;
+  }
+
+  .route-card {
+    background: #fff; border-radius: 14px; padding: 16px;
+    margin-bottom: 10px; box-shadow: 0 1px 6px rgba(0,0,0,.07);
+    display: flex; align-items: center; gap: 14px;
+    cursor: pointer; border-left: 5px solid #1a6fb5;
+    transition: transform .1s; -webkit-tap-highlight-color: transparent;
+  }
+  .route-card:active { transform: scale(.98); }
+  .route-num {
+    font-family:'Barlow Condensed',sans-serif; font-size: 28px; font-weight: 700;
+    color: #1a6fb5; min-width: 36px; text-align: center;
+  }
+  .route-info { flex: 1; }
+  .route-name {
+    font-family:'Barlow Condensed',sans-serif; font-size: 18px; font-weight: 700;
+    color: #1a1a1a; line-height: 1.2;
+  }
+  .route-detail { font-size: 12px; color: #888; margin-top: 2px; }
+  .route-stops { font-size: 11px; color: #1a6fb5; font-weight: 600; margin-top: 4px; }
+  .route-arrow { font-size: 20px; color: #ccc; }
+
+  /* ═══ TELA: ROTOGRAMA ═══ */
+  .rota-banner {
+    background: linear-gradient(135deg, #1a6fb5, #0d4f82);
+    padding: 16px; display: flex; flex-direction: column; gap: 8px;
+  }
+  .rota-banner h2 {
+    font-family:'Barlow Condensed',sans-serif; font-size: 24px; font-weight: 700;
+    color: #fff; letter-spacing: .8px;
+  }
+  .rota-banner h2 span { color: #9dd5ff; }
+  .rota-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+  .badge {
+    font-family:'Barlow Condensed',sans-serif; font-size: 12px; font-weight: 600;
+    padding: 4px 12px; border-radius: 20px; letter-spacing: .5px;
+    background: rgba(255,255,255,.15); color: #fff;
+  }
+
+  .wrap { max-width: 480px; margin: 0 auto; padding: 16px 12px 32px; }
+
+  .legenda {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; padding: 12px 14px;
+    background: #fff; border-radius: 12px; margin-bottom: 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  }
+  .leg-item { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; color: #555; }
+  .leg-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+  /* TIMELINE */
+  .timeline { display: flex; flex-direction: column; gap: 0; }
+
+  .step { display: flex; flex-direction: column; }
+  .step-icon-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 0 4px; margin-bottom: 8px;
+  }
+  .step-icon {
+    width: 48px; height: 48px; border-radius: 50%; display: flex;
+    align-items: center; justify-content: center;
+    font-size: 22px; color: #fff; font-weight: 700;
+    box-shadow: 0 2px 8px rgba(0,0,0,.18); flex-shrink: 0;
+  }
+  .step-km {
+    font-family:'Barlow Condensed',sans-serif; font-size: 13px; font-weight: 600; color: #999;
+  }
+  .step-connector { flex: 1; height: 2px; background: #ddd; border-radius: 1px; }
+
+  .step-card {
+    background: #fff; border-radius: 14px; padding: 16px;
+    box-shadow: 0 1px 6px rgba(0,0,0,.07); margin-bottom: 12px;
+    border-left: 5px solid transparent;
+  }
+
+  .step-header { display: flex; flex-direction: column; gap: 6px; }
+  .step-tipo {
+    font-family:'Barlow Condensed',sans-serif; font-size: 12px; font-weight: 600;
+    letter-spacing: 1px; text-transform: uppercase;
+  }
+  .step-nome {
+    font-family:'Barlow Condensed',sans-serif; font-size: 22px; font-weight: 700;
+    line-height: 1.15; color: #1a1a1a;
+  }
+  .step-cidade { font-size: 14px; color: #777; margin-top: 1px; }
+
+  .step-details { margin-top: 14px; display: flex; flex-direction: column; gap: 10px; }
+  .detail-row { display: flex; align-items: flex-start; gap: 8px; font-size: 14px; line-height: 1.4; }
+  .detail-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .detail-label { font-weight: 600; color: #555; min-width: 75px; flex-shrink: 0; }
+  .detail-value { color: #333; }
+
+  .card-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-family:'Barlow Condensed',sans-serif; font-size: 14px; font-weight: 600;
+    padding: 6px 14px; border-radius: 8px; letter-spacing: .3px; margin-top: 4px;
+  }
+  .card-truckpag { background: #e6f7e9; color: #1a7a2e; }
+  .card-shell { background: #fff4e0; color: #b8860b; }
+  .card-redefrota { background: #e6eeff; color: #2c5aa0; }
+
+  .maps-link {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    font-size: 14px; color: #fff; text-decoration: none;
+    font-weight: 600; margin-top: 14px;
+    background: #1a6fb5; border-radius: 10px;
+    padding: 12px 16px; min-height: 48px; text-align: center;
+    box-shadow: 0 2px 6px rgba(26,111,181,.25);
+  }
+  .maps-link:active { background: #155a96; }
+  .maps-link-rota { background: #27963c; box-shadow: 0 2px 6px rgba(39,150,60,.25); }
+  .maps-link-rota:active { background: #1f7a31; }
+
+  .ou-divider {
+    display: flex; align-items: center; gap: 10px; padding: 4px 0;
+  }
+  .ou-line { flex: 1; height: 2px; background: #ddd; border-radius: 1px; }
+  .ou-text {
+    font-family:'Barlow Condensed',sans-serif; font-size: 15px; font-weight: 700;
+    color: #FE2627; background: #f0f0f0; padding: 4px 16px; border-radius: 12px;
+  }
+
+  .note-box {
+    background: #eef6ff; border-left: 4px solid #1a6fb5; border-radius: 10px;
+    padding: 12px 14px; margin-top: 12px;
+  }
+  .note-box p { font-size: 13.5px; color: #333; line-height: 1.45; }
+  .note-box strong { color: #1a6fb5; }
+
+  /* FOOTER */
+  .footer {
+    background: #1a1a1a; padding: 18px 16px; margin-top: 8px;
+  }
+  .footer-title {
+    font-family:'Barlow Condensed',sans-serif; font-size: 14px; font-weight: 700;
+    color: #FE2627; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px;
+  }
+  .footer-grid { display: flex; flex-direction: column; gap: 8px; }
+  .footer-item {
+    background: rgba(255,255,255,.06); border-radius: 10px; padding: 12px 14px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .footer-num {
+    font-family:'Barlow Condensed',sans-serif; font-size: 20px; font-weight: 700;
+    color: #FE2627; min-width: 28px; text-align: center;
+  }
+  .footer-info { flex: 1; }
+  .footer-step-name {
+    font-family:'Barlow Condensed',sans-serif; font-size: 15px; font-weight: 700; color: #fff;
+  }
+  .footer-step-detail { font-size: 12px; color: #aaa; margin-top: 2px; }
+
+  /* LOADING */
+  .loading {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 60px 20px; gap: 16px;
+  }
+  .spinner {
+    width: 40px; height: 40px; border: 4px solid #ddd;
+    border-top-color: #FE2627; border-radius: 50%;
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading p { font-size: 14px; color: #888; }
+
+  /* CONFIG BAR */
+  .config-bar {
+    background: #fff; padding: 12px 16px; margin: 12px 12px 0;
+    border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    max-width: 456px; margin-left: auto; margin-right: auto;
+  }
+  .config-bar label {
+    font-family:'Barlow Condensed',sans-serif; font-size: 12px; font-weight: 600;
+    color: #999; letter-spacing: .5px; text-transform: uppercase;
+    display: block; margin-bottom: 6px;
+  }
+  .config-bar input {
+    width: 100%; padding: 10px 12px; border: 2px solid #ddd;
+    border-radius: 8px; font-size: 13px; font-family: 'Barlow', sans-serif;
+  }
+  .config-bar input:focus { outline: none; border-color: #1a6fb5; }
+  .config-bar .config-hint { font-size: 11px; color: #aaa; margin-top: 6px; line-height: 1.4; }
+  .config-bar button {
+    margin-top: 10px; width: 100%; padding: 12px;
+    background: #1a6fb5; color: #fff; border: none; border-radius: 8px;
+    font-family:'Barlow Condensed',sans-serif; font-size: 15px; font-weight: 700;
+    cursor: pointer; min-height: 48px;
+  }
+  .config-bar button:active { background: #155a96; }
+
+  /* INSTALL PROMPT */
+  .install-banner {
+    display: none; background: #1a1a1a; padding: 12px 16px;
+    align-items: center; gap: 12px;
+  }
+  .install-banner.show { display: flex; }
+  .install-banner p { flex: 1; font-size: 13px; color: #fff; }
+  .install-btn {
+    background: #FE2627; color: #fff; border: none; border-radius: 8px;
+    padding: 10px 18px; font-family:'Barlow Condensed',sans-serif;
+    font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap;
+    min-height: 44px;
+  }
+  .install-dismiss {
+    background: none; border: none; color: #888; font-size: 20px;
+    cursor: pointer; padding: 4px;
+  }
+
+  @media (min-width: 600px) {
+    .wrap, .route-list { max-width: 640px; }
+    .footer-grid { display: grid; grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <button class="header-back" id="btnBack" onclick="showHome()">←</button>
+  <div class="logo-c">C</div>
+  <div class="logo-text">
+    <div class="logo-name">RODOVIÁRIO CONFIANÇA</div>
+    <div class="logo-slogan">Segurança que move</div>
+  </div>
+  <div class="header-title">
+    <h1 id="headerLabel">Rotogramas</h1>
+    <p id="headerSub">Abastecimento da frota</p>
+  </div>
+</div>
+
+<!-- INSTALL BANNER -->
+<div class="install-banner" id="installBanner">
+  <p>Instale o app na tela inicial</p>
+  <button class="install-btn" id="installBtn">Instalar</button>
+  <button class="install-dismiss" id="installDismiss">✕</button>
+</div>
+
+<!-- ═══════════════════════
+     TELA 1: LISTA DE ROTAS
+═══════════════════════ -->
+<div class="screen active" id="screenHome">
+
+  <div class="home-banner">
+    <h2>Rotogramas de Abastecimento</h2>
+    <p>Toque na rota para ver os pontos de parada</p>
+  </div>
+
+  <div id="statusBar" class="home-status">
+    <div class="status-dot"></div>
+    <span id="statusText">Dados carregados</span>
+  </div>
+
+  <!-- SEARCH BAR -->
+  <div class="search-bar">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" class="search-input" id="searchInput"
+             placeholder="Buscar rota, cidade, estado..."
+             autocomplete="off" autocorrect="off" spellcheck="false">
+      <button class="search-clear" id="searchClear" onclick="clearSearch()">✕</button>
+    </div>
+    <div class="search-count hidden" id="searchCount"></div>
+  </div>
+
+  <div class="route-list" id="routeList">
+    <div class="loading" id="homeLoading">
+      <div class="spinner"></div>
+      <p>Carregando rotas...</p>
+    </div>
+  </div>
+
+  <!-- CONFIG: URL DA PLANILHA -->
+  <div class="config-bar">
+    <label>🔗 URL da Planilha Google</label>
+    <input type="url" id="sheetUrl" placeholder="Cole aqui a URL da planilha publicada">
+    <div class="config-hint">
+      No Google Planilhas: Arquivo → Compartilhar → Publicar na Web → Publicar como CSV.
+      Cole a URL gerada aqui. Deixe vazio para usar dados de demonstração.
+    </div>
+    <button onclick="saveSheetUrl()">Salvar e atualizar</button>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════
+     TELA 2: ROTOGRAMA
+═══════════════════════ -->
+<div class="screen" id="screenRoute">
+  <div id="routeContent"></div>
+</div>
+
+<script>
+// ══════════════════════════════════════
+// DADOS DE DEMONSTRAÇÃO
+// (usados quando não há planilha conectada)
+// ══════════════════════════════════════
+const DEMO_DATA = [
+  {
+    id: 'goiania-cabedelo',
+    nome: 'Goiânia → Cabedelo',
+    estados: 'GO → BA → SE → PE → PB',
+    numero: '04',
+    subtitulo: 'Rota 04 — Nordeste',
+    linkRota: 'https://maps.app.goo.gl/fvaMjeExq6nCp8yi6',
+    paradas: [
+      {
+        ordem: 0, tipo: 'origem',
+        nome: 'Goiânia — GO', cidade: 'Saída da garagem',
+        detalhe: 'BR-153 → BR-020 → BR-242 → BR-116 → BR-101',
+        km: 'KM 0'
+      },
+      {
+        ordem: 1, tipo: 'completa',
+        nome: 'Posto Cerradão', cidade: 'Luís Eduardo Magalhães — BA',
+        razaoSocial: 'Auto Posto São Roque — Cerradão',
+        litragem: 'Completa o tanque', cartao: 'truckpag',
+        km: '~850 km',
+        link: 'https://maps.app.goo.gl/Z5kyJdDhnuRHzedv6'
+      },
+      {
+        ordem: 2, tipo: 'parcial',
+        nome: 'Posto Irmão Caminhoneiro II', cidade: 'Itaberaba — BA',
+        litragem: '200 litros', cartao: 'truckpag',
+        km: '~1.400 km',
+        nota: 'Abastecer somente 200L para chegar até Sergipe, onde o diesel é mais barato, e completar o tanque lá.',
+        link: 'https://maps.app.goo.gl/CNqGn28QPT3yDFpd8',
+        alternativa: {
+          nome: 'Posto São Caetano', cidade: 'Santo Estêvão — BA',
+          litragem: '200 litros', cartao: 'truckpag',
+          km: '~1.500 km',
+          nota: 'Mesma lógica — 200L para chegar até Sergipe e completar tanque em posto mais barato.',
+          link: 'https://maps.app.goo.gl/CNqGn28QPT3yDFpd8'
+        }
+      },
+      {
+        ordem: 3, tipo: 'completa',
+        nome: 'Posto Azul — Atalaia', cidade: 'Santa Luzia do Itanhi — SE',
+        litragem: 'Completa o tanque', cartao: 'shell',
+        km: '~1.900 km',
+        vantagem: 'Diesel mais barato na região de Sergipe',
+        link: 'https://maps.app.goo.gl/eApQPbcLipGX6tsi6'
+      },
+      {
+        ordem: 4, tipo: 'completa',
+        nome: 'Posto CJCM', cidade: 'Igarassu — PE',
+        razaoSocial: 'Posto Shell (Igarassu)',
+        litragem: 'Completa o tanque', cartao: 'shell',
+        km: '~2.300 km',
+        link: 'https://maps.app.goo.gl/ynhhNNWJTvuyi5Jt9'
+      },
+      {
+        ordem: 5, tipo: 'destino',
+        nome: 'Cabedelo — PB', cidade: 'Chegada ao destino',
+        km: '~2.450 km'
+      }
+    ]
+  },
+  {
+    id: 'goiania-smateus',
+    nome: 'Goiânia → São Mateus do Sul',
+    estados: 'GO → SP → PR',
+    numero: '01',
+    subtitulo: 'Rota 01 — Sul',
+    linkRota: '',
+    paradas: [
+      { ordem: 0, tipo: 'origem', nome: 'Goiânia — GO', cidade: 'Saída da garagem', km: 'KM 0' },
+      { ordem: 1, tipo: 'destino', nome: 'São Mateus do Sul — PR', cidade: 'Sem abastecer na ida — abastece no Cais Ponta Grossa na volta', km: '~1.200 km' }
+    ]
+  },
+  {
+    id: 'goiania-sjcampos',
+    nome: 'Goiânia → São José dos Campos',
+    estados: 'GO → MG → SP',
+    numero: '02',
+    subtitulo: 'Rota 02 — Sudeste',
+    linkRota: '',
+    paradas: [
+      { ordem: 0, tipo: 'origem', nome: 'Goiânia — GO', cidade: 'Saída da garagem', km: 'KM 0' },
+      { ordem: 1, tipo: 'destino', nome: 'São José dos Campos — SP', cidade: 'Sem abastecer na ida — abastece no CAVAP', km: '~900 km' }
+    ]
+  }
+];
+
+// ══════════════════════════════════════
+// STATE
+// ══════════════════════════════════════
+let routes = [];
+let dataSource = 'demo'; // 'demo' | 'sheet'
+
+// ══════════════════════════════════════
+// GOOGLE SHEETS PARSER
+// ══════════════════════════════════════
+async function fetchFromSheet(url) {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Fetch failed');
+    const text = await res.text();
+    return parseCSV(text);
+  } catch (e) {
+    console.error('Sheet fetch error:', e);
+    return null;
+  }
+}
+
+function parseCSV(text) {
+  const lines = text.split('\n').map(l => {
+    const result = [];
+    let current = '', inQuote = false;
+    for (let i = 0; i < l.length; i++) {
+      const ch = l[i];
+      if (ch === '"') { inQuote = !inQuote; }
+      else if (ch === ',' && !inQuote) { result.push(current.trim()); current = ''; }
+      else { current += ch; }
+    }
+    result.push(current.trim());
+    return result;
+  });
+
+  if (lines.length < 2) return null;
+
+  const headers = lines[0].map(h => h.toLowerCase().replace(/\s+/g, '_'));
+  const rows = lines.slice(1).filter(r => r.length >= 3 && r[0]);
+
+  // Group by route
+  const routeMap = {};
+  for (const row of rows) {
+    const obj = {};
+    headers.forEach((h, i) => { obj[h] = row[i] || ''; });
+
+    const routeId = obj.rota_id || obj.rota || 'default';
+    if (!routeMap[routeId]) {
+      routeMap[routeId] = {
+        id: routeId,
+        nome: obj.rota_nome || routeId,
+        estados: obj.estados || '',
+        numero: obj.rota_numero || '?',
+        subtitulo: obj.subtitulo || '',
+        linkRota: obj.link_rota || '',
+        paradas: []
+      };
+    }
+
+    const parada = {
+      ordem: parseInt(obj.ordem) || 0,
+      tipo: obj.tipo || 'completa',
+      nome: obj.posto || obj.nome || '',
+      cidade: obj.cidade || '',
+      litragem: obj.litragem || '',
+      cartao: (obj.cartao || '').toLowerCase(),
+      km: obj.km || '',
+      link: obj.link_maps || obj.link || '',
+      razaoSocial: obj.razao_social || '',
+      vantagem: obj.vantagem || '',
+      nota: obj.nota || '',
+      detalhe: obj.detalhe || ''
+    };
+
+    // Check for alternativa columns
+    if (obj.alt_posto) {
+      parada.alternativa = {
+        nome: obj.alt_posto,
+        cidade: obj.alt_cidade || '',
+        litragem: obj.alt_litragem || parada.litragem,
+        cartao: (obj.alt_cartao || parada.cartao).toLowerCase(),
+        km: obj.alt_km || '',
+        nota: obj.alt_nota || '',
+        link: obj.alt_link || ''
+      };
+    }
+
+    routeMap[routeId].paradas.push(parada);
+  }
+
+  const result = Object.values(routeMap);
+  result.forEach(r => r.paradas.sort((a, b) => a.ordem - b.ordem));
+  return result;
+}
+
+// ══════════════════════════════════════
+// RENDER: LISTA DE ROTAS
+// ══════════════════════════════════════
+function buildSearchText(r) {
+  // Concatena tudo que faz sentido buscar: nome da rota, estados, postos, cidades, cartões
+  const parts = [r.nome, r.estados, r.subtitulo, r.numero];
+  for (const p of r.paradas) {
+    parts.push(p.nome, p.cidade, p.cartao, p.razaoSocial || '', p.vantagem || '');
+    if (p.alternativa) {
+      parts.push(p.alternativa.nome, p.alternativa.cidade);
+    }
+  }
+  return parts.join(' ').toLowerCase();
+}
+
+function renderRouteList() {
+  const list = document.getElementById('routeList');
+  const loading = document.getElementById('homeLoading');
+  if (loading) loading.remove();
+
+  let html = '<div class="route-list-title" id="routeListTitle">Rotas disponíveis</div>';
+
+  routes.forEach((r, i) => {
+    const stops = r.paradas.filter(p => p.tipo !== 'origem' && p.tipo !== 'destino').length;
+    const searchText = buildSearchText(r);
+    html += `
+      <div class="route-card" data-index="${i}" data-search="${searchText.replace(/"/g, '&quot;')}" onclick="showRoute(${i})">
+        <div class="route-num">${r.numero || (i + 1)}</div>
+        <div class="route-info">
+          <div class="route-name">${r.nome}</div>
+          <div class="route-detail">${r.estados}</div>
+          <div class="route-stops">⛽ ${stops} ponto${stops !== 1 ? 's' : ''} de abastecimento</div>
+        </div>
+        <div class="route-arrow">›</div>
+      </div>`;
+  });
+
+  html += '<div class="no-results" id="noResults" style="display:none"><span>🔍</span>Nenhuma rota encontrada</div>';
+  list.innerHTML = html;
+
+  // Re-apply active search if any
+  const input = document.getElementById('searchInput');
+  if (input && input.value.trim()) filterRoutes(input.value);
+}
+
+// ══════════════════════════════════════
+// SEARCH / FILTER
+// ══════════════════════════════════════
+function normalizeText(str) {
+  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+
+function filterRoutes(query) {
+  const cards = document.querySelectorAll('.route-card');
+  const noResults = document.getElementById('noResults');
+  const countEl = document.getElementById('searchCount');
+  const clearBtn = document.getElementById('searchClear');
+  const titleEl = document.getElementById('routeListTitle');
+
+  const q = normalizeText(query.trim());
+
+  if (!q) {
+    cards.forEach(c => c.classList.remove('hidden'));
+    noResults.style.display = 'none';
+    countEl.classList.add('hidden');
+    clearBtn.classList.remove('visible');
+    if (titleEl) titleEl.textContent = 'Rotas disponíveis';
+    return;
+  }
+
+  clearBtn.classList.add('visible');
+  const terms = q.split(/\s+/);
+  let visible = 0;
+
+  cards.forEach(card => {
+    const text = normalizeText(card.dataset.search || '');
+    const match = terms.every(t => text.includes(t));
+    card.classList.toggle('hidden', !match);
+    if (match) visible++;
+  });
+
+  if (visible === 0) {
+    noResults.style.display = 'block';
+    countEl.classList.add('hidden');
+  } else {
+    noResults.style.display = 'none';
+    countEl.classList.remove('hidden');
+    countEl.textContent = `${visible} de ${cards.length} rota${cards.length !== 1 ? 's' : ''}`;
+  }
+
+  if (titleEl) titleEl.textContent = visible === cards.length ? 'Rotas disponíveis' : 'Resultados da busca';
+}
+
+function clearSearch() {
+  const input = document.getElementById('searchInput');
+  input.value = '';
+  filterRoutes('');
+  input.focus();
+}
+
+// Bind search input
+document.addEventListener('DOMContentLoaded', () => {
+  const input = document.getElementById('searchInput');
+  if (input) {
+    input.addEventListener('input', (e) => filterRoutes(e.target.value));
+  }
+});
+
+// ══════════════════════════════════════
+// RENDER: ROTOGRAMA
+// ══════════════════════════════════════
+const COLORS = {
+  origem: { bg: '#1a1a1a', border: '#1a1a1a', label: '#999' },
+  completa: { bg: '#FE2627', border: '#FE2627', label: '#FE2627' },
+  parcial: { bg: '#f39c12', border: '#f39c12', label: '#f39c12' },
+  destino: { bg: '#27963c', border: '#27963c', label: '#27963c' }
+};
+
+function cardBadgeHTML(cartao) {
+  const map = {
+    truckpag: '<span class="card-badge card-truckpag">💳 TruckPag</span>',
+    shell: '<span class="card-badge card-shell">💳 Shell</span>',
+    redefrota: '<span class="card-badge card-redefrota">💳 Rede Frota</span>'
+  };
+  return map[cartao] || '';
+}
+
+function tipoLabel(tipo, ordem) {
+  if (tipo === 'origem') return 'Origem';
+  if (tipo === 'destino') return 'Destino Final';
+  const sub = tipo === 'parcial' ? ' (parcial)' : '';
+  return `${ordem}º Abastecimento`;
+}
+
+function renderStop(p) {
+  const c = COLORS[p.tipo] || COLORS.completa;
+  const icon = (p.tipo === 'origem' || p.tipo === 'destino') ? '🏁' : p.ordem;
+
+  let details = '';
+  if (p.detalhe) {
+    details += `<div class="detail-row"><span class="detail-icon">🛣️</span><span class="detail-value">${p.detalhe}</span></div>`;
+  }
+  if (p.litragem) {
+    details += `<div class="detail-row"><span class="detail-icon">⛽</span><span class="detail-label">Litragem:</span><span class="detail-value"><strong>${p.litragem}</strong>${p.tipo === 'parcial' ? ' (parcial)' : ''}</span></div>`;
+  }
+  if (p.razaoSocial) {
+    details += `<div class="detail-row"><span class="detail-icon">📋</span><span class="detail-label">Razão social:</span><span class="detail-value">${p.razaoSocial}</span></div>`;
+  }
+  if (p.vantagem) {
+    details += `<div class="detail-row"><span class="detail-icon">💰</span><span class="detail-label">Vantagem:</span><span class="detail-value">${p.vantagem}</span></div>`;
+  }
+
+  let noteHTML = '';
+  if (p.nota) {
+    noteHTML = `<div class="note-box"><p><strong>Estratégia:</strong> ${p.nota}</p></div>`;
+  }
+
+  let linkHTML = '';
+  if (p.link) {
+    linkHTML = `<a class="maps-link" href="${p.link}" target="_blank">📍 Abrir localização no Maps</a>`;
+  }
+
+  return `
+    <div class="step">
+      <div class="step-icon-row">
+        <div class="step-icon" style="background:${c.bg}">${icon}</div>
+        <div class="step-km">${p.km}</div>
+        <div class="step-connector"></div>
+      </div>
+      <div class="step-card" style="border-left-color:${c.border}">
+        <div class="step-header">
+          <div class="step-tipo" style="color:${c.label}">${tipoLabel(p.tipo, p.ordem)}</div>
+          <div class="step-nome">${p.nome}</div>
+          <div class="step-cidade">${p.cidade}</div>
+          ${cardBadgeHTML(p.cartao)}
+        </div>
+        ${details ? `<div class="step-details">${details}</div>` : ''}
+        ${noteHTML}
+        ${linkHTML}
+      </div>
+    </div>`;
+}
+
+function renderAlternative(alt) {
+  let details = '';
+  if (alt.litragem) {
+    details += `<div class="detail-row"><span class="detail-icon">⛽</span><span class="detail-label">Litragem:</span><span class="detail-value"><strong>${alt.litragem}</strong> (parcial)</span></div>`;
+  }
+  let noteHTML = alt.nota ? `<div class="note-box"><p><strong>Estratégia:</strong> ${alt.nota}</p></div>` : '';
+  let linkHTML = alt.link ? `<a class="maps-link" href="${alt.link}" target="_blank">📍 Abrir localização no Maps</a>` : '';
+
+  return `
+    <div class="ou-divider"><div class="ou-line"></div><div class="ou-text">OU</div><div class="ou-line"></div></div>
+    <div class="step">
+      <div class="step-icon-row">
+        <div class="step-icon" style="background:#f39c12;font-size:16px">${alt.ordem || '2B'}</div>
+        <div class="step-km">${alt.km}</div>
+        <div class="step-connector"></div>
+      </div>
+      <div class="step-card" style="border-left-color:#f39c12;border-style:dashed">
+        <div class="step-header">
+          <div class="step-tipo" style="color:#f39c12">Opção B</div>
+          <div class="step-nome">${alt.nome}</div>
+          <div class="step-cidade">${alt.cidade}</div>
+          ${cardBadgeHTML(alt.cartao)}
+        </div>
+        ${details ? `<div class="step-details">${details}</div>` : ''}
+        ${noteHTML}
+        ${linkHTML}
+      </div>
+    </div>`;
+}
+
+function renderRoute(route) {
+  // Banner
+  let html = `
+    <div class="rota-banner">
+      <h2>${route.nome.replace('→', '<span>→</span>')}</h2>
+      <div class="rota-badges"><span class="badge">${route.estados}</span></div>
+    </div>`;
+
+  // Legenda
+  html += `
+    <div class="wrap">
+      <div class="legenda">
+        <div class="leg-item"><div class="leg-dot" style="background:#1a1a1a"></div> Origem / Destino</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#FE2627"></div> Completa tanque</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#f39c12"></div> Parcial (200L)</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#27963c"></div> Destino final</div>
+      </div>`;
+
+  // Link rota completa
+  if (route.linkRota) {
+    html += `<a class="maps-link maps-link-rota" href="${route.linkRota}" target="_blank" style="margin-bottom:16px">📍 Ver rota completa no Maps</a>`;
+  }
+
+  // Timeline
+  html += '<div class="timeline">';
+  for (const p of route.paradas) {
+    html += renderStop(p);
+    if (p.alternativa) {
+      html += renderAlternative(p.alternativa);
+    }
+  }
+  html += '</div>';
+
+  // Footer resumo
+  const fuelStops = route.paradas.filter(p => p.tipo === 'completa' || p.tipo === 'parcial');
+  if (fuelStops.length > 0) {
+    html += `</div><div class="footer"><div class="footer-title">Resumo Rápido</div><div class="footer-grid">`;
+    for (const s of fuelStops) {
+      const cartaoName = { truckpag: 'TruckPag', shell: 'Shell', redefrota: 'Rede Frota' }[s.cartao] || s.cartao;
+      const litLabel = s.tipo === 'parcial' ? s.litragem : 'Completa';
+      html += `
+        <div class="footer-item">
+          <div class="footer-num">${s.ordem}</div>
+          <div class="footer-info">
+            <div class="footer-step-name">${s.nome}${s.alternativa ? ` <span style="color:#FE2627">ou</span> ${s.alternativa.nome}` : ''}</div>
+            <div class="footer-step-detail">${s.cidade.split('—')[0].trim()} · ${litLabel} · ${cartaoName}</div>
+          </div>
+        </div>`;
+    }
+    html += '</div></div>';
+  } else {
+    html += '</div>';
+  }
+
+  return html;
+}
+
+// ══════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════
+function showHome() {
+  document.getElementById('screenHome').classList.add('active');
+  document.getElementById('screenRoute').classList.remove('active');
+  document.getElementById('btnBack').classList.remove('visible');
+  document.getElementById('headerLabel').textContent = 'Rotogramas';
+  document.getElementById('headerSub').textContent = 'Abastecimento da frota';
+  // Manter o texto da busca mas não limpar, para o usuário continuar de onde parou
+  window.scrollTo(0, 0);
+}
+
+function showRoute(index) {
+  const route = routes[index];
+  document.getElementById('routeContent').innerHTML = renderRoute(route);
+  document.getElementById('screenHome').classList.remove('active');
+  document.getElementById('screenRoute').classList.add('active');
+  document.getElementById('btnBack').classList.add('visible');
+  document.getElementById('headerLabel').textContent = 'Rotograma';
+  document.getElementById('headerSub').textContent = route.subtitulo || route.nome;
+  window.scrollTo(0, 0);
+}
+
+// ══════════════════════════════════════
+// SHEET URL CONFIG
+// ══════════════════════════════════════
+function saveSheetUrl() {
+  const url = document.getElementById('sheetUrl').value.trim();
+  if (url) {
+    localStorage.setItem('rotograma_sheet_url', url);
+  } else {
+    localStorage.removeItem('rotograma_sheet_url');
+  }
+  loadData();
+}
+
+// ══════════════════════════════════════
+// INIT
+// ══════════════════════════════════════
+async function loadData() {
+  const statusBar = document.getElementById('statusBar');
+  const statusText = document.getElementById('statusText');
+
+  const savedUrl = localStorage.getItem('rotograma_sheet_url');
+  if (savedUrl) {
+    document.getElementById('sheetUrl').value = savedUrl;
+    statusBar.className = 'home-status';
+    statusText.textContent = 'Buscando dados da planilha...';
+
+    const sheetData = await fetchFromSheet(savedUrl);
+    if (sheetData && sheetData.length > 0) {
+      routes = sheetData;
+      dataSource = 'sheet';
+      statusBar.className = 'home-status';
+      statusText.textContent = `✓ ${routes.length} rota(s) da planilha · Atualizado agora`;
+    } else {
+      routes = DEMO_DATA;
+      dataSource = 'demo';
+      statusBar.className = 'home-status error';
+      statusText.textContent = '✕ Erro na planilha — usando dados de demonstração';
+    }
+  } else {
+    routes = DEMO_DATA;
+    dataSource = 'demo';
+    statusBar.className = 'home-status offline';
+    statusText.textContent = 'Dados de demonstração — conecte uma planilha';
+  }
+
+  renderRouteList();
+}
+
+// PWA Install
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('installBanner').classList.add('show');
+});
+
+document.getElementById('installBtn')?.addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  document.getElementById('installBanner').classList.remove('show');
+});
+
+document.getElementById('installDismiss')?.addEventListener('click', () => {
+  document.getElementById('installBanner').classList.remove('show');
+});
+
+// Register SW
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
+
+// Boot
+loadData();
+</script>
+</body>
+</html>
