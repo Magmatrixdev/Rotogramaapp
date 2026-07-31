@@ -13,9 +13,7 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 ::-webkit-scrollbar{width:0;height:0}
 body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;min-height:100vh;overscroll-behavior-y:contain}
-@keyframes slideUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-
+@keyframes spin{to{transform:rotate(360deg)}}
 .screen{display:none;flex-direction:column;min-height:100vh}
 .screen.active{display:flex}
 
@@ -28,6 +26,8 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .logo-sub{font-family:'Barlow',sans-serif;font-weight:500;font-size:9.5px;letter-spacing:.28em;color:#9a9894;margin-top:3px}
 .home-heading{font-weight:700;font-size:34px;color:#1c1c1c;line-height:.95;text-transform:uppercase}
 .home-subtext{font-family:'Barlow',sans-serif;font-size:13px;color:#8a8886;margin-top:6px}
+.admin-toggle{position:absolute;top:20px;right:22px;width:42px;height:42px;border-radius:12px;background:#eae8e3;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px}
+.admin-toggle:active{background:#e4e2dd}
 
 .search-wrap{margin-top:18px;position:relative}
 .search-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);width:15px;height:15px;border:2px solid #b0aea9;border-radius:50%}
@@ -39,8 +39,6 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .search-clear.vis{display:flex}
 
 .home-scroll{flex:1;overflow-y:auto;padding:20px 22px 28px}
-
-/* REGION */
 .region{margin-bottom:26px}
 .region-hd{display:flex;align-items:center;gap:10px;margin-bottom:12px}
 .region-bar{width:4px;height:17px;background:#fe2627;border-radius:2px;flex-shrink:0}
@@ -48,35 +46,18 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .region-count{font-family:'Barlow',sans-serif;font-size:11px;color:#8a8886;background:#eae8e3;padding:2px 9px;border-radius:20px}
 .region-line{flex:1;height:1px;background:#e4e2dd}
 
-/* ROUTE CARD */
-.rcard{cursor:pointer;background:#fff;border:1.5px solid #e8e6e1;border-radius:16px;padding:15px 16px;display:flex;align-items:center;gap:14px;margin-bottom:10px;box-shadow:0 2px 10px rgba(40,38,34,.04);transition:border-color .15s,transform .1s}
+.rcard{cursor:pointer;background:#fff;border:1.5px solid #e8e6e1;border-radius:16px;padding:15px 16px;display:flex;align-items:center;gap:14px;margin-bottom:10px;box-shadow:0 2px 10px rgba(40,38,34,.04);transition:transform .1s}
 .rcard:active{transform:scale(.98);border-color:#fe2627}
-.rcard-uf{flex:0 0 auto;width:46px;height:46px;border-radius:12px;background:#262625;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;color:#f4f4f2;line-height:1}
+.rcard-uf{flex:0 0 auto;width:46px;height:46px;border-radius:12px;background:#262625;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;color:#f4f4f2}
 .rcard-info{flex:1;min-width:0}
 .rcard-nome{font-weight:700;font-size:18px;color:#1c1c1c;line-height:1.05;text-transform:uppercase}
 .rcard-detail{font-family:'Barlow',sans-serif;font-size:12px;color:#8a8886;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rcard-stats{display:flex;gap:8px;margin-top:7px;font-family:'Barlow',sans-serif;font-size:11.5px;color:#9a9894}
 .rcard-stats .red{color:#fe2627;font-weight:600}
 .rcard-stats .dot{color:#cfcdc7}
-.rcard-arrow{flex:0 0 auto;color:#c2c0ba;font-size:22px;font-weight:300}
-
+.rcard-arrow{flex:0 0 auto;color:#c2c0ba;font-size:22px}
 .no-results{text-align:center;padding:50px 20px;color:#9a9894;font-family:'Barlow',sans-serif;display:none}
 .no-results span{font-size:40px;display:block;margin-bottom:8px}
-
-/* STATUS */
-.home-status{font-family:'Barlow',sans-serif;font-size:11px;color:#9a9894;text-align:center;padding:8px 22px 0}
-.home-status .dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:5px;vertical-align:middle}
-.home-status .dot.on{background:#1f8a3d}
-.home-status .dot.demo{background:#e8a020}
-
-/* CONFIG */
-.config-bar{padding:16px 22px 28px}
-.config-bar label{font-family:'Barlow',sans-serif;font-size:10px;font-weight:600;letter-spacing:.1em;color:#9a9894;text-transform:uppercase;display:block;margin-bottom:6px}
-.config-bar input{width:100%;padding:12px;border:1.5px solid #e4e2dd;border-radius:10px;font-size:13px;font-family:'Barlow',sans-serif;background:#fff;color:#1c1c1c}
-.config-bar input:focus{outline:none;border-color:#fe2627}
-.config-bar .hint{font-family:'Barlow',sans-serif;font-size:10px;color:#b0aea9;margin-top:5px;line-height:1.4}
-.config-bar button{margin-top:10px;width:100%;padding:13px;background:#fe2627;color:#fff;border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;min-height:48px}
-.config-bar button:active{background:#e01f20}
 
 /* ═══ ROTOGRAMA ═══ */
 .roto-top{flex:0 0 auto;padding:14px 20px 0}
@@ -93,18 +74,12 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .roto-stat .val{font-weight:700;font-size:19px;color:#1c1c1c}
 .roto-stat .val.red{color:#fe2627}
 .roto-stat .lbl{font-family:'Barlow',sans-serif;font-size:9.5px;color:#9a9894;letter-spacing:.1em;margin-top:1px}
-
-/* LINK ROTA */
 .rota-link{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:12px;padding:12px;background:#262625;border-radius:10px;color:#f4f4f2;font-weight:700;font-size:13px;text-decoration:none;min-height:46px}
 .rota-link:active{background:#3a3a38}
-
-/* TIMELINE */
 .roto-scroll{flex:1;overflow-y:auto;padding:16px 20px 28px}
 .timeline-wrap{position:relative}
 .timeline-line{position:absolute;left:26px;top:10px;bottom:10px;width:2px;background:linear-gradient(#fe2627,#4a4a49)}
 .timeline-stops{display:flex;flex-direction:column;gap:16px}
-
-/* STOP */
 .stop{position:relative;padding-left:56px}
 .stop-node{position:absolute;left:15px;top:8px;width:24px;height:24px;border-radius:50%;background:#f4f4f2;border:2px solid #fe2627;display:flex;align-items:center;justify-content:center}
 .stop-node-dot{width:8px;height:8px;border-radius:50%;background:#fe2627}
@@ -115,8 +90,6 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .stop-km{position:absolute;left:50px;top:6px;font-family:'Barlow',sans-serif;font-weight:700;font-size:10px;color:#fe2627;background:#f4f4f2;padding:2px 0}
 .stop-km.parcial{color:#e8a020}
 .stop-km.dest{color:#4a4a49}
-
-/* STOP CARD */
 .scard{margin-top:18px;background:#fff;border:1.5px solid #e8e6e1;border-radius:16px;overflow:hidden;box-shadow:0 2px 10px rgba(40,38,34,.05)}
 .scard.dashed{border-style:dashed}
 .scard-body{padding:14px 15px 12px}
@@ -124,24 +97,16 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .scard-brand-dot{width:9px;height:9px;border-radius:3px}
 .scard-brand-name{font-family:'Barlow',sans-serif;font-weight:600;font-size:11px;letter-spacing:.06em;color:#9a9894;text-transform:uppercase}
 .scard-nome{font-weight:700;font-size:18px;color:#1c1c1c;line-height:1.05;text-transform:uppercase}
-.scard-cidade{font-family:'Barlow',sans-serif;font-size:12px;color:#8a8886;margin-top:4px;line-height:1.3}
+.scard-cidade{font-family:'Barlow',sans-serif;font-size:12px;color:#8a8886;margin-top:4px}
 .scard-details{margin-top:10px;display:flex;flex-direction:column;gap:6px}
 .scard-detail{display:flex;align-items:center;gap:7px;font-family:'Barlow',sans-serif;font-size:12.5px;color:#8a8886}
 .scard-detail strong{color:#1c1c1c;font-weight:600}
-
-/* BADGES */
 .badge-row{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
-.badge-conv{display:inline-flex;align-items:center;gap:5px;background:rgba(31,138,61,.12);color:#1f8a3d;font-family:'Barlow',sans-serif;font-weight:600;font-size:10.5px;padding:5px 9px;border-radius:8px;white-space:nowrap}
-.badge-conv::before{content:'';width:6px;height:6px;border-radius:50%;background:#1f8a3d}
 .badge-cartao{font-family:'Barlow',sans-serif;font-weight:600;font-size:10.5px;padding:5px 9px;border-radius:8px;white-space:nowrap}
 .badge-truckpag{background:rgba(31,138,61,.12);color:#1f8a3d}
 .badge-shell{background:rgba(224,168,20,.12);color:#b8860b}
-
-/* NOTE */
 .scard-note{margin:10px 0 0;background:#f4f4f2;border-left:3px solid #1a6fb5;border-radius:8px;padding:10px 12px;font-family:'Barlow',sans-serif;font-size:12px;color:#8a8886;line-height:1.4}
 .scard-note strong{color:#1a6fb5}
-
-/* BRAND TABLE */
 .brand-tbl{width:100%;border-collapse:collapse;margin-top:10px}
 .brand-tbl th{font-family:'Barlow',sans-serif;font-size:10px;font-weight:700;letter-spacing:.08em;color:#9a9894;text-transform:uppercase;padding:6px 10px;text-align:left;border-bottom:1px solid #eae8e3}
 .brand-tbl td{padding:8px 10px;font-family:'Barlow',sans-serif;font-size:13px;border-bottom:1px solid #f4f4f2}
@@ -149,260 +114,337 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .brand-tbl .bname{font-weight:700;color:#1c1c1c}
 .brand-tbl .bqty{font-weight:700;color:#1a6fb5}
 .brand-tbl .bqty.zero{color:#1f8a3d}
-
-/* ACTIONS */
-.scard-actions{display:flex;border-top:1px solid #eeece7}
-.scard-actions a,.scard-actions button{flex:1;text-align:center;padding:11px 0;font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:12.5px;color:#262625;text-decoration:none;border:none;background:none;cursor:pointer;border-right:1px solid #eeece7}
-.scard-actions a:last-child,.scard-actions button:last-child{border-right:none}
-.scard-actions a:active,.scard-actions button:active{background:#f4f4f2}
-.scard-actions .red{color:#fe2627}
-
-/* OU DIVIDER */
 .ou-div{display:flex;align-items:center;gap:10px;padding:4px 0;margin-left:56px}
 .ou-line{flex:1;height:1px;background:#e4e2dd}
 .ou-pill{font-weight:700;font-size:13px;color:#fe2627;background:#eae8e3;padding:3px 14px;border-radius:10px}
-
-/* DEST STOP */
 .dest-stop{position:relative;padding-left:56px;margin-top:4px}
 .dest-stop .stop-node{top:2px}
 .dest-nome{padding:3px 0;font-weight:700;font-size:15px;color:#1c1c1c;text-transform:uppercase}
 
-/* INSTALL */
+/* ═══ ADMIN PANEL ═══ */
+.admin-top{padding:14px 20px;display:flex;align-items:center;gap:12px}
+.admin-title{flex:1;font-weight:700;font-size:20px;text-transform:uppercase}
+.admin-scroll{flex:1;overflow-y:auto;padding:0 20px 28px}
+.admin-add{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;background:#fe2627;border-radius:12px;color:#fff;font-weight:700;font-size:15px;border:none;width:100%;cursor:pointer;min-height:50px;margin-bottom:18px}
+.admin-add:active{background:#e01f20}
+
+.admin-rcard{background:#fff;border:1.5px solid #e8e6e1;border-radius:16px;padding:14px 16px;margin-bottom:10px;box-shadow:0 2px 10px rgba(40,38,34,.04)}
+.admin-rcard-head{display:flex;align-items:center;gap:10px}
+.admin-rcard-num{width:36px;height:36px;border-radius:10px;background:#262625;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#f4f4f2}
+.admin-rcard-info{flex:1}
+.admin-rcard-name{font-weight:700;font-size:16px;text-transform:uppercase}
+.admin-rcard-sub{font-family:'Barlow',sans-serif;font-size:11px;color:#8a8886;margin-top:2px}
+.admin-rcard-actions{display:flex;gap:6px;margin-top:10px}
+.admin-btn{flex:1;padding:10px;border-radius:8px;border:none;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;cursor:pointer;min-height:42px}
+.admin-btn-edit{background:#eae8e3;color:#1c1c1c}
+.admin-btn-edit:active{background:#e4e2dd}
+.admin-btn-del{background:rgba(254,38,39,.1);color:#fe2627}
+.admin-btn-del:active{background:rgba(254,38,39,.2)}
+
+/* ═══ EDITOR ═══ */
+.editor-scroll{flex:1;overflow-y:auto;padding:0 20px 28px}
+.editor-section{margin-bottom:18px}
+.editor-section-title{font-weight:700;font-size:13px;letter-spacing:.12em;color:#9a9894;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.editor-section-title .bar{width:4px;height:14px;background:#fe2627;border-radius:2px}
+.field{margin-bottom:12px}
+.field label{display:block;font-family:'Barlow',sans-serif;font-weight:600;font-size:10.5px;letter-spacing:.08em;color:#9a9894;text-transform:uppercase;margin-bottom:5px}
+.field input,.field select,.field textarea{width:100%;padding:12px;border:1.5px solid #e4e2dd;border-radius:10px;font-family:'Barlow',sans-serif;font-size:14px;color:#1c1c1c;background:#fff;outline:none;-webkit-appearance:none}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:#fe2627}
+.field textarea{resize:vertical;min-height:60px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+
+.stop-editor{background:#fff;border:1.5px solid #e8e6e1;border-radius:14px;padding:14px;margin-bottom:10px;position:relative}
+.stop-editor-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.stop-editor-num{font-weight:700;font-size:14px;color:#fe2627}
+.stop-editor-del{background:none;border:none;color:#fe2627;font-size:22px;cursor:pointer;padding:4px 8px}
+.stop-editor-del:active{opacity:.6}
+
+.alt-toggle{display:flex;align-items:center;gap:8px;padding:10px;background:#f4f4f2;border-radius:8px;border:none;width:100%;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;color:#8a8886;margin-top:6px}
+.alt-toggle:active{background:#eae8e3}
+.alt-toggle .red{color:#fe2627}
+.alt-box{margin-top:8px;padding:12px;background:#faf9f7;border:1px dashed #e4e2dd;border-radius:10px}
+
+.marca-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px}
+.add-marca-btn{background:#eae8e3;border:none;border-radius:8px;padding:8px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;color:#8a8886;cursor:pointer;width:100%;margin-top:4px}
+
+.add-stop-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:12px;background:#eae8e3;border-radius:12px;border:none;width:100%;cursor:pointer;font-weight:700;font-size:14px;color:#8a8886;margin:8px 0 16px}
+.add-stop-btn:active{background:#e4e2dd}
+
+.editor-save{display:flex;gap:10px;padding:16px 20px;background:#f4f4f2;border-top:1px solid #e4e2dd}
+.editor-save button{flex:1;padding:14px;border-radius:10px;border:none;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;cursor:pointer;min-height:50px}
+.editor-save .save{background:#fe2627;color:#fff}
+.editor-save .save:active{background:#e01f20}
+.editor-save .cancel{background:#eae8e3;color:#1c1c1c}
+.editor-save .cancel:active{background:#e4e2dd}
+
 .install-bar{display:none;background:#1c1c1c;padding:12px 16px;align-items:center;gap:12px}
 .install-bar.show{display:flex}
 .install-bar p{flex:1;font-family:'Barlow',sans-serif;font-size:13px;color:#fff}
 .install-btn{background:#fe2627;color:#fff;border:none;border-radius:8px;padding:10px 18px;font-weight:700;font-size:14px;cursor:pointer;min-height:44px}
 .install-x{background:none;border:none;color:#666;font-size:20px;cursor:pointer}
+.confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px}
+.confirm-box{background:#fff;border-radius:16px;padding:24px;max-width:320px;width:100%;text-align:center}
+.confirm-box h3{font-size:18px;margin-bottom:8px}
+.confirm-box p{font-family:'Barlow',sans-serif;font-size:14px;color:#8a8886;margin-bottom:18px}
+.confirm-box .btns{display:flex;gap:10px}
+.confirm-box .btns button{flex:1;padding:12px;border-radius:10px;border:none;font-weight:700;font-size:14px;cursor:pointer;min-height:44px}
+
+/* LOGIN MODAL */
+.login-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:300;padding:20px}
+.login-box{background:#fff;border-radius:20px;padding:28px 24px;max-width:340px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.2)}
+.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:20px}
+.login-logo .lb{width:36px;height:36px;background:#fe2627;border-radius:10px;display:flex;align-items:center;justify-content:center}
+.login-logo .lb span{font-weight:800;font-size:22px;color:#fff}
+.login-logo .lt{font-weight:700;font-size:16px;letter-spacing:.06em;color:#1c1c1c}
+.login-title{font-weight:700;font-size:20px;text-transform:uppercase;margin-bottom:4px}
+.login-sub{font-family:'Barlow',sans-serif;font-size:13px;color:#9a9894;margin-bottom:18px}
+.login-field{margin-bottom:12px}
+.login-field label{display:block;font-family:'Barlow',sans-serif;font-weight:600;font-size:10.5px;letter-spacing:.08em;color:#9a9894;text-transform:uppercase;margin-bottom:5px}
+.login-field input{width:100%;padding:13px;border:1.5px solid #e4e2dd;border-radius:10px;font-family:'Barlow',sans-serif;font-size:14px;color:#1c1c1c;background:#fff;outline:none;-webkit-appearance:none}
+.login-field input:focus{border-color:#fe2627}
+.login-btn{width:100%;padding:14px;background:#fe2627;color:#fff;border:none;border-radius:10px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;cursor:pointer;min-height:50px;margin-top:6px}
+.login-btn:active{background:#e01f20}
+.login-error{font-family:'Barlow',sans-serif;font-size:12px;color:#fe2627;text-align:center;margin-top:10px;display:none}
+.login-cancel{display:block;text-align:center;font-family:'Barlow',sans-serif;font-size:13px;color:#9a9894;margin-top:12px;cursor:pointer;border:none;background:none;width:100%}
+.login-cancel:active{color:#1c1c1c}
 </style>
 </head>
 <body>
 
-<div class="install-bar" id="installBanner">
-  <p>Instale o app na tela inicial</p>
-  <button class="install-btn" id="installBtn">Instalar</button>
-  <button class="install-x" id="installDismiss">✕</button>
-</div>
+<div class="install-bar" id="installBanner"><p>Instale o app na tela inicial</p><button class="install-btn" id="installBtn">Instalar</button><button class="install-x" id="installDismiss">✕</button></div>
 
 <!-- HOME -->
 <div class="screen active" id="screenHome">
-  <div class="home-top">
-    <div class="logo-row">
-      <div class="logo-box"><span>C</span></div>
-      <div>
-        <div class="logo-title">CONFIANÇA</div>
-        <div class="logo-sub">SEGURANÇA QUE MOVE</div>
-      </div>
-    </div>
+  <div class="home-top" style="position:relative">
+    <button class="admin-toggle" onclick="showLogin()" title="Gerenciar rotas">⚙️</button>
+    <div class="logo-row"><div class="logo-box"><span>C</span></div><div><div class="logo-title">CONFIANÇA</div><div class="logo-sub">SEGURANÇA QUE MOVE</div></div></div>
     <div class="home-heading">Rotogramas</div>
     <div class="home-subtext" id="routeCountText">Carregando...</div>
-    <div class="search-wrap">
-      <div class="search-icon"></div>
-      <input class="search-input" id="searchInput" placeholder="Buscar rota, cidade ou destino" autocomplete="off" autocorrect="off" spellcheck="false">
-      <button class="search-clear" id="searchClear" onclick="clearSearch()">✕</button>
-    </div>
+    <div class="search-wrap"><div class="search-icon"></div><input class="search-input" id="searchInput" placeholder="Buscar rota, cidade ou destino" autocomplete="off" autocorrect="off" spellcheck="false"><button class="search-clear" id="searchClear" onclick="clearSearch()">✕</button></div>
   </div>
-
-  <div class="home-status" id="statusBar">
-    <span class="dot demo"></span><span id="statusText">Carregando...</span>
-  </div>
-
-  <div class="home-scroll" id="routeList">
-    <div style="text-align:center;padding:40px"><div style="width:36px;height:36px;border:3px solid #e4e2dd;border-top-color:#fe2627;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto"></div><p style="font-family:'Barlow',sans-serif;font-size:13px;color:#9a9894;margin-top:12px">Carregando rotas...</p></div>
-    <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
-  </div>
-
-  <div class="config-bar">
-    <label>Planilha Google (opcional)</label>
-    <input type="url" id="sheetUrl" placeholder="Cole a URL da planilha publicada como CSV">
-    <div class="hint">Arquivo → Publicar na Web → aba "rotogramas" → CSV</div>
-    <button onclick="saveSheetUrl()">Salvar e atualizar</button>
-  </div>
+  <div class="home-scroll" id="routeList"></div>
 </div>
 
 <!-- ROTOGRAMA -->
-<div class="screen" id="screenRoute">
-  <div id="routeContent"></div>
+<div class="screen" id="screenRoute"><div id="routeContent"></div></div>
+
+<!-- ADMIN -->
+<div class="screen" id="screenAdmin">
+  <div class="admin-top"><button class="back-btn" onclick="showHome()">‹</button><div class="admin-title">Gerenciar Rotas</div></div>
+  <div class="admin-scroll" id="adminList"></div>
+</div>
+
+<!-- EDITOR -->
+<div class="screen" id="screenEditor">
+  <div class="admin-top"><button class="back-btn" onclick="showAdmin()">‹</button><div class="admin-title" id="editorTitle">Nova Rota</div></div>
+  <div class="editor-scroll" id="editorContent"></div>
+  <div class="editor-save"><button class="cancel" onclick="showAdmin()">Cancelar</button><button class="save" onclick="saveRoute()">Salvar Rota</button></div>
 </div>
 
 <script>
-// ══════════════════════════════════════════
-// DATA
-// ══════════════════════════════════════════
-const DEMO_DATA=[
-{id:'lucas-goiania',nome:'Lucas do Rio Verde → Goiânia',estados:'MT → GO',numero:'01',regiao:'Centro-Oeste',subtitulo:'Rota 01 — Centro-Oeste',linkRota:'https://maps.app.goo.gl/RQmTr6AP3kjDG65Z8',distancia:'~900 km',tempo:'~12h',paradas:[
+// ═══ DEFAULT DATA ═══
+const DEFAULTS=[
+{id:'lucas-goiania',nome:'Lucas do Rio Verde → Goiânia',estados:'MT → GO',numero:'01',regiao:'Centro-Oeste',subtitulo:'Rota 01',linkRota:'https://maps.app.goo.gl/RQmTr6AP3kjDG65Z8',distancia:'~900 km',tempo:'~12h',paradas:[
 {ordem:0,tipo:'origem',nome:'Lucas do Rio Verde — MT',cidade:'Após carregar',detalhe:'BR-163 → MT-251 → BR-070 → BR-060',km:'0'},
 {ordem:1,tipo:'completa',nome:'Rede São Roque — Sabiá',cidade:'Lucas do Rio Verde — MT',razaoSocial:'Posto São Roque — Sabiá',litragem:'Completa o tanque',cartao:'truckpag',km:'5',link:'https://maps.app.goo.gl/d8JaW8EZnRMyyaVR9',alternativa:{nome:'Rede São Roque — 29',cidade:'Nova Mutum — MT',litragem:'Completa o tanque',cartao:'truckpag',km:'100',link:'https://maps.app.goo.gl/Gg3S1rtRuDcJf7zZ6'}},
-{ordem:2,tipo:'parcial',nome:'Rede São Roque — Alvorada',cidade:'Primavera do Leste — MT',litragem:'Obrigatório (exceto Scania)',cartao:'truckpag',km:'450',nota:'Abastecimento obrigatório para todas as marcas, exceto Scania que segue direto para Goiânia.',link:'https://maps.app.goo.gl/QGC9w92uvcmApJmc9',marcas:[{marca:'Volvo',litros:'200L'},{marca:'Scania',litros:'Não abastece'},{marca:'Meteor',litros:'200L'},{marca:'Mercedes',litros:'300L'}]},
+{ordem:2,tipo:'parcial',nome:'Rede São Roque — Alvorada',cidade:'Primavera do Leste — MT',litragem:'Obrigatório (exceto Scania)',cartao:'truckpag',km:'450',nota:'Obrigatório para todas as marcas, exceto Scania.',link:'https://maps.app.goo.gl/QGC9w92uvcmApJmc9',marcas:[{marca:'Volvo',litros:'200L'},{marca:'Scania',litros:'Não abastece'},{marca:'Meteor',litros:'200L'},{marca:'Mercedes',litros:'300L'}]},
 {ordem:3,tipo:'destino',nome:'Goiânia — GO',cidade:'Chegada à garagem',km:'900'}]},
-{id:'goiania-cabedelo',nome:'Goiânia → Cabedelo',estados:'GO → BA → SE → PE → PB',numero:'02',regiao:'Nordeste',subtitulo:'Rota 02 — Nordeste',linkRota:'https://maps.app.goo.gl/fvaMjeExq6nCp8yi6',distancia:'~2.450 km',tempo:'~30h',paradas:[
+{id:'goiania-cabedelo',nome:'Goiânia → Cabedelo',estados:'GO → BA → SE → PE → PB',numero:'02',regiao:'Nordeste',subtitulo:'Rota 02',linkRota:'https://maps.app.goo.gl/fvaMjeExq6nCp8yi6',distancia:'~2.450 km',tempo:'~30h',paradas:[
 {ordem:0,tipo:'origem',nome:'Goiânia — GO',cidade:'Saída da garagem',detalhe:'BR-153 → BR-020 → BR-242 → BR-116 → BR-101',km:'0'},
 {ordem:1,tipo:'completa',nome:'Posto Cerradão',cidade:'Luís Eduardo Magalhães — BA',razaoSocial:'Auto Posto São Roque — Cerradão',litragem:'Completa o tanque',cartao:'truckpag',km:'850',link:'https://maps.app.goo.gl/Z5kyJdDhnuRHzedv6'},
-{ordem:2,tipo:'parcial',nome:'Posto Irmão Caminhoneiro II',cidade:'Itaberaba — BA',litragem:'200 litros',cartao:'truckpag',km:'1.400',nota:'Abastecer somente 200L para chegar até Sergipe, onde o diesel é mais barato.',link:'https://maps.app.goo.gl/CNqGn28QPT3yDFpd8',alternativa:{nome:'Posto São Caetano',cidade:'Santo Estêvão — BA',litragem:'200 litros',cartao:'truckpag',km:'1.500',nota:'Mesma lógica — 200L para chegar até Sergipe.',link:'https://maps.app.goo.gl/xtAuqcusfpnvVxuT7'}},
-{ordem:3,tipo:'completa',nome:'Posto Azul — Atalaia',cidade:'Santa Luzia do Itanhi — SE',litragem:'Completa o tanque',cartao:'shell',km:'1.900',vantagem:'Diesel mais barato na região de Sergipe',link:'https://maps.app.goo.gl/eApQPbcLipGX6tsi6'},
+{ordem:2,tipo:'parcial',nome:'Posto Irmão Caminhoneiro II',cidade:'Itaberaba — BA',litragem:'200 litros',cartao:'truckpag',km:'1.400',nota:'200L para chegar até Sergipe onde o diesel é mais barato.',link:'https://maps.app.goo.gl/CNqGn28QPT3yDFpd8',alternativa:{nome:'Posto São Caetano',cidade:'Santo Estêvão — BA',litragem:'200 litros',cartao:'truckpag',km:'1.500',nota:'Mesma lógica — 200L para Sergipe.',link:'https://maps.app.goo.gl/xtAuqcusfpnvVxuT7'}},
+{ordem:3,tipo:'completa',nome:'Posto Azul — Atalaia',cidade:'Santa Luzia do Itanhi — SE',litragem:'Completa o tanque',cartao:'shell',km:'1.900',vantagem:'Diesel mais barato em Sergipe',link:'https://maps.app.goo.gl/eApQPbcLipGX6tsi6'},
 {ordem:4,tipo:'completa',nome:'Posto CJCM',cidade:'Igarassu — PE',razaoSocial:'Posto Shell (Igarassu)',litragem:'Completa o tanque',cartao:'shell',km:'2.300',link:'https://maps.app.goo.gl/ynhhNNWJTvuyi5Jt9'},
 {ordem:5,tipo:'destino',nome:'Cabedelo — PB',cidade:'Chegada ao destino',km:'2.450'}]},
-{id:'cabedelo-suape',nome:'Cabedelo → Suape',estados:'PB → PE',numero:'03',regiao:'Nordeste',subtitulo:'Rota 03 — Nordeste (trecho)',linkRota:'https://maps.app.goo.gl/6QCtNdYNuezqKs2BA',distancia:'~150 km',tempo:'~2h30',paradas:[
-{ordem:0,tipo:'origem',nome:'Cabedelo — PB',cidade:'Saída do ponto de carga/descarga',detalhe:'BR-101 sentido sul',km:'0'},
+{id:'cabedelo-suape',nome:'Cabedelo → Suape',estados:'PB → PE',numero:'03',regiao:'Nordeste',subtitulo:'Rota 03',linkRota:'https://maps.app.goo.gl/6QCtNdYNuezqKs2BA',distancia:'~150 km',tempo:'~2h30',paradas:[
+{ordem:0,tipo:'origem',nome:'Cabedelo — PB',cidade:'Saída do ponto',detalhe:'BR-101 sentido sul',km:'0'},
 {ordem:1,tipo:'completa',nome:'Posto Petroconde',cidade:'Conde — PB',razaoSocial:'Eco Postos Conde',litragem:'Completa o tanque',cartao:'shell_expers',km:'25',link:'https://maps.app.goo.gl/Xbqi8GrwEGvQgXV17'},
 {ordem:2,tipo:'destino',nome:'Suape — PE',cidade:'Chegada ao destino',km:'150'}]},
-{id:'goiania-sjcampos',nome:'Goiânia → São José dos Campos',estados:'GO → MG → SP',numero:'04',regiao:'Sudeste',subtitulo:'Rota 04 — Sudeste',linkRota:'',distancia:'~900 km',tempo:'~11h',paradas:[
+{id:'goiania-sjcampos',nome:'Goiânia → São José dos Campos',estados:'GO → MG → SP',numero:'04',regiao:'Sudeste',subtitulo:'Rota 04',linkRota:'',distancia:'~900 km',tempo:'~11h',paradas:[
 {ordem:0,tipo:'origem',nome:'Goiânia — GO',cidade:'Saída da garagem',km:'0'},
 {ordem:1,tipo:'destino',nome:'São José dos Campos — SP',cidade:'Sem abastecer na ida — abastece no CAVAP',km:'900'}]},
-{id:'goiania-smateus',nome:'Goiânia → São Mateus do Sul',estados:'GO → SP → PR',numero:'05',regiao:'Sul',subtitulo:'Rota 05 — Sul',linkRota:'',distancia:'~1.200 km',tempo:'~15h',paradas:[
+{id:'goiania-smateus',nome:'Goiânia → São Mateus do Sul',estados:'GO → SP → PR',numero:'05',regiao:'Sul',subtitulo:'Rota 05',linkRota:'',distancia:'~1.200 km',tempo:'~15h',paradas:[
 {ordem:0,tipo:'origem',nome:'Goiânia — GO',cidade:'Saída da garagem',km:'0'},
-{ordem:1,tipo:'destino',nome:'São Mateus do Sul — PR',cidade:'Sem abastecer na ida — abastece no Cais Ponta Grossa na volta',km:'1.200'}]}
+{ordem:1,tipo:'destino',nome:'São Mateus do Sul — PR',cidade:'Sem abastecer — abastece no Cais Ponta Grossa na volta',km:'1.200'}]}
 ];
 
 const REGION_ORDER=['Centro-Oeste','Nordeste','Sudeste','Sul'];
-let routes=[],dataSource='demo';
+let routes=[];
 
-// ══════════════════════════════════════════
-// SHEETS PARSER
-// ══════════════════════════════════════════
-async function fetchFromSheet(url){try{const r=await fetch(url);if(!r.ok)throw 0;return parseCSV(await r.text())}catch(e){return null}}
-function parseCSV(t){const ls=t.split('\n').map(l=>{const r=[];let c='',q=false;for(let i=0;i<l.length;i++){const ch=l[i];if(ch==='"')q=!q;else if(ch===','&&!q){r.push(c.trim());c=''}else c+=ch}r.push(c.trim());return r});if(ls.length<2)return null;const h=ls[0].map(x=>x.toLowerCase().replace(/\s+/g,'_'));const rows=ls.slice(1).filter(r=>r.length>=3&&r[0]);const rm={};for(const row of rows){const o={};h.forEach((k,i)=>{o[k]=row[i]||''});const id=o.rota_id||'default';if(!rm[id])rm[id]={id,nome:o.rota_nome||id,estados:o.estados||'',numero:o.rota_numero||'?',regiao:o.regiao||'',subtitulo:o.subtitulo||'',linkRota:o.link_rota||'',distancia:o.distancia||'',tempo:o.tempo||'',paradas:[]};const p={ordem:parseInt(o.ordem)||0,tipo:o.tipo||'completa',nome:o.posto||o.nome||'',cidade:o.cidade||'',litragem:o.litragem||'',cartao:(o.cartao||'').toLowerCase(),km:o.km||'',link:o.link_maps||o.link||'',razaoSocial:o.razao_social||'',vantagem:o.vantagem||'',nota:o.nota||'',detalhe:o.detalhe||''};if(o.alt_posto)p.alternativa={nome:o.alt_posto,cidade:o.alt_cidade||'',litragem:o.alt_litragem||p.litragem,cartao:(o.alt_cartao||p.cartao).toLowerCase(),km:o.alt_km||'',nota:o.alt_nota||'',link:o.alt_link||''};rm[id].paradas.push(p)}const res=Object.values(rm);res.forEach(r=>r.paradas.sort((a,b)=>a.ordem-b.ordem));return res}
-
-// ══════════════════════════════════════════
-// RENDER HOME
-// ══════════════════════════════════════════
+function loadRoutes(){const s=localStorage.getItem('rotogramas_data');if(s){try{routes=JSON.parse(s);return}catch(e){}}routes=JSON.parse(JSON.stringify(DEFAULTS))}
+function saveRoutes(){localStorage.setItem('rotogramas_data',JSON.stringify(routes))}
 function norm(s){return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()}
-function searchText(r){const p=[r.nome,r.estados,r.subtitulo,r.numero,r.regiao||''];for(const s of r.paradas){p.push(s.nome,s.cidade,s.cartao,s.razaoSocial||'');if(s.alternativa)p.push(s.alternativa.nome,s.alternativa.cidade)}return p.join(' ').toLowerCase()}
+function searchText(r){const p=[r.nome,r.estados,r.subtitulo,r.numero,r.regiao||''];for(const s of r.paradas)p.push(s.nome,s.cidade,s.cartao||'',s.razaoSocial||'');return p.join(' ')}
 
+// ═══ HOME ═══
 function renderHome(){
   const el=document.getElementById('routeList');
-  const regionMap={};
-  routes.forEach((r,i)=>{const reg=r.regiao||'Outras';if(!regionMap[reg])regionMap[reg]=[];regionMap[reg].push({r,i})});
-  const sorted=Object.keys(regionMap).sort((a,b)=>{const ia=REGION_ORDER.indexOf(a),ib=REGION_ORDER.indexOf(b);return(ia<0?99:ia)-(ib<0?99:ib)});
+  const rm={};routes.forEach((r,i)=>{const g=r.regiao||'Outras';if(!rm[g])rm[g]=[];rm[g].push({r,i})});
+  const sorted=Object.keys(rm).sort((a,b)=>{const ia=REGION_ORDER.indexOf(a),ib=REGION_ORDER.indexOf(b);return(ia<0?99:ia)-(ib<0?99:ib)});
   let h='';
-  for(const reg of sorted){
-    const items=regionMap[reg];
+  for(const reg of sorted){const items=rm[reg];
     h+=`<div class="region"><div class="region-hd"><span class="region-bar"></span><span class="region-name">${reg}</span><span class="region-count">${items.length}</span><span class="region-line"></span></div>`;
-    for(const{r,i}of items){
-      const stops=r.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino').length;
-      const st=searchText(r);
-      const orig=r.paradas.find(p=>p.tipo==='origem');
-      const dest=r.paradas.find(p=>p.tipo==='destino');
-      h+=`<div class="rcard" data-idx="${i}" data-search="${norm(st)}" onclick="showRoute(${i})"><div class="rcard-uf">${r.numero}</div><div class="rcard-info"><div class="rcard-nome">${r.nome}</div><div class="rcard-detail">${r.estados}</div><div class="rcard-stats"><span>${r.distancia||''}</span><span class="dot">·</span><span>${r.tempo||''}</span><span class="dot">·</span><span class="red">⛽ ${stops} posto${stops!==1?'s':''}</span></div></div><div class="rcard-arrow">›</div></div>`;
-    }
-    h+='</div>';
-  }
+    for(const{r,i}of items){const stops=r.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino').length;
+      h+=`<div class="rcard" data-search="${norm(searchText(r))}" onclick="showRoute(${i})"><div class="rcard-uf">${r.numero}</div><div class="rcard-info"><div class="rcard-nome">${r.nome}</div><div class="rcard-detail">${r.estados}</div><div class="rcard-stats"><span>${r.distancia||''}</span><span class="dot">·</span><span>${r.tempo||''}</span><span class="dot">·</span><span class="red">⛽ ${stops} posto${stops!==1?'s':''}</span></div></div><div class="rcard-arrow">›</div></div>`}
+    h+='</div>'}
   h+='<div class="no-results" id="noResults"><span>🔍</span>Nenhuma rota encontrada</div>';
   el.innerHTML=h;
-  document.getElementById('routeCountText').textContent=`${routes.length} rotas ativas · toque para abrir o rotograma`;
-  const inp=document.getElementById('searchInput');
-  if(inp&&inp.value.trim())filterRoutes(inp.value);
+  document.getElementById('routeCountText').textContent=`${routes.length} rotas ativas · toque para abrir`;
 }
 
-function filterRoutes(q){
-  const cards=document.querySelectorAll('.rcard');
-  const regions=document.querySelectorAll('.region');
-  const nr=document.getElementById('noResults');
-  const cl=document.getElementById('searchClear');
-  const n=norm(q.trim());
-  if(!n){cards.forEach(c=>c.style.display='');regions.forEach(r=>r.style.display='');nr.style.display='none';cl.classList.remove('vis');return}
-  cl.classList.add('vis');
-  const terms=n.split(/\s+/);
-  let vis=0;
-  cards.forEach(c=>{const t=c.dataset.search||'';const m=terms.every(x=>t.includes(x));c.style.display=m?'':'none';if(m)vis++});
-  regions.forEach(r=>{const hasVis=[...r.querySelectorAll('.rcard')].some(c=>c.style.display!=='none');r.style.display=hasVis?'':'none'});
-  nr.style.display=vis?'none':'block';
-}
+function filterRoutes(q){const cards=document.querySelectorAll('.rcard'),regs=document.querySelectorAll('.region'),nr=document.getElementById('noResults'),cl=document.getElementById('searchClear');const n=norm(q.trim());if(!n){cards.forEach(c=>c.style.display='');regs.forEach(r=>r.style.display='');nr.style.display='none';cl.classList.remove('vis');return}cl.classList.add('vis');const terms=n.split(/\s+/);let vis=0;cards.forEach(c=>{const m=terms.every(x=>(c.dataset.search||'').includes(x));c.style.display=m?'':'none';if(m)vis++});regs.forEach(r=>{r.style.display=[...r.querySelectorAll('.rcard')].some(c=>c.style.display!=='none')?'':'none'});nr.style.display=vis?'none':'block'}
 function clearSearch(){const i=document.getElementById('searchInput');i.value='';filterRoutes('');i.focus()}
-document.addEventListener('DOMContentLoaded',()=>{const i=document.getElementById('searchInput');if(i)i.addEventListener('input',e=>filterRoutes(e.target.value))});
 
-// ══════════════════════════════════════════
-// RENDER ROTOGRAMA
-// ══════════════════════════════════════════
+// ═══ ROTOGRAMA ═══
 function cartaoBadge(c){const m={truckpag:['badge-truckpag','TRUCKPAG'],shell:['badge-shell','SHELL'],shell_expers:['badge-shell','SHELL EXPERS']};const v=m[c];return v?`<span class="badge-cartao ${v[0]}">${v[1]}</span>`:''}
-function cartaoLabel(c){return{truckpag:'TruckPag',shell:'Shell',shell_expers:'Shell Expers'}[c]||c}
-
-function renderStop(p){
-  const isParcial=p.tipo==='parcial';
-  const nodeClass=isParcial?'parcial':'';
-  const kmClass=isParcial?'parcial':'';
-  let details='';
-  if(p.litragem)details+=`<div class="scard-detail">⛽ <strong>${p.litragem}</strong></div>`;
-  if(p.razaoSocial)details+=`<div class="scard-detail">📋 ${p.razaoSocial}</div>`;
-  if(p.vantagem)details+=`<div class="scard-detail">💰 ${p.vantagem}</div>`;
-  if(p.detalhe)details+=`<div class="scard-detail">🛣️ ${p.detalhe}</div>`;
-  let note=p.nota?`<div class="scard-note"><strong>Estratégia:</strong> ${p.nota}</div>`:'';
-  let brandTbl='';
-  if(p.marcas&&p.marcas.length){brandTbl='<table class="brand-tbl"><thead><tr><th>Marca</th><th>Litragem</th></tr></thead><tbody>';for(const m of p.marcas){const cls=m.litros.toLowerCase().includes('não')?'bqty zero':'bqty';brandTbl+=`<tr><td class="bname">${m.marca}</td><td class="${cls}">${m.litros}</td></tr>`}brandTbl+='</tbody></table>'}
-  const tipoLabel=p.tipo==='parcial'?`${p.ordem}º Abast. · Parcial`:`${p.ordem}º Abastecimento`;
-  let actions='';
-  if(p.link)actions=`<a class="rota-link" href="${p.link}" target="_blank" style="margin:12px 14px 14px;border-radius:10px">📍 ABRIR LOCALIZAÇÃO NO MAPS</a>`;
-  return `<div class="stop"><div class="stop-node ${nodeClass}"><div class="stop-node-dot"></div></div><div class="stop-km ${kmClass}">KM ${p.km}</div><div class="scard"><div class="scard-body"><div class="scard-brand-row"><div class="scard-brand-dot" style="background:${isParcial?'#e8a020':'#fe2627'}"></div><span class="scard-brand-name">${tipoLabel}</span></div><div class="scard-nome">${p.nome}</div><div class="scard-cidade">${p.cidade}</div>${details?`<div class="scard-details">${details}</div>`:''}${brandTbl}<div class="badge-row">${cartaoBadge(p.cartao)}</div>${note}</div>${actions}</div></div>`;
-}
-
-function renderAlt(a){
-  let details=a.litragem?`<div class="scard-details"><div class="scard-detail">⛽ <strong>${a.litragem}</strong></div></div>`:'';
-  let note=a.nota?`<div class="scard-note"><strong>Estratégia:</strong> ${a.nota}</div>`:'';
-  let actions=a.link?`<a class="rota-link" href="${a.link}" target="_blank" style="margin:12px 14px 14px;border-radius:10px">📍 ABRIR LOCALIZAÇÃO NO MAPS</a>`:'';
-  return `<div class="ou-div"><div class="ou-line"></div><div class="ou-pill">OU</div><div class="ou-line"></div></div><div class="stop"><div class="stop-node parcial"><div class="stop-node-dot"></div></div><div class="stop-km parcial">KM ${a.km}</div><div class="scard dashed"><div class="scard-body"><div class="scard-brand-row"><div class="scard-brand-dot" style="background:#e8a020"></div><span class="scard-brand-name">Opção B</span></div><div class="scard-nome">${a.nome}</div><div class="scard-cidade">${a.cidade}</div>${details}<div class="badge-row">${cartaoBadge(a.cartao)}</div>${note}</div>${actions}</div></div>`;
-}
-
-function renderRoute(r){
-  const orig=r.paradas.find(p=>p.tipo==='origem');
-  const dest=r.paradas.find(p=>p.tipo==='destino');
-  const stops=r.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino');
-  const origCity=(orig?orig.nome:'').split('—')[0].trim();
-  const destCity=(dest?dest.nome:'').split('—')[0].trim();
-
-  let h=`<div class="roto-top"><button class="back-btn" onclick="showHome()">‹</button><div class="roto-header"><div class="roto-route-row"><div class="roto-chip"><div class="city">${origCity}</div><div class="lbl">ORIGEM</div></div><span class="roto-arrow">→</span><div class="roto-chip"><div class="city">${destCity}</div><div class="lbl">DESTINO</div></div></div><div class="roto-stats"><div class="roto-stat"><div class="val">${r.distancia||'—'}</div><div class="lbl">DISTÂNCIA</div></div><div class="roto-stat"><div class="val">${r.tempo||'—'}</div><div class="lbl">ESTIMADO</div></div><div class="roto-stat"><div class="val red">${stops.length}</div><div class="lbl">POSTOS</div></div></div>`;
+function renderStop(p){const ip=p.tipo==='parcial';let d='';if(p.litragem)d+=`<div class="scard-detail">⛽ <strong>${p.litragem}</strong></div>`;if(p.razaoSocial)d+=`<div class="scard-detail">📋 ${p.razaoSocial}</div>`;if(p.vantagem)d+=`<div class="scard-detail">💰 ${p.vantagem}</div>`;if(p.detalhe)d+=`<div class="scard-detail">🛣️ ${p.detalhe}</div>`;let note=p.nota?`<div class="scard-note"><strong>Estratégia:</strong> ${p.nota}</div>`:'';let bt='';if(p.marcas&&p.marcas.length){bt='<table class="brand-tbl"><thead><tr><th>Marca</th><th>Litragem</th></tr></thead><tbody>';for(const m of p.marcas){bt+=`<tr><td class="bname">${m.marca}</td><td class="${m.litros.toLowerCase().includes('não')?'bqty zero':'bqty'}">${m.litros}</td></tr>`}bt+='</tbody></table>'}
+  let link=p.link?`<a class="rota-link" href="${p.link}" target="_blank" style="margin:12px 14px 14px;border-radius:10px">📍 ABRIR LOCALIZAÇÃO NO MAPS</a>`:'';
+  return `<div class="stop"><div class="stop-node ${ip?'parcial':''}"><div class="stop-node-dot"></div></div><div class="stop-km ${ip?'parcial':''}">KM ${p.km}</div><div class="scard"><div class="scard-body"><div class="scard-brand-row"><div class="scard-brand-dot" style="background:${ip?'#e8a020':'#fe2627'}"></div><span class="scard-brand-name">${ip?p.ordem+'º Abast. · Parcial':p.ordem+'º Abastecimento'}</span></div><div class="scard-nome">${p.nome}</div><div class="scard-cidade">${p.cidade}</div>${d?`<div class="scard-details">${d}</div>`:''}${bt}<div class="badge-row">${cartaoBadge(p.cartao)}</div>${note}</div>${link}</div></div>`}
+function renderAlt(a){let d=a.litragem?`<div class="scard-details"><div class="scard-detail">⛽ <strong>${a.litragem}</strong></div></div>`:'';let n=a.nota?`<div class="scard-note"><strong>Estratégia:</strong> ${a.nota}</div>`:'';let l=a.link?`<a class="rota-link" href="${a.link}" target="_blank" style="margin:12px 14px 14px;border-radius:10px">📍 ABRIR LOCALIZAÇÃO NO MAPS</a>`:'';return `<div class="ou-div"><div class="ou-line"></div><div class="ou-pill">OU</div><div class="ou-line"></div></div><div class="stop"><div class="stop-node parcial"><div class="stop-node-dot"></div></div><div class="stop-km parcial">KM ${a.km}</div><div class="scard dashed"><div class="scard-body"><div class="scard-brand-row"><div class="scard-brand-dot" style="background:#e8a020"></div><span class="scard-brand-name">Opção B</span></div><div class="scard-nome">${a.nome}</div><div class="scard-cidade">${a.cidade}</div>${d}<div class="badge-row">${cartaoBadge(a.cartao)}</div>${n}</div>${l}</div></div>`}
+function renderRoute(r){const orig=r.paradas.find(p=>p.tipo==='origem'),dest=r.paradas.find(p=>p.tipo==='destino'),stops=r.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino');const oc=(orig?orig.nome:'').split('—')[0].trim(),dc=(dest?dest.nome:'').split('—')[0].trim();
+  let h=`<div class="roto-top"><button class="back-btn" onclick="showHome()">‹</button><div class="roto-header"><div class="roto-route-row"><div class="roto-chip"><div class="city">${oc}</div><div class="lbl">ORIGEM</div></div><span class="roto-arrow">→</span><div class="roto-chip"><div class="city">${dc}</div><div class="lbl">DESTINO</div></div></div><div class="roto-stats"><div class="roto-stat"><div class="val">${r.distancia||'—'}</div><div class="lbl">DISTÂNCIA</div></div><div class="roto-stat"><div class="val">${r.tempo||'—'}</div><div class="lbl">ESTIMADO</div></div><div class="roto-stat"><div class="val red">${stops.length}</div><div class="lbl">POSTOS</div></div></div>`;
   if(r.linkRota)h+=`<a class="rota-link" href="${r.linkRota}" target="_blank">📍 VER ROTA COMPLETA NO MAPS</a>`;
   h+=`</div></div><div class="roto-scroll"><div class="timeline-wrap"><div class="timeline-line"></div><div class="timeline-stops">`;
+  if(orig){let od=orig.detalhe?`<div class="scard-details"><div class="scard-detail">🛣️ ${orig.detalhe}</div></div>`:'';h+=`<div class="stop"><div class="stop-node"><div class="stop-node-dot"></div></div><div class="stop-km">KM 0</div><div class="scard"><div class="scard-body"><div class="scard-brand-row"><div class="scard-brand-dot" style="background:#1c1c1c"></div><span class="scard-brand-name">Origem</span></div><div class="scard-nome">${orig.nome}</div><div class="scard-cidade">${orig.cidade}</div>${od}</div></div></div>`}
+  for(const p of r.paradas){if(p.tipo==='origem'||p.tipo==='destino')continue;h+=renderStop(p);if(p.alternativa)h+=renderAlt(p.alternativa)}
+  if(dest)h+=`<div class="dest-stop"><div class="stop-node dest"><div class="stop-node-dot"></div></div><div class="dest-nome">Chegada · ${dc}</div></div>`;
+  return h+`</div></div></div>`}
 
-  // Origin stop
-  if(orig){
-    let originDetails=orig.detalhe?`<div class="scard-details"><div class="scard-detail">🛣️ ${orig.detalhe}</div></div>`:'';
-    h+=`<div class="stop"><div class="stop-node"><div class="stop-node-dot"></div></div><div class="stop-km">KM 0</div><div class="scard"><div class="scard-body"><div class="scard-brand-row"><div class="scard-brand-dot" style="background:#1c1c1c"></div><span class="scard-brand-name">Origem</span></div><div class="scard-nome">${orig.nome}</div><div class="scard-cidade">${orig.cidade}</div>${originDetails}</div></div></div>`;
-  }
+// ═══ ADMIN ═══
+function renderAdmin(){const el=document.getElementById('adminList');let h=`<button class="admin-add" onclick="editRoute(-1)">＋ NOVA ROTA</button>`;
+  routes.forEach((r,i)=>{const stops=r.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino').length;
+    h+=`<div class="admin-rcard"><div class="admin-rcard-head"><div class="admin-rcard-num">${r.numero}</div><div class="admin-rcard-info"><div class="admin-rcard-name">${r.nome}</div><div class="admin-rcard-sub">${r.regiao} · ${stops} postos · ${r.distancia}</div></div></div><div class="admin-rcard-actions"><button class="admin-btn admin-btn-edit" onclick="editRoute(${i})">✏️ Editar</button><button class="admin-btn admin-btn-del" onclick="deleteRoute(${i})">🗑️ Excluir</button></div></div>`});
+  el.innerHTML=h}
 
-  // Fuel stops
-  for(const p of r.paradas){
-    if(p.tipo==='origem'||p.tipo==='destino')continue;
-    h+=renderStop(p);
-    if(p.alternativa)h+=renderAlt(p.alternativa);
-  }
+function deleteRoute(i){const r=routes[i];const ov=document.createElement('div');ov.className='confirm-overlay';ov.innerHTML=`<div class="confirm-box"><h3>Excluir rota?</h3><p>${r.nome}</p><div class="btns"><button style="background:#eae8e3;color:#1c1c1c" onclick="this.closest('.confirm-overlay').remove()">Cancelar</button><button style="background:#fe2627;color:#fff" onclick="confirmDelete(${i});this.closest('.confirm-overlay').remove()">Excluir</button></div></div>`;document.body.appendChild(ov)}
+function confirmDelete(i){routes.splice(i,1);saveRoutes();renderAdmin()}
 
-  // Destination
-  if(dest){
-    h+=`<div class="dest-stop"><div class="stop-node dest"><div class="stop-node-dot"></div></div><div class="dest-nome">Chegada · ${destCity}</div></div>`;
-  }
+// ═══ EDITOR ═══
+let editingIndex=-1;let editData={};
 
-  h+=`</div></div></div>`;
-  return h;
+function editRoute(i){
+  editingIndex=i;
+  if(i>=0){editData=JSON.parse(JSON.stringify(routes[i]));document.getElementById('editorTitle').textContent='Editar Rota'}
+  else{editData={id:'',nome:'',estados:'',numero:String(routes.length+1).padStart(2,'0'),regiao:'Centro-Oeste',subtitulo:'',linkRota:'',distancia:'',tempo:'',paradas:[{ordem:0,tipo:'origem',nome:'',cidade:'',km:'0',detalhe:''},{ordem:1,tipo:'destino',nome:'',cidade:'',km:''}]};document.getElementById('editorTitle').textContent='Nova Rota'}
+  renderEditor();showScreen('screenEditor')}
+
+function renderEditor(){
+  const d=editData;const fuelStops=d.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino');const orig=d.paradas.find(p=>p.tipo==='origem')||{};const dest=d.paradas.find(p=>p.tipo==='destino')||{};
+  let h=`<div class="editor-section"><div class="editor-section-title"><span class="bar"></span>Dados da Rota</div>
+  <div class="field"><label>Nome da rota</label><input id="ed_nome" value="${esc(d.nome)}" placeholder="Ex: Goiânia → Cabedelo"></div>
+  <div class="field-row"><div class="field"><label>Número</label><input id="ed_numero" value="${esc(d.numero)}" placeholder="01"></div><div class="field"><label>Região</label><select id="ed_regiao">${REGION_ORDER.map(r=>`<option${d.regiao===r?' selected':''}>${r}</option>`).join('')}</select></div></div>
+  <div class="field"><label>Estados</label><input id="ed_estados" value="${esc(d.estados)}" placeholder="GO → BA → SE"></div>
+  <div class="field-row"><div class="field"><label>Distância</label><input id="ed_distancia" value="${esc(d.distancia)}" placeholder="~900 km"></div><div class="field"><label>Tempo</label><input id="ed_tempo" value="${esc(d.tempo)}" placeholder="~12h"></div></div>
+  <div class="field"><label>Link rota Google Maps</label><input id="ed_linkRota" value="${esc(d.linkRota)}" placeholder="https://maps.app.goo.gl/..."></div></div>`;
+
+  h+=`<div class="editor-section"><div class="editor-section-title"><span class="bar"></span>Origem</div>
+  <div class="field"><label>Local</label><input id="ed_orig_nome" value="${esc(orig.nome)}" placeholder="Goiânia — GO"></div>
+  <div class="field"><label>Descrição</label><input id="ed_orig_cidade" value="${esc(orig.cidade)}" placeholder="Saída da garagem"></div>
+  <div class="field"><label>BRs / Rodovias</label><input id="ed_orig_detalhe" value="${esc(orig.detalhe||'')}" placeholder="BR-153 → BR-020"></div></div>`;
+
+  h+=`<div class="editor-section"><div class="editor-section-title"><span class="bar"></span>Postos de Abastecimento</div>`;
+  fuelStops.forEach((s,si)=>{h+=renderStopEditor(s,si)});
+  h+=`<button class="add-stop-btn" onclick="addStop()">＋ Adicionar Posto</button></div>`;
+
+  h+=`<div class="editor-section"><div class="editor-section-title"><span class="bar"></span>Destino</div>
+  <div class="field"><label>Local</label><input id="ed_dest_nome" value="${esc(dest.nome)}" placeholder="Cabedelo — PB"></div>
+  <div class="field"><label>Descrição</label><input id="ed_dest_cidade" value="${esc(dest.cidade)}" placeholder="Chegada ao destino"></div>
+  <div class="field"><label>KM total</label><input id="ed_dest_km" value="${esc(dest.km)}" placeholder="2.450"></div></div>`;
+
+  document.getElementById('editorContent').innerHTML=h}
+
+function renderStopEditor(s,si){
+  const hasAlt=!!s.alternativa;const a=s.alternativa||{};
+  let marcasHtml='';if(s.marcas&&s.marcas.length){s.marcas.forEach((m,mi)=>{marcasHtml+=`<div class="marca-row"><div class="field" style="margin:0"><input value="${esc(m.marca)}" onchange="editData.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino')[${si}].marcas[${mi}].marca=this.value" placeholder="Marca"></div><div class="field" style="margin:0;display:flex;gap:4px"><input value="${esc(m.litros)}" onchange="editData.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino')[${si}].marcas[${mi}].litros=this.value" placeholder="Litros"><button style="background:#fe2627;color:#fff;border:none;border-radius:6px;width:32px;cursor:pointer;font-size:16px" onclick="removeMarca(${si},${mi})">✕</button></div></div>`})}
+  return `<div class="stop-editor"><div class="stop-editor-head"><span class="stop-editor-num">${si+1}º Posto</span><button class="stop-editor-del" onclick="removeStop(${si})">✕</button></div>
+  <div class="field"><label>Nome do posto</label><input value="${esc(s.nome)}" onchange="updateStop(${si},'nome',this.value)" placeholder="Posto Cerradão"></div>
+  <div class="field"><label>Cidade — UF</label><input value="${esc(s.cidade)}" onchange="updateStop(${si},'cidade',this.value)" placeholder="Luís Eduardo Magalhães — BA"></div>
+  <div class="field-row"><div class="field"><label>Tipo</label><select onchange="updateStop(${si},'tipo',this.value)"><option value="completa"${s.tipo==='completa'?' selected':''}>Completa</option><option value="parcial"${s.tipo==='parcial'?' selected':''}>Parcial</option></select></div><div class="field"><label>KM</label><input value="${esc(s.km)}" onchange="updateStop(${si},'km',this.value)" placeholder="850"></div></div>
+  <div class="field-row"><div class="field"><label>Litragem</label><input value="${esc(s.litragem)}" onchange="updateStop(${si},'litragem',this.value)" placeholder="Completa o tanque"></div><div class="field"><label>Cartão</label><select onchange="updateStop(${si},'cartao',this.value)"><option value="truckpag"${s.cartao==='truckpag'?' selected':''}>TruckPag</option><option value="shell"${s.cartao==='shell'?' selected':''}>Shell</option><option value="shell_expers"${s.cartao==='shell_expers'?' selected':''}>Shell Expers</option><option value="redefrota"${s.cartao==='redefrota'?' selected':''}>Rede Frota</option></select></div></div>
+  <div class="field"><label>Link Google Maps</label><input value="${esc(s.link||'')}" onchange="updateStop(${si},'link',this.value)" placeholder="https://maps.app.goo.gl/..."></div>
+  <div class="field"><label>Razão social (opcional)</label><input value="${esc(s.razaoSocial||'')}" onchange="updateStop(${si},'razaoSocial',this.value)"></div>
+  <div class="field"><label>Nota / Estratégia (opcional)</label><textarea onchange="updateStop(${si},'nota',this.value)" placeholder="Ex: Abastecer 200L para chegar até Sergipe...">${esc(s.nota||'')}</textarea></div>
+  <div class="field"><label>Litragem por marca (opcional)</label>${marcasHtml}<button class="add-marca-btn" onclick="addMarca(${si})">＋ Adicionar marca</button></div>
+  <button class="alt-toggle" onclick="toggleAlt(${si})"><span class="red">OU</span> ${hasAlt?'Remover posto alternativo':'Adicionar posto alternativo'}</button>
+  ${hasAlt?`<div class="alt-box">
+  <div class="field"><label>Nome alternativo</label><input value="${esc(a.nome)}" onchange="updateAlt(${si},'nome',this.value)"></div>
+  <div class="field"><label>Cidade — UF</label><input value="${esc(a.cidade)}" onchange="updateAlt(${si},'cidade',this.value)"></div>
+  <div class="field-row"><div class="field"><label>Litragem</label><input value="${esc(a.litragem)}" onchange="updateAlt(${si},'litragem',this.value)"></div><div class="field"><label>KM</label><input value="${esc(a.km)}" onchange="updateAlt(${si},'km',this.value)"></div></div>
+  <div class="field"><label>Link Maps</label><input value="${esc(a.link||'')}" onchange="updateAlt(${si},'link',this.value)"></div>
+  <div class="field"><label>Nota</label><input value="${esc(a.nota||'')}" onchange="updateAlt(${si},'nota',this.value)"></div></div>`:''}</div>`}
+
+function esc(s){return(s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;')}
+function getFuelStops(){return editData.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino')}
+function updateStop(si,key,val){getFuelStops()[si][key]=val}
+function updateAlt(si,key,val){const s=getFuelStops()[si];if(s.alternativa)s.alternativa[key]=val}
+function toggleAlt(si){const s=getFuelStops()[si];if(s.alternativa)delete s.alternativa;else s.alternativa={nome:'',cidade:'',litragem:'',cartao:s.cartao,km:'',nota:'',link:''};renderEditor()}
+function addMarca(si){const s=getFuelStops()[si];if(!s.marcas)s.marcas=[];s.marcas.push({marca:'',litros:''});renderEditor()}
+function removeMarca(si,mi){getFuelStops()[si].marcas.splice(mi,1);renderEditor()}
+function addStop(){const fs=getFuelStops();const newOrd=fs.length?Math.max(...fs.map(s=>s.ordem))+1:1;editData.paradas.splice(editData.paradas.length-1,0,{ordem:newOrd,tipo:'completa',nome:'',cidade:'',litragem:'Completa o tanque',cartao:'truckpag',km:'',link:''});renderEditor()}
+function removeStop(si){const s=getFuelStops()[si];const idx=editData.paradas.indexOf(s);editData.paradas.splice(idx,1);renderEditor()}
+
+function saveRoute(){
+  const v=k=>document.getElementById(k)?.value||'';
+  editData.nome=v('ed_nome');editData.numero=v('ed_numero');editData.regiao=v('ed_regiao');editData.estados=v('ed_estados');editData.distancia=v('ed_distancia');editData.tempo=v('ed_tempo');editData.linkRota=v('ed_linkRota');editData.subtitulo='Rota '+editData.numero;editData.id=editData.nome.toLowerCase().replace(/[^a-z0-9]/g,'-').replace(/-+/g,'-');
+  const orig=editData.paradas.find(p=>p.tipo==='origem');if(orig){orig.nome=v('ed_orig_nome');orig.cidade=v('ed_orig_cidade');orig.detalhe=v('ed_orig_detalhe')}
+  const dest=editData.paradas.find(p=>p.tipo==='destino');if(dest){dest.nome=v('ed_dest_nome');dest.cidade=v('ed_dest_cidade');dest.km=v('ed_dest_km')}
+  // Reorder
+  let ord=1;editData.paradas.forEach(p=>{if(p.tipo!=='origem'&&p.tipo!=='destino')p.ordem=ord++});
+  if(editingIndex>=0)routes[editingIndex]=editData;else routes.push(editData);
+  saveRoutes();showAdmin()}
+
+// ═══ NAV ═══
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0)}
+function showHome(){renderHome();showScreen('screenHome')}
+function showRoute(i){document.getElementById('routeContent').innerHTML=renderRoute(routes[i]);showScreen('screenRoute')}
+function showAdmin(){renderAdmin();showScreen('screenAdmin')}
+
+// ═══ LOGIN ═══
+const ADMIN_USER='admin';
+const ADMIN_PASS='confianca2026';
+
+function showLogin(){
+  // Remove existing login overlay if any
+  document.querySelector('.login-overlay')?.remove();
+  const ov=document.createElement('div');
+  ov.className='login-overlay';
+  ov.innerHTML=`<div class="login-box">
+    <div class="login-logo"><div class="lb"><span>C</span></div><span class="lt">CONFIANÇA</span></div>
+    <div class="login-title">Área Restrita</div>
+    <div class="login-sub">Digite suas credenciais para gerenciar as rotas</div>
+    <div class="login-field"><label>Usuário</label><input type="text" id="loginUser" placeholder="Usuário" autocomplete="off" autocorrect="off"></div>
+    <div class="login-field"><label>Senha</label><input type="password" id="loginPass" placeholder="Senha"></div>
+    <button class="login-btn" onclick="doLogin()">ENTRAR</button>
+    <div class="login-error" id="loginError">Usuário ou senha incorretos</div>
+    <button class="login-cancel" onclick="this.closest('.login-overlay').remove()">Cancelar</button>
+  </div>`;
+  document.body.appendChild(ov);
+  // Focus user field
+  setTimeout(()=>document.getElementById('loginUser')?.focus(),100);
+  // Enter key support
+  ov.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
 }
 
-// ══════════════════════════════════════════
-// NAV
-// ══════════════════════════════════════════
-function showHome(){document.getElementById('screenHome').classList.add('active');document.getElementById('screenRoute').classList.remove('active');window.scrollTo(0,0)}
-function showRoute(i){document.getElementById('routeContent').innerHTML=renderRoute(routes[i]);document.getElementById('screenHome').classList.remove('active');document.getElementById('screenRoute').classList.add('active');window.scrollTo(0,0)}
-
-// ══════════════════════════════════════════
-// SHEET CONFIG
-// ══════════════════════════════════════════
-function saveSheetUrl(){const u=document.getElementById('sheetUrl').value.trim();u?localStorage.setItem('rotograma_sheet_url',u):localStorage.removeItem('rotograma_sheet_url');loadData()}
-
-// ══════════════════════════════════════════
-// INIT
-// ══════════════════════════════════════════
-async function loadData(){
-  const sb=document.getElementById('statusBar'),st=document.getElementById('statusText'),dot=sb.querySelector('.dot');
-  const url=localStorage.getItem('rotograma_sheet_url');
-  if(url){document.getElementById('sheetUrl').value=url;st.textContent='Buscando planilha...';const d=await fetchFromSheet(url);if(d&&d.length){routes=d;dataSource='sheet';dot.className='dot on';st.textContent=`✓ ${routes.length} rota(s) da planilha`}else{routes=DEMO_DATA;dataSource='demo';dot.className='dot demo';st.textContent='Erro na planilha — dados de demonstração'}}
-  else{routes=DEMO_DATA;dataSource='demo';dot.className='dot demo';st.textContent='Dados de demonstração'}
-  renderHome();
+function doLogin(){
+  const u=(document.getElementById('loginUser')?.value||'').trim();
+  const p=(document.getElementById('loginPass')?.value||'').trim();
+  if(u===ADMIN_USER&&p===ADMIN_PASS){
+    document.querySelector('.login-overlay')?.remove();
+    showAdmin();
+  }else{
+    const err=document.getElementById('loginError');
+    if(err){err.style.display='block';setTimeout(()=>err.style.display='none',3000)}
+  }
 }
 
-// PWA
-let dp;
-window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();dp=e;document.getElementById('installBanner').classList.add('show')});
+// ═══ INIT ═══
+document.addEventListener('DOMContentLoaded',()=>{document.getElementById('searchInput')?.addEventListener('input',e=>filterRoutes(e.target.value))});
+let dp;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();dp=e;document.getElementById('installBanner').classList.add('show')});
 document.getElementById('installBtn')?.addEventListener('click',async()=>{if(!dp)return;dp.prompt();await dp.userChoice;dp=null;document.getElementById('installBanner').classList.remove('show')});
-document.getElementById('installDismiss')?.addEventListener('click',()=>{document.getElementById('installBanner').classList.remove('show')});
+document.getElementById('installDismiss')?.addEventListener('click',()=>document.getElementById('installBanner').classList.remove('show'));
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
-loadData();
+loadRoutes();renderHome();
 </script>
 </body>
 </html>
