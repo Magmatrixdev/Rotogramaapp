@@ -330,7 +330,7 @@ function renderStop(p){
   if(p.marcas&&p.marcas.length){brandTbl='<table class="brand-tbl"><thead><tr><th>Marca</th><th>Litragem</th></tr></thead><tbody>';for(const m of p.marcas){const cls=m.litros.toLowerCase().includes('não')?'bqty zero':'bqty';brandTbl+=`<tr><td class="bname">${m.marca}</td><td class="${cls}">${m.litros}</td></tr>`}brandTbl+='</tbody></table>'}
   const tipoLabel=p.tipo==='parcial'?`${p.ordem}º Abast. · Parcial`:`${p.ordem}º Abastecimento`;
   let actions='';
-  if(p.link)actions=`<div class="scard-actions"><a href="${p.link}" target="_blank">📍 Maps</a><a href="https://waze.com/ul?ll=${encodeURIComponent(p.link)}&navigate=yes" target="_blank">🧭 Waze</a></div>`;
+  if(p.link)actions=`<div class="scard-actions"><a href="${p.link}" target="_blank">📍 Maps</a></div>`;
   return `<div class="stop"><div class="stop-node ${nodeClass}"><div class="stop-node-dot"></div></div><div class="stop-km ${kmClass}">KM ${p.km}</div><div class="scard"><div class="scard-body"><div class="scard-brand-row"><div class="scard-brand-dot" style="background:${isParcial?'#e8a020':'#fe2627'}"></div><span class="scard-brand-name">${tipoLabel}</span></div><div class="scard-nome">${p.nome}</div><div class="scard-cidade">${p.cidade}</div>${details?`<div class="scard-details">${details}</div>`:''}${brandTbl}<div class="badge-row">${cartaoBadge(p.cartao)}</div>${note}</div>${actions}</div></div>`;
 }
 
