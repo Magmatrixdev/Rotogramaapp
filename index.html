@@ -207,7 +207,7 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 </div>
 <div class="screen" id="screenRoute"><div id="routeContent"></div></div>
 <div class="screen" id="screenAdmin"><div class="admin-top"><button class="back-btn" onclick="showHome()">‹</button><div class="admin-title">Gerenciar Rotas</div></div><div class="admin-scroll" id="adminList"></div></div>
-<div class="screen" id="screenEditor"><div class="admin-top"><button class="back-btn" onclick="showAdmin()">‹</button><div class="admin-title" id="editorTitle">Nova Rota</div></div><div class="editor-scroll" id="editorContent"></div><div class="editor-save"><button class="cancel" onclick="showAdmin()">Cancelar</button><button class="save" onclick="saveRoute()">Salvar Rota</button></div></div>
+<div class="screen" id="screenEditor"><div class="admin-top"><button class="back-btn" onclick="showAdmin()">‹</button><div class="admin-title" id="editorTitle">Nova Rota</div></div><div class="editor-scroll" id="editorContent"></div><div class="editor-save"><button class="cancel" onclick="cancelEdit()">Cancelar</button><button class="save" onclick="saveRoute()">Salvar Rota</button></div></div>
 
 <script>
 // ══════════════════════════════════════════════
@@ -260,6 +260,8 @@ let db=null;
 let firebaseReady=false;
 
 // ═══ FIREBASE ═══
+let isEditing=false;
+
 function initFirebase(){
   try{
     if(FIREBASE_CONFIG.apiKey==='COLE_AQUI_SUA_API_KEY'){
@@ -268,13 +270,11 @@ function initFirebase(){
     }
     firebase.initializeApp(FIREBASE_CONFIG);
     db=firebase.database();
-    // Listen for real-time changes
     db.ref('rotogramas').on('value',snap=>{
       const data=snap.val();
-      if(data&&Array.isArray(data)){routes=data;firebaseReady=true;setSyncStatus('on','Sincronizado com Firebase');renderHome()}
+      if(data&&Array.isArray(data)){routes=data;firebaseReady=true;setSyncStatus('on','Sincronizado com Firebase');if(!isEditing)renderHome()}
       else if(!data){
-        // First time: upload defaults
-        db.ref('rotogramas').set(DEFAULTS).then(()=>{routes=DEFAULTS;firebaseReady=true;setSyncStatus('on','Sincronizado com Firebase');renderHome()});
+        db.ref('rotogramas').set(DEFAULTS).then(()=>{routes=DEFAULTS;firebaseReady=true;setSyncStatus('on','Sincronizado com Firebase');if(!isEditing)renderHome()});
       }
     },err=>{
       console.error('Firebase error:',err);
@@ -342,7 +342,52 @@ function confirmDelete(i){routes.splice(i,1);saveToFirebase();renderAdmin()}
 
 // ═══ EDITOR ═══
 let editingIndex=-1;let editData={};
-function editRoute(i){editingIndex=i;if(i>=0){editData=JSON.parse(JSON.stringify(routes[i]));document.getElementById('editorTitle').textContent='Editar Rota'}else{editData={id:'',nome:'',estados:'',numero:String(routes.length+1).padStart(2,'0'),regiao:'Centro-Oeste',subtitulo:'',linkRota:'',distancia:'',tempo:'',paradas:[{ordem:0,tipo:'origem',nome:'',cidade:'',km:'0',detalhe:''},{ordem:1,tipo:'destino',nome:'',cidade:'',km:''}]};document.getElementById('editorTitle').textContent='Nova Rota'}renderEditor();showScreen('screenEditor')}
+
+// Auto-save draft every time a field changes
+function saveDraft(){
+  captureEditorFields();
+  localStorage.setItem('rotograma_draft',JSON.stringify({index:editingIndex,data:editData}));
+}
+function clearDraft(){localStorage.removeItem('rotograma_draft')}
+function loadDraft(){try{const d=JSON.parse(localStorage.getItem('rotograma_draft'));if(d&&d.data&&d.data.nome)return d}catch(e){}return null}
+
+// Capture current field values into editData without re-rendering
+function captureEditorFields(){
+  const v=k=>document.getElementById(k)?.value;
+  if(v('ed_nome')!==undefined){
+    editData.nome=v('ed_nome')||editData.nome;
+    editData.numero=v('ed_numero')||editData.numero;
+    editData.regiao=v('ed_regiao')||editData.regiao;
+    editData.estados=v('ed_estados')||editData.estados;
+    editData.distancia=v('ed_distancia')||editData.distancia;
+    editData.tempo=v('ed_tempo')||editData.tempo;
+    editData.linkRota=v('ed_linkRota')||editData.linkRota;
+    const orig=editData.paradas.find(p=>p.tipo==='origem');
+    if(orig){orig.nome=v('ed_orig_nome')||orig.nome;orig.cidade=v('ed_orig_cidade')||orig.cidade;orig.detalhe=v('ed_orig_detalhe')||orig.detalhe}
+    const dest=editData.paradas.find(p=>p.tipo==='destino');
+    if(dest){dest.nome=v('ed_dest_nome')||dest.nome;dest.cidade=v('ed_dest_cidade')||dest.cidade;dest.km=v('ed_dest_km')||dest.km}
+  }
+}
+
+function editRoute(i){
+  isEditing=true;editingIndex=i;
+  // Check for saved draft
+  const draft=loadDraft();
+  if(draft&&draft.index===i){
+    editData=draft.data;
+    document.getElementById('editorTitle').textContent=i>=0?'Editar Rota (rascunho)':'Nova Rota (rascunho)';
+  }else if(i>=0){
+    editData=JSON.parse(JSON.stringify(routes[i]));
+    document.getElementById('editorTitle').textContent='Editar Rota';
+  }else{
+    editData={id:'',nome:'',estados:'',numero:String(routes.length+1).padStart(2,'0'),regiao:'Centro-Oeste',subtitulo:'',linkRota:'',distancia:'',tempo:'',paradas:[{ordem:0,tipo:'origem',nome:'',cidade:'',km:'0',detalhe:''},{ordem:1,tipo:'destino',nome:'',cidade:'',km:''}]};
+    document.getElementById('editorTitle').textContent='Nova Rota';
+  }
+  renderEditor();showScreen('screenEditor');
+  // Start auto-save interval
+  if(window._draftInterval)clearInterval(window._draftInterval);
+  window._draftInterval=setInterval(saveDraft,3000);
+}
 function renderEditor(){
   const d=editData;const fs=d.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino');const orig=d.paradas.find(p=>p.tipo==='origem')||{};const dest=d.paradas.find(p=>p.tipo==='destino')||{};
   let h=`<div class="editor-section"><div class="editor-section-title"><span class="bar"></span>Dados da Rota</div>
@@ -384,18 +429,24 @@ function addMarca(si){const s=getFuelStops()[si];if(!s.marcas)s.marcas=[];s.marc
 function removeMarca(si,mi){getFuelStops()[si].marcas.splice(mi,1);renderEditor()}
 function addStop(){const fs=getFuelStops();const o=fs.length?Math.max(...fs.map(s=>s.ordem))+1:1;editData.paradas.splice(editData.paradas.length-1,0,{ordem:o,tipo:'completa',nome:'',cidade:'',litragem:'Completa o tanque',cartao:'truckpag',km:'',link:''});renderEditor()}
 function removeStop(si){const s=getFuelStops()[si];editData.paradas.splice(editData.paradas.indexOf(s),1);renderEditor()}
-function saveRoute(){const v=k=>document.getElementById(k)?.value||'';editData.nome=v('ed_nome');editData.numero=v('ed_numero');editData.regiao=v('ed_regiao');editData.estados=v('ed_estados');editData.distancia=v('ed_distancia');editData.tempo=v('ed_tempo');editData.linkRota=v('ed_linkRota');editData.subtitulo='Rota '+editData.numero;editData.id=editData.nome.toLowerCase().replace(/[^a-z0-9]/g,'-').replace(/-+/g,'-');
-  const orig=editData.paradas.find(p=>p.tipo==='origem');if(orig){orig.nome=v('ed_orig_nome');orig.cidade=v('ed_orig_cidade');orig.detalhe=v('ed_orig_detalhe')}
-  const dest=editData.paradas.find(p=>p.tipo==='destino');if(dest){dest.nome=v('ed_dest_nome');dest.cidade=v('ed_dest_cidade');dest.km=v('ed_dest_km')}
+function saveRoute(){captureEditorFields();
+  editData.subtitulo='Rota '+editData.numero;editData.id=editData.nome.toLowerCase().replace(/[^a-z0-9]/g,'-').replace(/-+/g,'-');
   let ord=1;editData.paradas.forEach(p=>{if(p.tipo!=='origem'&&p.tipo!=='destino')p.ordem=ord++});
   if(editingIndex>=0)routes[editingIndex]=editData;else routes.push(editData);
+  clearDraft();isEditing=false;if(window._draftInterval)clearInterval(window._draftInterval);
   saveToFirebase();showAdmin()}
+
+function cancelEdit(){
+  saveDraft();
+  const ov=document.createElement('div');ov.className='confirm-overlay';
+  ov.innerHTML=`<div class="confirm-box"><h3>Sair da edição?</h3><p>Seu rascunho foi salvo automaticamente. Quando voltar a editar, os dados estarão preservados.</p><div class="btns"><button style="background:#eae8e3;color:#1c1c1c" onclick="clearDraft();this.closest('.confirm-overlay').remove();showAdmin()">Descartar</button><button style="background:#fe2627;color:#fff" onclick="this.closest('.confirm-overlay').remove();showAdmin()">Manter rascunho</button></div></div>`;
+  document.body.appendChild(ov)}
 
 // ═══ NAV ═══
 function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0)}
-function showHome(){renderHome();showScreen('screenHome')}
+function showHome(){isEditing=false;if(window._draftInterval)clearInterval(window._draftInterval);renderHome();showScreen('screenHome')}
 function showRoute(i){document.getElementById('routeContent').innerHTML=renderRoute(routes[i]);showScreen('screenRoute')}
-function showAdmin(){renderAdmin();showScreen('screenAdmin')}
+function showAdmin(){isEditing=false;if(window._draftInterval)clearInterval(window._draftInterval);renderAdmin();showScreen('screenAdmin')}
 
 // ═══ LOGIN ═══
 function showLogin(){document.querySelector('.login-overlay')?.remove();const ov=document.createElement('div');ov.className='login-overlay';ov.innerHTML=`<div class="login-box"><div class="login-logo"><div class="lb"><span>C</span></div><span class="lt">CONFIANÇA</span></div><div class="login-title">Área Restrita</div><div class="login-sub">Digite suas credenciais para gerenciar as rotas</div><div class="login-field"><label>Usuário</label><input type="text" id="loginUser" placeholder="Usuário" autocomplete="off"></div><div class="login-field"><label>Senha</label><input type="password" id="loginPass" placeholder="Senha"></div><button class="login-btn" onclick="doLogin()">ENTRAR</button><div class="login-error" id="loginError">Usuário ou senha incorretos</div><button class="login-cancel" onclick="this.closest('.login-overlay').remove()">Cancelar</button></div>`;document.body.appendChild(ov);setTimeout(()=>document.getElementById('loginUser')?.focus(),100);ov.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()})}
