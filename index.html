@@ -9,6 +9,11 @@
 <title>Rotogramas — Confiança</title>
 <link rel="manifest" href="./manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- FIREBASE SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 ::-webkit-scrollbar{width:0;height:0}
@@ -16,8 +21,6 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 @keyframes spin{to{transform:rotate(360deg)}}
 .screen{display:none;flex-direction:column;min-height:100vh}
 .screen.active{display:flex}
-
-/* ═══ HOME ═══ */
 .home-top{padding:20px 22px 0}
 .logo-row{display:flex;align-items:center;gap:11px;margin-bottom:22px}
 .logo-box{width:42px;height:42px;background:#fe2627;border-radius:11px;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(254,38,39,.28)}
@@ -28,7 +31,6 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .home-subtext{font-family:'Barlow',sans-serif;font-size:13px;color:#8a8886;margin-top:6px}
 .admin-toggle{position:absolute;top:20px;right:22px;width:42px;height:42px;border-radius:12px;background:#eae8e3;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px}
 .admin-toggle:active{background:#e4e2dd}
-
 .search-wrap{margin-top:18px;position:relative}
 .search-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);width:15px;height:15px;border:2px solid #b0aea9;border-radius:50%}
 .search-icon::after{content:'';position:absolute;left:11px;top:12px;width:7px;height:2px;background:#b0aea9;transform:rotate(45deg);transform-origin:left}
@@ -37,7 +39,6 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .search-input::placeholder{color:#b0aea9}
 .search-clear{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:#e4e2dd;border:none;width:28px;height:28px;border-radius:50%;font-size:14px;color:#8a8886;cursor:pointer;display:none;align-items:center;justify-content:center}
 .search-clear.vis{display:flex}
-
 .home-scroll{flex:1;overflow-y:auto;padding:20px 22px 28px}
 .region{margin-bottom:26px}
 .region-hd{display:flex;align-items:center;gap:10px;margin-bottom:12px}
@@ -45,7 +46,6 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .region-name{font-weight:700;font-size:15px;letter-spacing:.16em;color:#1c1c1c;text-transform:uppercase}
 .region-count{font-family:'Barlow',sans-serif;font-size:11px;color:#8a8886;background:#eae8e3;padding:2px 9px;border-radius:20px}
 .region-line{flex:1;height:1px;background:#e4e2dd}
-
 .rcard{cursor:pointer;background:#fff;border:1.5px solid #e8e6e1;border-radius:16px;padding:15px 16px;display:flex;align-items:center;gap:14px;margin-bottom:10px;box-shadow:0 2px 10px rgba(40,38,34,.04);transition:transform .1s}
 .rcard:active{transform:scale(.98);border-color:#fe2627}
 .rcard-uf{flex:0 0 auto;width:46px;height:46px;border-radius:12px;background:#262625;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;color:#f4f4f2}
@@ -58,8 +58,11 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .rcard-arrow{flex:0 0 auto;color:#c2c0ba;font-size:22px}
 .no-results{text-align:center;padding:50px 20px;color:#9a9894;font-family:'Barlow',sans-serif;display:none}
 .no-results span{font-size:40px;display:block;margin-bottom:8px}
-
-/* ═══ ROTOGRAMA ═══ */
+/* SYNC STATUS */
+.sync-bar{font-family:'Barlow',sans-serif;font-size:11px;text-align:center;padding:6px 22px;color:#1f8a3d;background:rgba(31,138,61,.08)}
+.sync-bar.off{color:#e8a020;background:rgba(232,160,32,.08)}
+.sync-bar.err{color:#fe2627;background:rgba(254,38,39,.08)}
+/* ROTOGRAMA */
 .roto-top{flex:0 0 auto;padding:14px 20px 0}
 .back-btn{cursor:pointer;width:42px;height:42px;border-radius:12px;background:#eae8e3;border:none;display:flex;align-items:center;justify-content:center;color:#1c1c1c;font-size:24px;font-weight:700}
 .back-btn:active{background:#e4e2dd}
@@ -83,13 +86,10 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .stop{position:relative;padding-left:56px}
 .stop-node{position:absolute;left:15px;top:8px;width:24px;height:24px;border-radius:50%;background:#f4f4f2;border:2px solid #fe2627;display:flex;align-items:center;justify-content:center}
 .stop-node-dot{width:8px;height:8px;border-radius:50%;background:#fe2627}
-.stop-node.parcial{border-color:#e8a020}
-.stop-node.parcial .stop-node-dot{background:#e8a020}
-.stop-node.dest{border-color:#4a4a49;background:#4a4a49}
-.stop-node.dest .stop-node-dot{background:#fff;width:9px;height:9px;border-radius:2px}
+.stop-node.parcial{border-color:#e8a020}.stop-node.parcial .stop-node-dot{background:#e8a020}
+.stop-node.dest{border-color:#4a4a49;background:#4a4a49}.stop-node.dest .stop-node-dot{background:#fff;width:9px;height:9px;border-radius:2px}
 .stop-km{position:absolute;left:50px;top:6px;font-family:'Barlow',sans-serif;font-weight:700;font-size:10px;color:#fe2627;background:#f4f4f2;padding:2px 0}
-.stop-km.parcial{color:#e8a020}
-.stop-km.dest{color:#4a4a49}
+.stop-km.parcial{color:#e8a020}.stop-km.dest{color:#4a4a49}
 .scard{margin-top:18px;background:#fff;border:1.5px solid #e8e6e1;border-radius:16px;overflow:hidden;box-shadow:0 2px 10px rgba(40,38,34,.05)}
 .scard.dashed{border-style:dashed}
 .scard-body{padding:14px 15px 12px}
@@ -112,22 +112,19 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .brand-tbl td{padding:8px 10px;font-family:'Barlow',sans-serif;font-size:13px;border-bottom:1px solid #f4f4f2}
 .brand-tbl tr:last-child td{border:none}
 .brand-tbl .bname{font-weight:700;color:#1c1c1c}
-.brand-tbl .bqty{font-weight:700;color:#1a6fb5}
-.brand-tbl .bqty.zero{color:#1f8a3d}
+.brand-tbl .bqty{font-weight:700;color:#1a6fb5}.brand-tbl .bqty.zero{color:#1f8a3d}
 .ou-div{display:flex;align-items:center;gap:10px;padding:4px 0;margin-left:56px}
 .ou-line{flex:1;height:1px;background:#e4e2dd}
 .ou-pill{font-weight:700;font-size:13px;color:#fe2627;background:#eae8e3;padding:3px 14px;border-radius:10px}
 .dest-stop{position:relative;padding-left:56px;margin-top:4px}
 .dest-stop .stop-node{top:2px}
 .dest-nome{padding:3px 0;font-weight:700;font-size:15px;color:#1c1c1c;text-transform:uppercase}
-
-/* ═══ ADMIN PANEL ═══ */
+/* ADMIN */
 .admin-top{padding:14px 20px;display:flex;align-items:center;gap:12px}
 .admin-title{flex:1;font-weight:700;font-size:20px;text-transform:uppercase}
 .admin-scroll{flex:1;overflow-y:auto;padding:0 20px 28px}
 .admin-add{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;background:#fe2627;border-radius:12px;color:#fff;font-weight:700;font-size:15px;border:none;width:100%;cursor:pointer;min-height:50px;margin-bottom:18px}
 .admin-add:active{background:#e01f20}
-
 .admin-rcard{background:#fff;border:1.5px solid #e8e6e1;border-radius:16px;padding:14px 16px;margin-bottom:10px;box-shadow:0 2px 10px rgba(40,38,34,.04)}
 .admin-rcard-head{display:flex;align-items:center;gap:10px}
 .admin-rcard-num{width:36px;height:36px;border-radius:10px;background:#262625;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#f4f4f2}
@@ -136,12 +133,9 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .admin-rcard-sub{font-family:'Barlow',sans-serif;font-size:11px;color:#8a8886;margin-top:2px}
 .admin-rcard-actions{display:flex;gap:6px;margin-top:10px}
 .admin-btn{flex:1;padding:10px;border-radius:8px;border:none;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;cursor:pointer;min-height:42px}
-.admin-btn-edit{background:#eae8e3;color:#1c1c1c}
-.admin-btn-edit:active{background:#e4e2dd}
-.admin-btn-del{background:rgba(254,38,39,.1);color:#fe2627}
-.admin-btn-del:active{background:rgba(254,38,39,.2)}
-
-/* ═══ EDITOR ═══ */
+.admin-btn-edit{background:#eae8e3;color:#1c1c1c}.admin-btn-edit:active{background:#e4e2dd}
+.admin-btn-del{background:rgba(254,38,39,.1);color:#fe2627}.admin-btn-del:active{background:rgba(254,38,39,.2)}
+/* EDITOR */
 .editor-scroll{flex:1;overflow-y:auto;padding:0 20px 28px}
 .editor-section{margin-bottom:18px}
 .editor-section-title{font-weight:700;font-size:13px;letter-spacing:.12em;color:#9a9894;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px}
@@ -152,45 +146,29 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .field input:focus,.field select:focus,.field textarea:focus{border-color:#fe2627}
 .field textarea{resize:vertical;min-height:60px}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.field-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
-
 .stop-editor{background:#fff;border:1.5px solid #e8e6e1;border-radius:14px;padding:14px;margin-bottom:10px;position:relative}
 .stop-editor-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .stop-editor-num{font-weight:700;font-size:14px;color:#fe2627}
 .stop-editor-del{background:none;border:none;color:#fe2627;font-size:22px;cursor:pointer;padding:4px 8px}
-.stop-editor-del:active{opacity:.6}
-
 .alt-toggle{display:flex;align-items:center;gap:8px;padding:10px;background:#f4f4f2;border-radius:8px;border:none;width:100%;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;color:#8a8886;margin-top:6px}
 .alt-toggle:active{background:#eae8e3}
 .alt-toggle .red{color:#fe2627}
 .alt-box{margin-top:8px;padding:12px;background:#faf9f7;border:1px dashed #e4e2dd;border-radius:10px}
-
 .marca-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px}
 .add-marca-btn{background:#eae8e3;border:none;border-radius:8px;padding:8px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;color:#8a8886;cursor:pointer;width:100%;margin-top:4px}
-
 .add-stop-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:12px;background:#eae8e3;border-radius:12px;border:none;width:100%;cursor:pointer;font-weight:700;font-size:14px;color:#8a8886;margin:8px 0 16px}
 .add-stop-btn:active{background:#e4e2dd}
-
 .editor-save{display:flex;gap:10px;padding:16px 20px;background:#f4f4f2;border-top:1px solid #e4e2dd}
 .editor-save button{flex:1;padding:14px;border-radius:10px;border:none;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;cursor:pointer;min-height:50px}
-.editor-save .save{background:#fe2627;color:#fff}
-.editor-save .save:active{background:#e01f20}
-.editor-save .cancel{background:#eae8e3;color:#1c1c1c}
-.editor-save .cancel:active{background:#e4e2dd}
-
-.install-bar{display:none;background:#1c1c1c;padding:12px 16px;align-items:center;gap:12px}
-.install-bar.show{display:flex}
-.install-bar p{flex:1;font-family:'Barlow',sans-serif;font-size:13px;color:#fff}
-.install-btn{background:#fe2627;color:#fff;border:none;border-radius:8px;padding:10px 18px;font-weight:700;font-size:14px;cursor:pointer;min-height:44px}
-.install-x{background:none;border:none;color:#666;font-size:20px;cursor:pointer}
+.editor-save .save{background:#fe2627;color:#fff}.editor-save .save:active{background:#e01f20}
+.editor-save .cancel{background:#eae8e3;color:#1c1c1c}.editor-save .cancel:active{background:#e4e2dd}
 .confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:200;padding:20px}
 .confirm-box{background:#fff;border-radius:16px;padding:24px;max-width:320px;width:100%;text-align:center}
 .confirm-box h3{font-size:18px;margin-bottom:8px}
 .confirm-box p{font-family:'Barlow',sans-serif;font-size:14px;color:#8a8886;margin-bottom:18px}
 .confirm-box .btns{display:flex;gap:10px}
 .confirm-box .btns button{flex:1;padding:12px;border-radius:10px;border:none;font-weight:700;font-size:14px;cursor:pointer;min-height:44px}
-
-/* LOGIN MODAL */
+/* LOGIN */
 .login-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:300;padding:20px}
 .login-box{background:#fff;border-radius:20px;padding:28px 24px;max-width:340px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.2)}
 .login-logo{display:flex;align-items:center;gap:10px;margin-bottom:20px}
@@ -207,42 +185,49 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .login-btn:active{background:#e01f20}
 .login-error{font-family:'Barlow',sans-serif;font-size:12px;color:#fe2627;text-align:center;margin-top:10px;display:none}
 .login-cancel{display:block;text-align:center;font-family:'Barlow',sans-serif;font-size:13px;color:#9a9894;margin-top:12px;cursor:pointer;border:none;background:none;width:100%}
-.login-cancel:active{color:#1c1c1c}
+.install-bar{display:none;background:#1c1c1c;padding:12px 16px;align-items:center;gap:12px}
+.install-bar.show{display:flex}
+.install-bar p{flex:1;font-family:'Barlow',sans-serif;font-size:13px;color:#fff}
+.install-btn{background:#fe2627;color:#fff;border:none;border-radius:8px;padding:10px 18px;font-weight:700;font-size:14px;cursor:pointer;min-height:44px}
+.install-x{background:none;border:none;color:#666;font-size:20px;cursor:pointer}
 </style>
 </head>
 <body>
-
-<div class="install-bar" id="installBanner"><p>Instale o app na tela inicial</p><button class="install-btn" id="installBtn">Instalar</button><button class="install-x" id="installDismiss">✕</button></div>
-
-<!-- HOME -->
+<div class="install-bar" id="installBanner"><p>Instale o app</p><button class="install-btn" id="installBtn">Instalar</button><button class="install-x" id="installDismiss">✕</button></div>
 <div class="screen active" id="screenHome">
   <div class="home-top" style="position:relative">
-    <button class="admin-toggle" onclick="showLogin()" title="Gerenciar rotas">⚙️</button>
+    <button class="admin-toggle" onclick="showLogin()">⚙️</button>
     <div class="logo-row"><div class="logo-box"><span>C</span></div><div><div class="logo-title">CONFIANÇA</div><div class="logo-sub">SEGURANÇA QUE MOVE</div></div></div>
     <div class="home-heading">Rotogramas</div>
     <div class="home-subtext" id="routeCountText">Carregando...</div>
     <div class="search-wrap"><div class="search-icon"></div><input class="search-input" id="searchInput" placeholder="Buscar rota, cidade ou destino" autocomplete="off" autocorrect="off" spellcheck="false"><button class="search-clear" id="searchClear" onclick="clearSearch()">✕</button></div>
   </div>
+  <div class="sync-bar" id="syncBar">⏳ Conectando...</div>
   <div class="home-scroll" id="routeList"></div>
 </div>
-
-<!-- ROTOGRAMA -->
 <div class="screen" id="screenRoute"><div id="routeContent"></div></div>
-
-<!-- ADMIN -->
-<div class="screen" id="screenAdmin">
-  <div class="admin-top"><button class="back-btn" onclick="showHome()">‹</button><div class="admin-title">Gerenciar Rotas</div></div>
-  <div class="admin-scroll" id="adminList"></div>
-</div>
-
-<!-- EDITOR -->
-<div class="screen" id="screenEditor">
-  <div class="admin-top"><button class="back-btn" onclick="showAdmin()">‹</button><div class="admin-title" id="editorTitle">Nova Rota</div></div>
-  <div class="editor-scroll" id="editorContent"></div>
-  <div class="editor-save"><button class="cancel" onclick="showAdmin()">Cancelar</button><button class="save" onclick="saveRoute()">Salvar Rota</button></div>
-</div>
+<div class="screen" id="screenAdmin"><div class="admin-top"><button class="back-btn" onclick="showHome()">‹</button><div class="admin-title">Gerenciar Rotas</div></div><div class="admin-scroll" id="adminList"></div></div>
+<div class="screen" id="screenEditor"><div class="admin-top"><button class="back-btn" onclick="showAdmin()">‹</button><div class="admin-title" id="editorTitle">Nova Rota</div></div><div class="editor-scroll" id="editorContent"></div><div class="editor-save"><button class="cancel" onclick="showAdmin()">Cancelar</button><button class="save" onclick="saveRoute()">Salvar Rota</button></div></div>
 
 <script>
+// ══════════════════════════════════════════════
+// 🔥 FIREBASE CONFIG
+// Substitua com as credenciais do seu projeto Firebase
+// ══════════════════════════════════════════════
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyAbYd2RulYeBr-_IQ8G4ccmzxKf8gAjLPQ",
+  authDomain: "rotogramas-confianca.firebaseapp.com",
+  databaseURL: "https://rotogramas-confianca-default-rtdb.firebaseio.com",
+  projectId: "rotogramas-confianca",
+  storageBucket: "rotogramas-confianca.firebasestorage.app",
+  messagingSenderId: "156398881281",
+  appId: "1:156398881281:web:a67f3e2ee02b969ab78e00"
+};
+// ══════════════════════════════════════════════
+
+const ADMIN_USER='admin';
+const ADMIN_PASS='confianca2026';
+
 // ═══ DEFAULT DATA ═══
 const DEFAULTS=[
 {id:'lucas-goiania',nome:'Lucas do Rio Verde → Goiânia',estados:'MT → GO',numero:'01',regiao:'Centro-Oeste',subtitulo:'Rota 01',linkRota:'https://maps.app.goo.gl/RQmTr6AP3kjDG65Z8',distancia:'~900 km',tempo:'~12h',paradas:[
@@ -271,13 +256,50 @@ const DEFAULTS=[
 
 const REGION_ORDER=['Centro-Oeste','Nordeste','Sudeste','Sul'];
 let routes=[];
+let db=null;
+let firebaseReady=false;
 
-function loadRoutes(){const s=localStorage.getItem('rotogramas_data');if(s){try{routes=JSON.parse(s);return}catch(e){}}routes=JSON.parse(JSON.stringify(DEFAULTS))}
-function saveRoutes(){localStorage.setItem('rotogramas_data',JSON.stringify(routes))}
+// ═══ FIREBASE ═══
+function initFirebase(){
+  try{
+    if(FIREBASE_CONFIG.apiKey==='COLE_AQUI_SUA_API_KEY'){
+      setSyncStatus('off','Firebase não configurado — dados locais');
+      loadLocal();return;
+    }
+    firebase.initializeApp(FIREBASE_CONFIG);
+    db=firebase.database();
+    // Listen for real-time changes
+    db.ref('rotogramas').on('value',snap=>{
+      const data=snap.val();
+      if(data&&Array.isArray(data)){routes=data;firebaseReady=true;setSyncStatus('on','Sincronizado com Firebase');renderHome()}
+      else if(!data){
+        // First time: upload defaults
+        db.ref('rotogramas').set(DEFAULTS).then(()=>{routes=DEFAULTS;firebaseReady=true;setSyncStatus('on','Sincronizado com Firebase');renderHome()});
+      }
+    },err=>{
+      console.error('Firebase error:',err);
+      setSyncStatus('err','Erro Firebase — dados locais');
+      loadLocal();
+    });
+  }catch(e){
+    console.error('Firebase init error:',e);
+    setSyncStatus('err','Erro Firebase — dados locais');
+    loadLocal();
+  }
+}
+
+function saveToFirebase(){
+  if(db&&firebaseReady){db.ref('rotogramas').set(routes).then(()=>setSyncStatus('on','Salvo e sincronizado')).catch(()=>setSyncStatus('err','Erro ao salvar'))}
+  else{localStorage.setItem('rotogramas_data',JSON.stringify(routes))}
+}
+
+function loadLocal(){const s=localStorage.getItem('rotogramas_data');if(s){try{routes=JSON.parse(s);renderHome();return}catch(e){}}routes=JSON.parse(JSON.stringify(DEFAULTS));renderHome()}
+
+function setSyncStatus(type,text){const el=document.getElementById('syncBar');if(!el)return;el.className='sync-bar'+(type==='on'?'':type==='off'?' off':' err');const icons={on:'🟢',off:'🟡',err:'🔴'};el.textContent=`${icons[type]||''} ${text}`}
+
+// ═══ RENDER HOME ═══
 function norm(s){return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()}
 function searchText(r){const p=[r.nome,r.estados,r.subtitulo,r.numero,r.regiao||''];for(const s of r.paradas)p.push(s.nome,s.cidade,s.cartao||'',s.razaoSocial||'');return p.join(' ')}
-
-// ═══ HOME ═══
 function renderHome(){
   const el=document.getElementById('routeList');
   const rm={};routes.forEach((r,i)=>{const g=r.regiao||'Outras';if(!rm[g])rm[g]=[];rm[g].push({r,i})});
@@ -289,10 +311,9 @@ function renderHome(){
       h+=`<div class="rcard" data-search="${norm(searchText(r))}" onclick="showRoute(${i})"><div class="rcard-uf">${r.numero}</div><div class="rcard-info"><div class="rcard-nome">${r.nome}</div><div class="rcard-detail">${r.estados}</div><div class="rcard-stats"><span>${r.distancia||''}</span><span class="dot">·</span><span>${r.tempo||''}</span><span class="dot">·</span><span class="red">⛽ ${stops} posto${stops!==1?'s':''}</span></div></div><div class="rcard-arrow">›</div></div>`}
     h+='</div>'}
   h+='<div class="no-results" id="noResults"><span>🔍</span>Nenhuma rota encontrada</div>';
-  el.innerHTML=h;
-  document.getElementById('routeCountText').textContent=`${routes.length} rotas ativas · toque para abrir`;
+  el.innerHTML=h;document.getElementById('routeCountText').textContent=`${routes.length} rotas ativas · toque para abrir`;
+  const inp=document.getElementById('searchInput');if(inp&&inp.value.trim())filterRoutes(inp.value);
 }
-
 function filterRoutes(q){const cards=document.querySelectorAll('.rcard'),regs=document.querySelectorAll('.region'),nr=document.getElementById('noResults'),cl=document.getElementById('searchClear');const n=norm(q.trim());if(!n){cards.forEach(c=>c.style.display='');regs.forEach(r=>r.style.display='');nr.style.display='none';cl.classList.remove('vis');return}cl.classList.add('vis');const terms=n.split(/\s+/);let vis=0;cards.forEach(c=>{const m=terms.every(x=>(c.dataset.search||'').includes(x));c.style.display=m?'':'none';if(m)vis++});regs.forEach(r=>{r.style.display=[...r.querySelectorAll('.rcard')].some(c=>c.style.display!=='none')?'':'none'});nr.style.display=vis?'none':'block'}
 function clearSearch(){const i=document.getElementById('searchInput');i.value='';filterRoutes('');i.focus()}
 
@@ -316,83 +337,59 @@ function renderAdmin(){const el=document.getElementById('adminList');let h=`<but
   routes.forEach((r,i)=>{const stops=r.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino').length;
     h+=`<div class="admin-rcard"><div class="admin-rcard-head"><div class="admin-rcard-num">${r.numero}</div><div class="admin-rcard-info"><div class="admin-rcard-name">${r.nome}</div><div class="admin-rcard-sub">${r.regiao} · ${stops} postos · ${r.distancia}</div></div></div><div class="admin-rcard-actions"><button class="admin-btn admin-btn-edit" onclick="editRoute(${i})">✏️ Editar</button><button class="admin-btn admin-btn-del" onclick="deleteRoute(${i})">🗑️ Excluir</button></div></div>`});
   el.innerHTML=h}
-
 function deleteRoute(i){const r=routes[i];const ov=document.createElement('div');ov.className='confirm-overlay';ov.innerHTML=`<div class="confirm-box"><h3>Excluir rota?</h3><p>${r.nome}</p><div class="btns"><button style="background:#eae8e3;color:#1c1c1c" onclick="this.closest('.confirm-overlay').remove()">Cancelar</button><button style="background:#fe2627;color:#fff" onclick="confirmDelete(${i});this.closest('.confirm-overlay').remove()">Excluir</button></div></div>`;document.body.appendChild(ov)}
-function confirmDelete(i){routes.splice(i,1);saveRoutes();renderAdmin()}
+function confirmDelete(i){routes.splice(i,1);saveToFirebase();renderAdmin()}
 
 // ═══ EDITOR ═══
 let editingIndex=-1;let editData={};
-
-function editRoute(i){
-  editingIndex=i;
-  if(i>=0){editData=JSON.parse(JSON.stringify(routes[i]));document.getElementById('editorTitle').textContent='Editar Rota'}
-  else{editData={id:'',nome:'',estados:'',numero:String(routes.length+1).padStart(2,'0'),regiao:'Centro-Oeste',subtitulo:'',linkRota:'',distancia:'',tempo:'',paradas:[{ordem:0,tipo:'origem',nome:'',cidade:'',km:'0',detalhe:''},{ordem:1,tipo:'destino',nome:'',cidade:'',km:''}]};document.getElementById('editorTitle').textContent='Nova Rota'}
-  renderEditor();showScreen('screenEditor')}
-
+function editRoute(i){editingIndex=i;if(i>=0){editData=JSON.parse(JSON.stringify(routes[i]));document.getElementById('editorTitle').textContent='Editar Rota'}else{editData={id:'',nome:'',estados:'',numero:String(routes.length+1).padStart(2,'0'),regiao:'Centro-Oeste',subtitulo:'',linkRota:'',distancia:'',tempo:'',paradas:[{ordem:0,tipo:'origem',nome:'',cidade:'',km:'0',detalhe:''},{ordem:1,tipo:'destino',nome:'',cidade:'',km:''}]};document.getElementById('editorTitle').textContent='Nova Rota'}renderEditor();showScreen('screenEditor')}
 function renderEditor(){
-  const d=editData;const fuelStops=d.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino');const orig=d.paradas.find(p=>p.tipo==='origem')||{};const dest=d.paradas.find(p=>p.tipo==='destino')||{};
+  const d=editData;const fs=d.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino');const orig=d.paradas.find(p=>p.tipo==='origem')||{};const dest=d.paradas.find(p=>p.tipo==='destino')||{};
   let h=`<div class="editor-section"><div class="editor-section-title"><span class="bar"></span>Dados da Rota</div>
   <div class="field"><label>Nome da rota</label><input id="ed_nome" value="${esc(d.nome)}" placeholder="Ex: Goiânia → Cabedelo"></div>
   <div class="field-row"><div class="field"><label>Número</label><input id="ed_numero" value="${esc(d.numero)}" placeholder="01"></div><div class="field"><label>Região</label><select id="ed_regiao">${REGION_ORDER.map(r=>`<option${d.regiao===r?' selected':''}>${r}</option>`).join('')}</select></div></div>
   <div class="field"><label>Estados</label><input id="ed_estados" value="${esc(d.estados)}" placeholder="GO → BA → SE"></div>
   <div class="field-row"><div class="field"><label>Distância</label><input id="ed_distancia" value="${esc(d.distancia)}" placeholder="~900 km"></div><div class="field"><label>Tempo</label><input id="ed_tempo" value="${esc(d.tempo)}" placeholder="~12h"></div></div>
   <div class="field"><label>Link rota Google Maps</label><input id="ed_linkRota" value="${esc(d.linkRota)}" placeholder="https://maps.app.goo.gl/..."></div></div>`;
-
   h+=`<div class="editor-section"><div class="editor-section-title"><span class="bar"></span>Origem</div>
   <div class="field"><label>Local</label><input id="ed_orig_nome" value="${esc(orig.nome)}" placeholder="Goiânia — GO"></div>
   <div class="field"><label>Descrição</label><input id="ed_orig_cidade" value="${esc(orig.cidade)}" placeholder="Saída da garagem"></div>
   <div class="field"><label>BRs / Rodovias</label><input id="ed_orig_detalhe" value="${esc(orig.detalhe||'')}" placeholder="BR-153 → BR-020"></div></div>`;
-
   h+=`<div class="editor-section"><div class="editor-section-title"><span class="bar"></span>Postos de Abastecimento</div>`;
-  fuelStops.forEach((s,si)=>{h+=renderStopEditor(s,si)});
+  fs.forEach((s,si)=>{h+=renderStopEditor(s,si)});
   h+=`<button class="add-stop-btn" onclick="addStop()">＋ Adicionar Posto</button></div>`;
-
   h+=`<div class="editor-section"><div class="editor-section-title"><span class="bar"></span>Destino</div>
   <div class="field"><label>Local</label><input id="ed_dest_nome" value="${esc(dest.nome)}" placeholder="Cabedelo — PB"></div>
   <div class="field"><label>Descrição</label><input id="ed_dest_cidade" value="${esc(dest.cidade)}" placeholder="Chegada ao destino"></div>
   <div class="field"><label>KM total</label><input id="ed_dest_km" value="${esc(dest.km)}" placeholder="2.450"></div></div>`;
-
   document.getElementById('editorContent').innerHTML=h}
-
-function renderStopEditor(s,si){
-  const hasAlt=!!s.alternativa;const a=s.alternativa||{};
-  let marcasHtml='';if(s.marcas&&s.marcas.length){s.marcas.forEach((m,mi)=>{marcasHtml+=`<div class="marca-row"><div class="field" style="margin:0"><input value="${esc(m.marca)}" onchange="editData.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino')[${si}].marcas[${mi}].marca=this.value" placeholder="Marca"></div><div class="field" style="margin:0;display:flex;gap:4px"><input value="${esc(m.litros)}" onchange="editData.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino')[${si}].marcas[${mi}].litros=this.value" placeholder="Litros"><button style="background:#fe2627;color:#fff;border:none;border-radius:6px;width:32px;cursor:pointer;font-size:16px" onclick="removeMarca(${si},${mi})">✕</button></div></div>`})}
+function renderStopEditor(s,si){const hasAlt=!!s.alternativa;const a=s.alternativa||{};let mh='';if(s.marcas&&s.marcas.length){s.marcas.forEach((m,mi)=>{mh+=`<div class="marca-row"><div class="field" style="margin:0"><input value="${esc(m.marca)}" onchange="editData.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino')[${si}].marcas[${mi}].marca=this.value" placeholder="Marca"></div><div class="field" style="margin:0;display:flex;gap:4px"><input value="${esc(m.litros)}" onchange="editData.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino')[${si}].marcas[${mi}].litros=this.value" placeholder="Litros"><button style="background:#fe2627;color:#fff;border:none;border-radius:6px;width:32px;cursor:pointer;font-size:16px" onclick="removeMarca(${si},${mi})">✕</button></div></div>`})}
   return `<div class="stop-editor"><div class="stop-editor-head"><span class="stop-editor-num">${si+1}º Posto</span><button class="stop-editor-del" onclick="removeStop(${si})">✕</button></div>
-  <div class="field"><label>Nome do posto</label><input value="${esc(s.nome)}" onchange="updateStop(${si},'nome',this.value)" placeholder="Posto Cerradão"></div>
-  <div class="field"><label>Cidade — UF</label><input value="${esc(s.cidade)}" onchange="updateStop(${si},'cidade',this.value)" placeholder="Luís Eduardo Magalhães — BA"></div>
-  <div class="field-row"><div class="field"><label>Tipo</label><select onchange="updateStop(${si},'tipo',this.value)"><option value="completa"${s.tipo==='completa'?' selected':''}>Completa</option><option value="parcial"${s.tipo==='parcial'?' selected':''}>Parcial</option></select></div><div class="field"><label>KM</label><input value="${esc(s.km)}" onchange="updateStop(${si},'km',this.value)" placeholder="850"></div></div>
-  <div class="field-row"><div class="field"><label>Litragem</label><input value="${esc(s.litragem)}" onchange="updateStop(${si},'litragem',this.value)" placeholder="Completa o tanque"></div><div class="field"><label>Cartão</label><select onchange="updateStop(${si},'cartao',this.value)"><option value="truckpag"${s.cartao==='truckpag'?' selected':''}>TruckPag</option><option value="shell"${s.cartao==='shell'?' selected':''}>Shell</option><option value="shell_expers"${s.cartao==='shell_expers'?' selected':''}>Shell Expers</option><option value="redefrota"${s.cartao==='redefrota'?' selected':''}>Rede Frota</option></select></div></div>
-  <div class="field"><label>Link Google Maps</label><input value="${esc(s.link||'')}" onchange="updateStop(${si},'link',this.value)" placeholder="https://maps.app.goo.gl/..."></div>
-  <div class="field"><label>Razão social (opcional)</label><input value="${esc(s.razaoSocial||'')}" onchange="updateStop(${si},'razaoSocial',this.value)"></div>
-  <div class="field"><label>Nota / Estratégia (opcional)</label><textarea onchange="updateStop(${si},'nota',this.value)" placeholder="Ex: Abastecer 200L para chegar até Sergipe...">${esc(s.nota||'')}</textarea></div>
-  <div class="field"><label>Litragem por marca (opcional)</label>${marcasHtml}<button class="add-marca-btn" onclick="addMarca(${si})">＋ Adicionar marca</button></div>
-  <button class="alt-toggle" onclick="toggleAlt(${si})"><span class="red">OU</span> ${hasAlt?'Remover posto alternativo':'Adicionar posto alternativo'}</button>
-  ${hasAlt?`<div class="alt-box">
-  <div class="field"><label>Nome alternativo</label><input value="${esc(a.nome)}" onchange="updateAlt(${si},'nome',this.value)"></div>
-  <div class="field"><label>Cidade — UF</label><input value="${esc(a.cidade)}" onchange="updateAlt(${si},'cidade',this.value)"></div>
-  <div class="field-row"><div class="field"><label>Litragem</label><input value="${esc(a.litragem)}" onchange="updateAlt(${si},'litragem',this.value)"></div><div class="field"><label>KM</label><input value="${esc(a.km)}" onchange="updateAlt(${si},'km',this.value)"></div></div>
-  <div class="field"><label>Link Maps</label><input value="${esc(a.link||'')}" onchange="updateAlt(${si},'link',this.value)"></div>
-  <div class="field"><label>Nota</label><input value="${esc(a.nota||'')}" onchange="updateAlt(${si},'nota',this.value)"></div></div>`:''}</div>`}
-
+  <div class="field"><label>Nome do posto</label><input value="${esc(s.nome)}" onchange="updateStop(${si},'nome',this.value)"></div>
+  <div class="field"><label>Cidade — UF</label><input value="${esc(s.cidade)}" onchange="updateStop(${si},'cidade',this.value)"></div>
+  <div class="field-row"><div class="field"><label>Tipo</label><select onchange="updateStop(${si},'tipo',this.value)"><option value="completa"${s.tipo==='completa'?' selected':''}>Completa</option><option value="parcial"${s.tipo==='parcial'?' selected':''}>Parcial</option></select></div><div class="field"><label>KM</label><input value="${esc(s.km)}" onchange="updateStop(${si},'km',this.value)"></div></div>
+  <div class="field-row"><div class="field"><label>Litragem</label><input value="${esc(s.litragem)}" onchange="updateStop(${si},'litragem',this.value)"></div><div class="field"><label>Cartão</label><select onchange="updateStop(${si},'cartao',this.value)"><option value="truckpag"${s.cartao==='truckpag'?' selected':''}>TruckPag</option><option value="shell"${s.cartao==='shell'?' selected':''}>Shell</option><option value="shell_expers"${s.cartao==='shell_expers'?' selected':''}>Shell Expers</option><option value="redefrota"${s.cartao==='redefrota'?' selected':''}>Rede Frota</option></select></div></div>
+  <div class="field"><label>Link Google Maps</label><input value="${esc(s.link||'')}" onchange="updateStop(${si},'link',this.value)"></div>
+  <div class="field"><label>Razão social</label><input value="${esc(s.razaoSocial||'')}" onchange="updateStop(${si},'razaoSocial',this.value)"></div>
+  <div class="field"><label>Nota / Estratégia</label><textarea onchange="updateStop(${si},'nota',this.value)">${esc(s.nota||'')}</textarea></div>
+  <div class="field"><label>Litragem por marca</label>${mh}<button class="add-marca-btn" onclick="addMarca(${si})">＋ Adicionar marca</button></div>
+  <button class="alt-toggle" onclick="toggleAlt(${si})"><span class="red">OU</span> ${hasAlt?'Remover alternativo':'Adicionar alternativo'}</button>
+  ${hasAlt?`<div class="alt-box"><div class="field"><label>Nome</label><input value="${esc(a.nome)}" onchange="updateAlt(${si},'nome',this.value)"></div><div class="field"><label>Cidade</label><input value="${esc(a.cidade)}" onchange="updateAlt(${si},'cidade',this.value)"></div><div class="field-row"><div class="field"><label>Litragem</label><input value="${esc(a.litragem)}" onchange="updateAlt(${si},'litragem',this.value)"></div><div class="field"><label>KM</label><input value="${esc(a.km)}" onchange="updateAlt(${si},'km',this.value)"></div></div><div class="field"><label>Link Maps</label><input value="${esc(a.link||'')}" onchange="updateAlt(${si},'link',this.value)"></div><div class="field"><label>Nota</label><input value="${esc(a.nota||'')}" onchange="updateAlt(${si},'nota',this.value)"></div></div>`:''}</div>`}
 function esc(s){return(s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;')}
 function getFuelStops(){return editData.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino')}
-function updateStop(si,key,val){getFuelStops()[si][key]=val}
-function updateAlt(si,key,val){const s=getFuelStops()[si];if(s.alternativa)s.alternativa[key]=val}
+function updateStop(si,k,v){getFuelStops()[si][k]=v}
+function updateAlt(si,k,v){const s=getFuelStops()[si];if(s.alternativa)s.alternativa[k]=v}
 function toggleAlt(si){const s=getFuelStops()[si];if(s.alternativa)delete s.alternativa;else s.alternativa={nome:'',cidade:'',litragem:'',cartao:s.cartao,km:'',nota:'',link:''};renderEditor()}
 function addMarca(si){const s=getFuelStops()[si];if(!s.marcas)s.marcas=[];s.marcas.push({marca:'',litros:''});renderEditor()}
 function removeMarca(si,mi){getFuelStops()[si].marcas.splice(mi,1);renderEditor()}
-function addStop(){const fs=getFuelStops();const newOrd=fs.length?Math.max(...fs.map(s=>s.ordem))+1:1;editData.paradas.splice(editData.paradas.length-1,0,{ordem:newOrd,tipo:'completa',nome:'',cidade:'',litragem:'Completa o tanque',cartao:'truckpag',km:'',link:''});renderEditor()}
-function removeStop(si){const s=getFuelStops()[si];const idx=editData.paradas.indexOf(s);editData.paradas.splice(idx,1);renderEditor()}
-
-function saveRoute(){
-  const v=k=>document.getElementById(k)?.value||'';
-  editData.nome=v('ed_nome');editData.numero=v('ed_numero');editData.regiao=v('ed_regiao');editData.estados=v('ed_estados');editData.distancia=v('ed_distancia');editData.tempo=v('ed_tempo');editData.linkRota=v('ed_linkRota');editData.subtitulo='Rota '+editData.numero;editData.id=editData.nome.toLowerCase().replace(/[^a-z0-9]/g,'-').replace(/-+/g,'-');
+function addStop(){const fs=getFuelStops();const o=fs.length?Math.max(...fs.map(s=>s.ordem))+1:1;editData.paradas.splice(editData.paradas.length-1,0,{ordem:o,tipo:'completa',nome:'',cidade:'',litragem:'Completa o tanque',cartao:'truckpag',km:'',link:''});renderEditor()}
+function removeStop(si){const s=getFuelStops()[si];editData.paradas.splice(editData.paradas.indexOf(s),1);renderEditor()}
+function saveRoute(){const v=k=>document.getElementById(k)?.value||'';editData.nome=v('ed_nome');editData.numero=v('ed_numero');editData.regiao=v('ed_regiao');editData.estados=v('ed_estados');editData.distancia=v('ed_distancia');editData.tempo=v('ed_tempo');editData.linkRota=v('ed_linkRota');editData.subtitulo='Rota '+editData.numero;editData.id=editData.nome.toLowerCase().replace(/[^a-z0-9]/g,'-').replace(/-+/g,'-');
   const orig=editData.paradas.find(p=>p.tipo==='origem');if(orig){orig.nome=v('ed_orig_nome');orig.cidade=v('ed_orig_cidade');orig.detalhe=v('ed_orig_detalhe')}
   const dest=editData.paradas.find(p=>p.tipo==='destino');if(dest){dest.nome=v('ed_dest_nome');dest.cidade=v('ed_dest_cidade');dest.km=v('ed_dest_km')}
-  // Reorder
   let ord=1;editData.paradas.forEach(p=>{if(p.tipo!=='origem'&&p.tipo!=='destino')p.ordem=ord++});
   if(editingIndex>=0)routes[editingIndex]=editData;else routes.push(editData);
-  saveRoutes();showAdmin()}
+  saveToFirebase();showAdmin()}
 
 // ═══ NAV ═══
 function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0)}
@@ -401,42 +398,8 @@ function showRoute(i){document.getElementById('routeContent').innerHTML=renderRo
 function showAdmin(){renderAdmin();showScreen('screenAdmin')}
 
 // ═══ LOGIN ═══
-const ADMIN_USER='admin';
-const ADMIN_PASS='confianca2026';
-
-function showLogin(){
-  // Remove existing login overlay if any
-  document.querySelector('.login-overlay')?.remove();
-  const ov=document.createElement('div');
-  ov.className='login-overlay';
-  ov.innerHTML=`<div class="login-box">
-    <div class="login-logo"><div class="lb"><span>C</span></div><span class="lt">CONFIANÇA</span></div>
-    <div class="login-title">Área Restrita</div>
-    <div class="login-sub">Digite suas credenciais para gerenciar as rotas</div>
-    <div class="login-field"><label>Usuário</label><input type="text" id="loginUser" placeholder="Usuário" autocomplete="off" autocorrect="off"></div>
-    <div class="login-field"><label>Senha</label><input type="password" id="loginPass" placeholder="Senha"></div>
-    <button class="login-btn" onclick="doLogin()">ENTRAR</button>
-    <div class="login-error" id="loginError">Usuário ou senha incorretos</div>
-    <button class="login-cancel" onclick="this.closest('.login-overlay').remove()">Cancelar</button>
-  </div>`;
-  document.body.appendChild(ov);
-  // Focus user field
-  setTimeout(()=>document.getElementById('loginUser')?.focus(),100);
-  // Enter key support
-  ov.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
-}
-
-function doLogin(){
-  const u=(document.getElementById('loginUser')?.value||'').trim();
-  const p=(document.getElementById('loginPass')?.value||'').trim();
-  if(u===ADMIN_USER&&p===ADMIN_PASS){
-    document.querySelector('.login-overlay')?.remove();
-    showAdmin();
-  }else{
-    const err=document.getElementById('loginError');
-    if(err){err.style.display='block';setTimeout(()=>err.style.display='none',3000)}
-  }
-}
+function showLogin(){document.querySelector('.login-overlay')?.remove();const ov=document.createElement('div');ov.className='login-overlay';ov.innerHTML=`<div class="login-box"><div class="login-logo"><div class="lb"><span>C</span></div><span class="lt">CONFIANÇA</span></div><div class="login-title">Área Restrita</div><div class="login-sub">Digite suas credenciais para gerenciar as rotas</div><div class="login-field"><label>Usuário</label><input type="text" id="loginUser" placeholder="Usuário" autocomplete="off"></div><div class="login-field"><label>Senha</label><input type="password" id="loginPass" placeholder="Senha"></div><button class="login-btn" onclick="doLogin()">ENTRAR</button><div class="login-error" id="loginError">Usuário ou senha incorretos</div><button class="login-cancel" onclick="this.closest('.login-overlay').remove()">Cancelar</button></div>`;document.body.appendChild(ov);setTimeout(()=>document.getElementById('loginUser')?.focus(),100);ov.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()})}
+function doLogin(){const u=(document.getElementById('loginUser')?.value||'').trim(),p=(document.getElementById('loginPass')?.value||'').trim();if(u===ADMIN_USER&&p===ADMIN_PASS){document.querySelector('.login-overlay')?.remove();showAdmin()}else{const e=document.getElementById('loginError');if(e){e.style.display='block';setTimeout(()=>e.style.display='none',3000)}}}
 
 // ═══ INIT ═══
 document.addEventListener('DOMContentLoaded',()=>{document.getElementById('searchInput')?.addEventListener('input',e=>filterRoutes(e.target.value))});
@@ -444,7 +407,7 @@ let dp;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();dp=e
 document.getElementById('installBtn')?.addEventListener('click',async()=>{if(!dp)return;dp.prompt();await dp.userChoice;dp=null;document.getElementById('installBanner').classList.remove('show')});
 document.getElementById('installDismiss')?.addEventListener('click',()=>document.getElementById('installBanner').classList.remove('show'));
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
-loadRoutes();renderHome();
+initFirebase();
 </script>
 </body>
 </html>
