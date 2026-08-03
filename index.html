@@ -366,7 +366,8 @@ function renderRoute(r){const orig=r.paradas.find(p=>p.tipo==='origem'),dest=r.p
   let h=`<div class="roto-top"><button class="back-btn" onclick="showHome()">‹</button><div class="roto-header"><div class="roto-route-row"><div class="roto-chip"><div class="city">${oc}</div><div class="lbl">ORIGEM</div></div><span class="roto-arrow">→</span><div class="roto-chip"><div class="city">${dc}</div><div class="lbl">DESTINO</div></div></div><div class="roto-stats"><div class="roto-stat"><div class="val">${r.distancia||'—'}</div><div class="lbl">DISTÂNCIA</div></div><div class="roto-stat"><div class="val">${r.tempo||'—'}</div><div class="lbl">ESTIMADO</div></div><div class="roto-stat"><div class="val red">${stops.length}</div><div class="lbl">POSTOS</div></div></div>`;
   if(r.linkRota)h+=`<a class="rota-link" href="${r.linkRota}" target="_blank">📍 VER ROTA COMPLETA NO MAPS</a>`;
   // Share WhatsApp button
-  const shareText=encodeURIComponent(`🚛 Rotograma: ${r.nome}\n📍 ${r.estados}\n📏 ${r.distancia||''} · ${r.tempo||''}\n⛽ ${stops.length} postos de abastecimento\n\nAbra o app: ${location.href}`);
+  const appUrl=location.origin+location.pathname+'#rota='+encodeURIComponent(r.id);
+  const shareText=encodeURIComponent(`🚛 Rotograma: ${r.nome}\n📍 ${r.estados}\n📏 ${r.distancia||''} · ${r.tempo||''}\n⛽ ${stops.length} postos de abastecimento\n\nAbra a rota: ${appUrl}`);
   h+=`<a class="share-btn" href="https://wa.me/?text=${shareText}" target="_blank">📤 COMPARTILHAR ROTA VIA WHATSAPP</a>`;
   h+=`</div></div>`;
   // Alert banner
@@ -498,8 +499,8 @@ function cancelEdit(){
 
 // ═══ NAV ═══
 function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0)}
-function showHome(){isEditing=false;if(window._draftInterval)clearInterval(window._draftInterval);renderHome();showScreen('screenHome')}
-function showRoute(i){document.getElementById('routeContent').innerHTML=renderRoute(routes[i]);showScreen('screenRoute')}
+function showHome(){isEditing=false;if(window._draftInterval)clearInterval(window._draftInterval);history.replaceState(null,'',location.pathname);renderHome();showScreen('screenHome')}
+function showRoute(i){const r=routes[i];history.replaceState(null,'',location.pathname+'#rota='+encodeURIComponent(r.id));document.getElementById('routeContent').innerHTML=renderRoute(r);showScreen('screenRoute')}
 function showAdmin(){isEditing=false;if(window._draftInterval)clearInterval(window._draftInterval);renderAdmin();showScreen('screenAdmin')}
 
 // ═══ LOGIN ═══
@@ -516,6 +517,23 @@ document.getElementById('installBtn')?.addEventListener('click',async()=>{if(!dp
 document.getElementById('installDismiss')?.addEventListener('click',()=>document.getElementById('installBanner').classList.remove('show'));
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 initFirebase();
+
+// Deep link: check URL hash for #rota=id
+function checkDeepLink(){
+  const hash=location.hash;
+  if(hash.startsWith('#rota=')){
+    const rotaId=decodeURIComponent(hash.replace('#rota=',''));
+    const idx=routes.findIndex(r=>r.id===rotaId);
+    if(idx>=0){showRoute(idx);return true}
+  }
+  return false;
+}
+// Listen for hash changes (back button, etc)
+window.addEventListener('hashchange',()=>{if(!checkDeepLink())showHome()});
+// Initial deep link check after data loads
+const _origRenderHome=renderHome;
+renderHome=function(){_origRenderHome();checkDeepLink()};
+
 </script>
 </body>
 </html>
