@@ -851,10 +851,16 @@ async function handlePosition(lat,lng){
     const route=routes[currentRouteIdx];
     const pos={lat,lng,timestamp:Date.now(),motoristaId:currentDriver.id,motoristaNome:currentDriver.nome,rotaNome:route?route.nome:'',viagemId:currentTrip.id};
     db.ref('posicoes/'+currentDriver.id).set(pos);
-    // Update approx distance
+    // Calcula distância percorrida usando coordenadas de origem do ROUTE_COORDS
     if(route){
-      const orig=route.paradas.find(p=>p.tipo==='origem');
-      if(orig&&orig.lat&&orig.lng){const dist=calcDistance(orig.lat,orig.lng,lat,lng);db.ref('viagens/'+currentTrip.id+'/distanciaPercorrida').set(Math.round(dist));}
+      const coords=ROUTE_COORDS[route.id];
+      if(coords?.orig){
+        const [oLat,oLng]=coords.orig;
+        const dist=calcDistance(oLat,oLng,lat,lng);
+        currentTrip.distanciaPercorrida=Math.round(dist);
+        db.ref('viagens/'+currentTrip.id+'/distanciaPercorrida').set(Math.round(dist));
+        updateSVGProgress(); // atualiza caminhão no mapa imediatamente
+      }
     }
   }
 }
