@@ -560,7 +560,16 @@ function initFirebase(){
       if(data&&Array.isArray(data)){routes=data;firebaseReady=true;localStorage.setItem('rotogramas_cache',JSON.stringify(routes));setSyncStatus('on','Sincronizado');if(!isEditing)renderHome()}
       else if(!data){db.ref('rotogramas').set(DEFAULTS).then(()=>{routes=DEFAULTS;firebaseReady=true;setSyncStatus('on','Sincronizado');renderHome()})}
     },err=>{setSyncStatus('err','Erro Firebase — dados locais');loadLocal()});
-    db.ref('motoristas').on('value',snap=>{const d=snap.val();drivers=d||{};if(adminMode)renderDriverManager();renderMonitoring();renderBI();});
+    db.ref('motoristas').on('value',snap=>{
+      const fbData=snap.val()||{};
+      // Merge local drivers (pending sync) into Firebase data
+      const localPending=JSON.parse(localStorage.getItem('drivers_local')||'{}');
+      drivers={...fbData};
+      // Sync any pending local drivers to Firebase
+      Object.values(localPending).forEach(d=>{if(!fbData[d.id]){db.ref('motoristas/'+d.id).set(d).then(()=>{const lp=JSON.parse(localStorage.getItem('drivers_local')||'{}');delete lp[d.id];localStorage.setItem('drivers_local',JSON.stringify(lp));}).catch(()=>{});}else{const lp=JSON.parse(localStorage.getItem('drivers_local')||'{}');delete lp[d.id];localStorage.setItem('drivers_local',JSON.stringify(lp));}});
+      drivers={...fbData,...localPending};
+      if(adminMode)renderDriverManager();renderMonitoring();renderBI();
+    });
     db.ref('viagens').on('value',snap=>{const d=snap.val();viagens=d||{};checkActiveTrip();renderMonitoring();renderBI();});
     db.ref('posicoes').on('value',snap=>{const d=snap.val();posicoes=d||{};updateMonitorMap();renderMonitoring();});
   }catch(e){setSyncStatus('err','Erro Firebase');loadLocal();}
@@ -608,14 +617,12 @@ async function doDriverRegister(){
     const cpfEnc=await encryptCPF(cpfRaw);
     const id='drv_'+Date.now();
     const driver={id,nome,cpfHash,cpfEnc,pinHash,bloqueado:false,criadoEm:Date.now(),ultimoAcesso:Date.now()};
-    if(db){await db.ref('motoristas/'+id).set(driver);}
-    else{// Firebase não pronto ainda — salva localmente
-      const localDrivers=JSON.parse(localStorage.getItem('drivers_local')||'{}');
-      localDrivers[id]=driver;
-      localStorage.setItem('drivers_local',JSON.stringify(localDrivers));
-    }
+    // Garante acesso imediato — salva local primeiro, Firebase em background
+    drivers[id]=driver;
+    localStorage.setItem('drivers_local',JSON.stringify(Object.assign(JSON.parse(localStorage.getItem('drivers_local')||'{}'),{[id]:driver})));
     currentDriver=driver;
     localStorage.setItem('drv_session',JSON.stringify({id,nome,pinHash}));
+    if(db){db.ref('motoristas/'+id).set(driver).catch(e=>console.warn('Firebase sync pending:',e));}
     showHome();
   }catch(err){
     console.error('Erro no cadastro:',err);
@@ -927,11 +934,57 @@ function deleteRoute(i){const r=routes[i];const ov=document.createElement('div')
 function confirmDeleteRoute(i){routes.splice(i,1);saveToFirebase();renderAdmin()}
 
 // ═══ RENDER DRIVER MANAGER ═══
+function showAddDriverModal(){
+  document.querySelector('.driver-modal-overlay')?.remove();
+  const ov=document.createElement('div');ov.className='driver-modal-overlay confirm-overlay';
+  ov.innerHTML=`<div class="confirm-box" style="max-width:380px;text-align:left">
+    <h3 style="margin-bottom:16px">Cadastrar Motorista</h3>
+    <div class="login-field"><label>Nome completo</label><input type="text" id="adNome" placeholder="João da Silva" style="width:100%;padding:12px;border:1.5px solid #e4e2dd;border-radius:10px;font-family:'Barlow',sans-serif;font-size:14px;outline:none"></div>
+    <div class="login-field" style="margin-top:10px"><label>CPF</label><input type="text" id="adCPF" placeholder="000.000.000-00" maxlength="14" oninput="fmtCPF(this)" style="width:100%;padding:12px;border:1.5px solid #e4e2dd;border-radius:10px;font-family:'Barlow',sans-serif;font-size:14px;outline:none"></div>
+    <div class="login-field" style="margin-top:10px"><label>PIN inicial (4 dígitos)</label><input type="password" id="adPIN" placeholder="••••" maxlength="4" inputmode="numeric" style="width:100%;padding:12px;border:1.5px solid #e4e2dd;border-radius:10px;font-family:'Barlow',sans-serif;font-size:14px;outline:none"></div>
+    <div class="login-error" id="adError" style="display:none;margin-top:8px">Preencha todos os campos</div>
+    <div class="btns" style="margin-top:16px">
+      <button style="background:#eae8e3;color:#1c1c1c;flex:1;padding:12px;border-radius:10px;border:none;font-weight:700;cursor:pointer" onclick="this.closest('.driver-modal-overlay').remove()">Cancelar</button>
+      <button id="adSaveBtn" style="background:#fe2627;color:#fff;flex:1;padding:12px;border-radius:10px;border:none;font-weight:700;cursor:pointer" onclick="doAddDriverAdmin()">Cadastrar</button>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+  setTimeout(()=>document.getElementById('adNome')?.focus(),100);
+}
+async function doAddDriverAdmin(){
+  const nome=(document.getElementById('adNome')?.value||'').trim();
+  const cpfRaw=cleanCPF(document.getElementById('adCPF')?.value||'');
+  const pin=(document.getElementById('adPIN')?.value||'').trim();
+  const errEl=document.getElementById('adError');
+  const btn=document.getElementById('adSaveBtn');
+  function showErr(msg){errEl.textContent=msg;errEl.style.display='block';setTimeout(()=>errEl.style.display='none',4000);}
+  if(!nome){showErr('Informe o nome completo');return;}
+  if(cpfRaw.length!==11){showErr('CPF inválido');return;}
+  if(pin.length!==4||!/^\d{4}$/.test(pin)){showErr('PIN deve ter 4 dígitos numéricos');return;}
+  const existing=Object.values(drivers).find(d=>d.cpfHash&&d.nome.toLowerCase()===nome.toLowerCase());
+  if(btn){btn.disabled=true;btn.textContent='Salvando...';}
+  try{
+    const hashFn=(!window.crypto||!window.crypto.subtle)?sha256Fallback:sha256;
+    const cpfHash=await hashFn(cpfRaw);
+    const dup=Object.values(drivers).find(d=>d.cpfHash===cpfHash);
+    if(dup){showErr('CPF já cadastrado');return;}
+    const pinHash=await hashFn(pin);
+    let cpfEnc=btoa(cpfRaw);
+    if(window.crypto&&window.crypto.subtle)cpfEnc=await encryptCPF(cpfRaw);
+    const id='drv_'+Date.now();
+    const driver={id,nome,cpfHash,cpfEnc,pinHash,bloqueado:false,criadoEm:Date.now(),ultimoAcesso:0,cadastradoPorAdmin:true};
+    drivers[id]=driver;
+    if(db)await db.ref('motoristas/'+id).set(driver);
+    document.querySelector('.driver-modal-overlay')?.remove();
+    renderDriverManager();
+  }catch(err){showErr('Erro: '+(err.message||'tente novamente'));}
+  finally{if(btn){btn.disabled=false;btn.textContent='Cadastrar';}}
+}
 async function renderDriverManager(){
   const el=document.getElementById('adminDriversList');if(!el)return;
   const driverList=Object.values(drivers);
-  if(driverList.length===0){el.innerHTML=`<div style="text-align:center;padding:40px 20px;color:#9a9894;font-family:'Barlow',sans-serif"><span style="font-size:40px">👤</span><p style="margin-top:8px">Nenhum motorista cadastrado</p><p style="font-size:12px;margin-top:4px">Os motoristas se cadastram pelo app</p></div>`;return;}
-  let h='';
+  if(driverList.length===0){el.innerHTML=`<div style="padding:0 0 16px"><button class="admin-add" onclick="showAddDriverModal()">＋ CADASTRAR MOTORISTA</button></div><div style="text-align:center;padding:30px 20px;color:#9a9894;font-family:'Barlow',sans-serif"><span style="font-size:40px">👤</span><p style="margin-top:8px">Nenhum motorista cadastrado ainda</p></div>`;return;}
+  let h='<button class="admin-add" onclick="showAddDriverModal()">＋ CADASTRAR MOTORISTA</button>';
   for(const d of driverList.sort((a,b)=>a.nome.localeCompare(b.nome))){
     const initials=d.nome.split(' ').slice(0,2).map(n=>n[0]).join('').toUpperCase();
     const isOnTrip=Object.values(viagens).some(v=>v.motoristaId===d.id&&v.status==='em_viagem');
