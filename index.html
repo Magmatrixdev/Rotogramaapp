@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#1c1c1c">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -16,7 +16,7 @@
 ::-webkit-scrollbar{width:0;height:0}
 body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;min-height:100vh;overscroll-behavior-y:contain}
 @keyframes spin{to{transform:rotate(360deg)}}
-.screen{position:fixed;inset:0;display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;background:#f4f4f2;visibility:hidden;transform:translateX(100%)}
+.screen{position:fixed;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;background:#f4f4f2;visibility:hidden;transform:translateX(100%)}
 .screen.active{visibility:visible;transform:translateX(0)}
 .screen.behind{visibility:visible;transform:translateX(-22%)}
 .home-top{padding:20px 22px 0}
@@ -1025,14 +1025,14 @@ function updateTripStats(){
 // ═══ MAPA REAL (Mapbox GL JS + OSRM) ═══
 const ll=([lat,lng])=>[lng,lat]; // [lat,lng] → Mapbox [lng,lat]
 
-// Rota um único segmento (A→B) via OSRM
-async function _osrmSegment(from, to){
-  const url='https://router.project-osrm.org/route/v1/driving/'
+// Rota um único segmento (A→B) via Mapbox Directions API
+async function _mbSegment(from, to){
+  const url='https://api.mapbox.com/directions/v5/mapbox/driving/'
     +from[1]+','+from[0]+';'+to[1]+','+to[0]
-    +'?overview=full&geometries=geojson&steps=false';
+    +'?overview=full&geometries=geojson&steps=false&access_token='+MAPBOX_TOKEN;
   try{
     const ctrl=new AbortController();
-    const tid=setTimeout(()=>ctrl.abort(),25000); // 25s por segmento
+    const tid=setTimeout(()=>ctrl.abort(),25000);
     const r=await fetch(url,{signal:ctrl.signal});
     clearTimeout(tid);
     if(!r.ok)return null;
@@ -1040,45 +1040,45 @@ async function _osrmSegment(from, to){
     if(d.code==='Ok'&&d.routes[0]){
       return d.routes[0].geometry.coordinates.map(c=>[c[1],c[0]]);
     }
-    console.warn('OSRM segmento:',d.code,d.message);
-  }catch(e){console.warn('OSRM segmento erro:',e.message);}
+    console.warn('Mapbox Directions segmento:',d.code,d.message);
+  }catch(e){console.warn('Mapbox Directions segmento erro:',e.message);}
   return null;
 }
 
-// Rota completa: segmento por segmento e concatena
+// Rota completa: tenta de uma vez, senão segmento por segmento
 async function fetchOSRMRoute(points){
   const valid=points.filter(p=>p&&Array.isArray(p)&&p[0]!==undefined&&p[1]!==undefined);
   if(valid.length<2)return null;
 
-  // Tenta rota completa de uma vez (mais rápido)
-  try{
-    const coords=valid.map(p=>p[1]+','+p[0]).join(';');
-    const url='https://router.project-osrm.org/route/v1/driving/'+coords
-      +'?overview=full&geometries=geojson&steps=false';
-    const ctrl=new AbortController();
-    const tid=setTimeout(()=>ctrl.abort(),20000);
-    const r=await fetch(url,{signal:ctrl.signal});
-    clearTimeout(tid);
-    if(r.ok){
-      const d=await r.json();
-      if(d.code==='Ok'&&d.routes[0]){
-        console.log('OSRM completo OK, pontos:',d.routes[0].geometry.coordinates.length);
-        return d.routes[0].geometry.coordinates.map(c=>[c[1],c[0]]);
+  // Mapbox Directions API suporta até 25 waypoints
+  if(valid.length<=25){
+    try{
+      const coords=valid.map(p=>p[1]+','+p[0]).join(';');
+      const url='https://api.mapbox.com/directions/v5/mapbox/driving/'+coords
+        +'?overview=full&geometries=geojson&steps=false&access_token='+MAPBOX_TOKEN;
+      const ctrl=new AbortController();
+      const tid=setTimeout(()=>ctrl.abort(),20000);
+      const r=await fetch(url,{signal:ctrl.signal});
+      clearTimeout(tid);
+      if(r.ok){
+        const d=await r.json();
+        if(d.code==='Ok'&&d.routes[0]){
+          console.log('Mapbox Directions OK, pontos:',d.routes[0].geometry.coordinates.length);
+          return d.routes[0].geometry.coordinates.map(c=>[c[1],c[0]]);
+        }
+        console.warn('Mapbox Directions:',d.code);
       }
-      console.warn('OSRM completo:',d.code);
-    }
-  }catch(e){console.warn('OSRM completo erro:',e.message);}
+    }catch(e){console.warn('Mapbox Directions erro:',e.message);}
+  }
 
   // Fallback: segmento por segmento
-  console.log('OSRM: tentando segmento a segmento...');
+  console.log('Directions: tentando segmento a segmento...');
   let fullRoute=[];
   for(let i=0;i<valid.length-1;i++){
-    const seg=await _osrmSegment(valid[i],valid[i+1]);
+    const seg=await _mbSegment(valid[i],valid[i+1]);
     if(seg){
-      // Evita duplicar o ponto de junção entre segmentos
       fullRoute=fullRoute.concat(i===0?seg:seg.slice(1));
     }else{
-      // Segmento falhou — usa linha reta para esse trecho
       if(fullRoute.length===0||fullRoute[fullRoute.length-1]!==valid[i])fullRoute.push(valid[i]);
       fullRoute.push(valid[i+1]);
     }
@@ -1257,15 +1257,26 @@ async function initDriverMap(){
   _mbTruckMarker=new mapboxgl.Marker(truckEl).setLngLat(ll(coords.orig)).addTo(_mbMap);
 
   // Quando o mapa carregar: adiciona rota
+  // Força resize após criação — essencial para PWA standalone no iOS
+  // onde o container pode ter dimensões diferentes do esperado
+  setTimeout(()=>{if(_mbMap)_mbMap.resize();},100);
+  setTimeout(()=>{if(_mbMap)_mbMap.resize();},500);
+
   _mbMap.on('load',async()=>{
+    if(_mbMap)_mbMap.resize(); // resize novamente no load
     const waypoints=[coords.orig,...coords.stops.filter(Boolean),coords.dest];
 
-    // Linha provisória imediata — aparece enquanto OSRM calcula a rota real
+    // Linha provisória imediata — aparece enquanto Directions calcula a rota real
     const provisCoords=waypoints.map(p=>ll(p));
+
+    // Casing (borda escura) para dar profundidade visual
+    _mbMap.addSource('route-casing',{type:'geojson',data:{type:'Feature',geometry:{type:'LineString',coordinates:provisCoords}}});
+    _mbMap.addLayer({id:'route-casing',type:'line',source:'route-casing',paint:{'line-color':'#0d4a1a','line-width':9,'line-opacity':.4,'line-cap':'round','line-join':'round'}});
+
     _mbMap.addSource('route-done',{type:'geojson',data:{type:'Feature',geometry:{type:'LineString',coordinates:provisCoords.slice(0,1).concat([provisCoords[0]])}}});
-    _mbMap.addLayer({id:'route-done',type:'line',source:'route-done',paint:{'line-color':'#1f8a3d','line-width':5,'line-opacity':.92,'line-cap':'round','line-join':'round'}});
+    _mbMap.addLayer({id:'route-done',type:'line',source:'route-done',paint:{'line-color':'#1f8a3d','line-width':6,'line-opacity':.95,'line-cap':'round','line-join':'round'}});
     _mbMap.addSource('route-rest',{type:'geojson',data:{type:'Feature',geometry:{type:'LineString',coordinates:provisCoords}}});
-    _mbMap.addLayer({id:'route-rest',type:'line',source:'route-rest',paint:{'line-color':'#1a6fb5','line-width':5,'line-opacity':.85,'line-dasharray':[3,2],'line-cap':'round','line-join':'round'}});
+    _mbMap.addLayer({id:'route-rest',type:'line',source:'route-rest',paint:{'line-color':'#4a90d9','line-width':6,'line-opacity':.9,'line-dasharray':[2.5,1.5],'line-cap':'round','line-join':'round'}});
 
     // Indicador de carregamento com progresso
     const loadEl=document.createElement('div');
@@ -1279,7 +1290,7 @@ async function initDriverMap(){
 
     if(!geom||geom.length<2){
       geom=waypoints; // fallback: pontos diretos
-      showToast('⚠️ Sem acesso ao OSRM — rota estimada','#e8a020');
+      showToast('⚠️ Sem acesso ao serviço de rotas — rota estimada','#e8a020');
     }
     _routeGeometry=geom;
 
@@ -1288,8 +1299,9 @@ async function initDriverMap(){
     const mbDone=geom.slice(0,splitIdx+1).map(p=>ll(p));
     const mbRest=geom.slice(splitIdx).map(p=>ll(p));
 
-    // Linha percorrida (verde)
-    // Atualiza as fontes com a rota real do OSRM (layers já foram criados acima)
+    // Atualiza as fontes com a rota real da Mapbox Directions API
+    const allCoords=geom.map(p=>ll(p));
+    _mbMap.getSource('route-casing')?.setData({type:'Feature',geometry:{type:'LineString',coordinates:allCoords}});
     _mbMap.getSource('route-done')?.setData({type:'Feature',geometry:{type:'LineString',coordinates:mbDone.length>1?mbDone:[mbDone[0],mbDone[0]]}});
     _mbMap.getSource('route-rest')?.setData({type:'Feature',geometry:{type:'LineString',coordinates:mbRest.length>1?mbRest:[mbRest[0],mbRest[0]]}});
 
@@ -1315,6 +1327,19 @@ async function initDriverMap(){
   }
 }
 
+// Calcula progresso GPS: fração 0-1 da distância percorrida vs total
+function calcGPSProgress(){
+  if(!currentTrip)return 0;
+  const dist=currentTrip.distanciaPercorrida||0;
+  const route=currentRouteIdx>=0?routes[currentRouteIdx]:null;
+  if(!route)return 0;
+  // Extrai distância total em km da string ex: "~2.450 km"
+  const m=route.distancia?.match?.(/[\d.]+/);
+  if(!m)return 0;
+  const total=parseFloat(m[0].replace('.',''))||1;
+  return Math.max(0,Math.min(1,dist/total));
+}
+
 function updateDriverMarkerPos(lat,lng){
   if(!_mbMap||!_mbTruckMarker)return;
   _mbTruckMarker.setLngLat([lng,lat]);
@@ -1329,6 +1354,7 @@ function _updateRouteColors(lat,lng){
   const mbDone=_routeGeometry.slice(0,closeIdx+1).map(p=>ll(p));
   const mbRest=_routeGeometry.slice(closeIdx).map(p=>ll(p));
   try{
+    _mbMap.getSource('route-casing')?.setData({type:'Feature',geometry:{type:'LineString',coordinates:_routeGeometry.map(p=>ll(p))}});
     _mbMap.getSource('route-done')?.setData({type:'Feature',geometry:{type:'LineString',coordinates:mbDone.length>1?mbDone:[mbDone[0],mbDone[0]]}});
     _mbMap.getSource('route-rest')?.setData({type:'Feature',geometry:{type:'LineString',coordinates:mbRest.length>1?mbRest:[mbRest[0],mbRest[0]]}});
   }catch(e){}
@@ -1888,6 +1914,8 @@ function showMapLive(){
         startTracking();if(!tripTimerInterval&&tripStartTs)startTripTimer();return;
       }
       await initDriverMap();
+      // Resize mapa após transição de navegação completar (260ms navPush + margem)
+      setTimeout(()=>{if(_mbMap)_mbMap.resize();},350);
       startTracking();
       if(!tripTimerInterval&&tripStartTs)startTripTimer();
     },400);
