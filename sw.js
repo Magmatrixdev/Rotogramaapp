@@ -1,4 +1,4 @@
-const CACHE = 'rotograma-v5';
+const CACHE = 'rotograma-v6';
 const STATIC = [
   './manifest.json',
   './icon-192.png',
@@ -23,17 +23,20 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('message', e => {
   if (e.data?.type === 'SKIP_WAITING') self.skipWaiting();
+  // Suporte a limpeza forçada de cache
+  if (e.data?.type === 'CLEAR_CACHE') {
+    caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))));
+  }
 });
 
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
 
-  // ✅ REGRA PRINCIPAL: só intercepta requests do mesmo domínio (mesma origem)
-  // Tudo externo (Mapbox, Firebase, OSRM, CDNs) passa direto sem interferência
+  // Tudo externo (Mapbox, Firebase, CDNs) passa direto
   if (url.origin !== self.location.origin) return;
 
-  // index.html — network-first (garante updates)
-  if (url.pathname.endsWith('.html') || url.pathname === '/' || url.pathname.endsWith('/')) {
+  // index.html e sw.js — network-first (garante updates)
+  if (url.pathname.endsWith('.html') || url.pathname.endsWith('sw.js') || url.pathname === '/' || url.pathname.endsWith('/')) {
     e.respondWith(
       fetch(e.request, { cache: 'no-store' })
         .then(res => {

@@ -27,9 +27,9 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .logo-sub{font-family:'Barlow',sans-serif;font-weight:500;font-size:9.5px;letter-spacing:.28em;color:#9a9894;margin-top:3px}
 .home-heading{font-weight:700;font-size:34px;color:#1c1c1c;line-height:.95;text-transform:uppercase}
 .home-subtext{font-family:'Barlow',sans-serif;font-size:13px;color:#8a8886;margin-top:6px}
-.admin-toggle{position:absolute;top:20px;right:22px;width:42px;height:42px;border-radius:12px;background:#eae8e3;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px}
+.admin-toggle{position:absolute;top:calc(env(safe-area-inset-top, 20px) + 8px);right:22px;width:42px;height:42px;border-radius:12px;background:#eae8e3;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px}
 .admin-toggle:active{background:#e4e2dd}
-.logout-btn{position:absolute;top:70px;right:22px;height:32px;border-radius:9px;background:rgba(254,38,39,.08);border:1.5px solid rgba(254,38,39,.18);display:none;align-items:center;gap:6px;padding:0 11px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;color:#fe2627}
+.logout-btn{position:absolute;top:calc(env(safe-area-inset-top, 20px) + 52px);right:22px;height:32px;border-radius:9px;background:rgba(254,38,39,.08);border:1.5px solid rgba(254,38,39,.18);display:none;align-items:center;gap:6px;padding:0 11px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;color:#fe2627}
 .logout-btn:active{background:rgba(254,38,39,.15)}
 .logout-btn.show{display:flex}
 .driver-greeting{font-family:'Barlow',sans-serif;font-size:12px;color:#9a9894;margin-top:4px}
@@ -63,7 +63,7 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .sync-bar{font-family:'Barlow',sans-serif;font-size:11px;text-align:center;padding:6px 22px;color:#1f8a3d;background:rgba(31,138,61,.08)}
 .sync-bar.off{color:#e8a020;background:rgba(232,160,32,.08)}
 .sync-bar.err{color:#fe2627;background:rgba(254,38,39,.08)}
-.roto-top{flex:0 0 auto;padding:14px 20px 0}
+.roto-top{flex:0 0 auto;padding:14px 20px 0;padding-top:calc(env(safe-area-inset-top, 14px) + 6px)}
 .back-btn{cursor:pointer;width:42px;height:42px;border-radius:12px;background:#eae8e3;border:none;display:flex;align-items:center;justify-content:center;color:#1c1c1c;font-size:24px;font-weight:700}
 .back-btn:active{background:#e4e2dd}
 .roto-header{margin-top:14px}
@@ -192,6 +192,13 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .emergency-title{font-family:'Barlow',sans-serif;font-weight:600;font-size:10px;letter-spacing:.12em;color:#9a9894;text-transform:uppercase;margin-bottom:10px;text-align:center}
 .emergency-btns{display:flex;gap:8px}
 .emergency-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:12px 8px;border-radius:10px;text-decoration:none;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;min-height:48px;text-align:center;line-height:1.15}
+/* Versão compacta na home */
+.emergency-compact{padding:10px 14px}
+.emergency-compact .emergency-title{margin-bottom:6px;font-size:9px}
+.emergency-compact .emergency-btns{gap:6px}
+.emergency-compact .emergency-btn{padding:8px 6px;min-height:36px;border-radius:8px;font-size:12px;gap:5px}
+.emergency-compact .emergency-btn-name{font-size:12px}
+.emergency-compact .emergency-btn-sub{font-size:8px}
 .emergency-btn.whatsapp{background:#25d366;color:#fff}
 .emergency-btn.whatsapp:active{background:#1fb855}
 .emergency-btn-info{display:flex;flex-direction:column;align-items:flex-start}
@@ -424,7 +431,7 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
     <div class="active-trip-banner-txt" id="activeTripBannerTxt">Viagem em andamento</div>
     <span class="active-trip-banner-arr">›</span>
   </div>
-  <div class="emergency-bar" style="margin:14px 22px 0"><div class="emergency-title">Contato de emergência — Abastecimento</div><div class="emergency-btns"><a class="emergency-btn whatsapp" href="https://wa.me/5562998780792" target="_blank">💬<div class="emergency-btn-info"><span class="emergency-btn-name">Pedro</span><span class="emergency-btn-sub">Seg a Sex</span></div></a><a class="emergency-btn whatsapp" href="https://wa.me/5562999943443" target="_blank">💬<div class="emergency-btn-info"><span class="emergency-btn-name">Maria</span><span class="emergency-btn-sub">Sáb e Dom</span></div></a></div></div>
+  <div class="emergency-bar emergency-compact" style="margin:10px 22px 0"><div class="emergency-title">Contato de emergência — Abastecimento</div><div class="emergency-btns"><a class="emergency-btn whatsapp" href="https://wa.me/5562998780792" target="_blank">💬<div class="emergency-btn-info"><span class="emergency-btn-name">Pedro</span><span class="emergency-btn-sub">Seg a Sex</span></div></a><a class="emergency-btn whatsapp" href="https://wa.me/5562999943443" target="_blank">💬<div class="emergency-btn-info"><span class="emergency-btn-name">Maria</span><span class="emergency-btn-sub">Sáb e Dom</span></div></a></div></div>
   <div class="home-scroll" id="routeList"></div>
 </div>
 
@@ -531,6 +538,7 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 
 <script>
 // ═══ FIREBASE CONFIG ═══
+const APP_VERSION = 6; // Incrementar a cada deploy para forçar update em todos os devices
 const FIREBASE_CONFIG={apiKey:"AIzaSyAbYd2RulYeBr-_IQ8G4ccmzxKf8gAjLPQ",authDomain:"rotogramas-confianca.firebaseapp.com",databaseURL:"https://rotogramas-confianca-default-rtdb.firebaseio.com",projectId:"rotogramas-confianca",storageBucket:"rotogramas-confianca.firebasestorage.app",messagingSenderId:"156398881281",appId:"1:156398881281:web:a67f3e2ee02b969ab78e00"};
 const ADMIN_USER='admin';
 const ADMIN_PASS='confianca2026';
@@ -674,6 +682,30 @@ function initFirebase(){
   try{
     firebase.initializeApp(FIREBASE_CONFIG);
     db=firebase.database();
+
+    // ═══ VERIFICAÇÃO DE VERSÃO (força update em iOS e todos os devices) ═══
+    // Seta a versão atual no Firebase (admin pode ver)
+    db.ref('config/appVersion').once('value').then(snap=>{
+      const remoteVersion=snap.val();
+      if(remoteVersion===null){
+        // Primeira vez — seta a versão no Firebase
+        db.ref('config/appVersion').set(APP_VERSION);
+      } else if(remoteVersion>APP_VERSION){
+        // Versão remota é mais nova — força reload limpo
+        console.log('🔄 Nova versão detectada:',remoteVersion,'> local:',APP_VERSION);
+        _forceCleanReload();
+      }
+    }).catch(()=>{});
+
+    // Listener em tempo real: se admin mudar a versão, todos os apps abertos atualizam
+    db.ref('config/appVersion').on('value',snap=>{
+      const v=snap.val();
+      if(v&&v>APP_VERSION){
+        console.log('🔄 Update ao vivo:',v);
+        _forceCleanReload();
+      }
+    });
+
     db.ref('rotogramas').on('value',snap=>{
       const data=snap.val();
       if(data&&Array.isArray(data)){routes=data;firebaseReady=true;localStorage.setItem('rotogramas_cache',JSON.stringify(routes));setSyncStatus('on','Sincronizado');if(!isEditing)renderHome()}
@@ -2012,6 +2044,36 @@ function showUpdateBanner(reg){
   };
   document.body.appendChild(b);
 }
+// ═══ FORCE CLEAN RELOAD (limpa SW cache e recarrega) ═══
+async function _forceCleanReload(){
+  try{
+    // Limpa todos os caches do service worker
+    const keys=await caches.keys();
+    await Promise.all(keys.map(k=>caches.delete(k)));
+    // Força SW a buscar versão nova
+    const reg=await navigator.serviceWorker?.getRegistration();
+    if(reg){await reg.update().catch(()=>{});}
+  }catch(e){}
+  // Reload sem cache
+  location.reload();
+}
+
+// ═══ VERIFICAÇÃO AO VOLTAR AO APP (iOS: visibilitychange) ═══
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible'&&db){
+    // Checa versão toda vez que o app volta ao foco
+    db.ref('config/appVersion').once('value').then(snap=>{
+      const v=snap.val();
+      if(v&&v>APP_VERSION){
+        console.log('🔄 Update ao voltar:',v);
+        _forceCleanReload();
+      }
+    }).catch(()=>{});
+    // Também força SW update check
+    navigator.serviceWorker?.getRegistration().then(reg=>{if(reg)reg.update().catch(()=>{});});
+  }
+});
+
 initFirebase();
 </script>
 </body>
