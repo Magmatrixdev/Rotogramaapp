@@ -18,8 +18,11 @@
 ::-webkit-scrollbar{width:0;height:0}
 body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;min-height:100vh;overscroll-behavior-y:contain}
 @keyframes spin{to{transform:rotate(360deg)}}
-.screen{display:none;flex-direction:column;min-height:100vh}
+.screen{display:none;flex-direction:column;min-height:100vh;overflow-x:hidden}
 .screen.active{display:flex}
+/* Fade-in on screen switch */
+@keyframes screenIn{from{opacity:.6}to{opacity:1}}
+.screen.active{animation:screenIn .18s ease}
 .home-top{padding:20px 22px 0}
 .logo-row{display:flex;align-items:center;gap:11px;margin-bottom:22px}
 .logo-box{width:42px;height:42px;background:#fe2627;border-radius:11px;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(254,38,39,.28)}
@@ -243,32 +246,53 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .btn-view-static{flex:1;padding:15px;background:#eae8e3;color:#1c1c1c;border:none;border-radius:12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;cursor:pointer;min-height:52px}
 
 /* ═══ LIVE MAP SCREEN ═══ */
-.maplive-header{padding:14px 16px 10px;display:flex;align-items:center;gap:10px;flex-shrink:0;background:#1c1c1c}
-.maplive-route-name{flex:1;font-weight:700;font-size:15px;color:#fff;text-transform:uppercase;line-height:1.1}
-.live-pill{display:flex;align-items:center;gap:5px;background:rgba(31,138,61,.2);border:1px solid rgba(31,138,61,.4);border-radius:8px;padding:5px 10px}
+.maplive-header{padding:12px 16px 10px;display:flex;align-items:center;gap:10px;flex-shrink:0;background:#1c1c1c}
+.maplive-route-name{flex:1;font-weight:700;font-size:14px;color:#fff;text-transform:uppercase;line-height:1.1}
+.live-pill{display:flex;align-items:center;gap:5px;background:rgba(31,138,61,.2);border:1px solid rgba(31,138,61,.4);border-radius:8px;padding:5px 10px;flex-shrink:0}
 .live-pill-dot{width:7px;height:7px;border-radius:50%;background:#1f8a3d;animation:livepulse 1.4s ease-in-out infinite}
 @keyframes livepulse{0%,100%{opacity:1}50%{opacity:.3}}
 .live-pill-txt{font-family:'Barlow',sans-serif;font-weight:700;font-size:10px;color:#1f8a3d;letter-spacing:.06em}
-.trip-stats-bar{display:flex;background:#262625;flex-shrink:0}
-.trip-stat-item{flex:1;padding:10px 8px;text-align:center;border-right:1px solid #333}
+.driver-map-container{flex:0 0 46vh;min-height:180px;background:#d8e8d0;position:relative}
+.maplive-panel{flex:1;overflow-y:auto;background:#fff;display:flex;flex-direction:column;min-height:0}
+.trip-stats-bar{display:flex;background:#1c1c1c;flex-shrink:0}
+.trip-stat-item{flex:1;padding:10px 8px;text-align:center;border-right:1px solid #2e2e2c}
 .trip-stat-item:last-child{border:none}
-.trip-stat-val{font-weight:700;font-size:18px;color:#fff;line-height:1}
+.trip-stat-val{font-weight:700;font-size:20px;color:#fff;line-height:1}
 .trip-stat-val.green{color:#1f8a3d}
 .trip-stat-val.yellow{color:#e8a020}
-.trip-stat-lbl{font-family:'Barlow',sans-serif;font-size:8px;color:#666;letter-spacing:.08em;text-transform:uppercase;margin-top:2px}
-.driver-map-container{flex:1;min-height:0;background:#d8e8d0}
-.maplive-bottom{flex-shrink:0;background:#fff;border-top:1px solid #e4e2dd;padding:12px 16px 20px}
-.next-stop-pill{background:#f4f4f2;border-radius:10px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
-.next-stop-pill-icon{font-size:18px}
-.next-stop-pill-info{flex:1}
-.next-stop-pill-name{font-weight:700;font-size:14px;color:#1c1c1c}
-.next-stop-pill-dist{font-family:'Barlow',sans-serif;font-size:11px;color:#9a9894;margin-top:2px}
-.maplive-btns{display:flex;gap:10px}
-.btn-fuel-confirm{flex:1;padding:14px;background:#1f8a3d;color:#fff;border:none;border-radius:12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;cursor:pointer;min-height:50px;display:none}
+.trip-stat-lbl{font-family:'Barlow',sans-serif;font-size:8px;color:#666;letter-spacing:.1em;text-transform:uppercase;margin-top:3px}
+.next-stop-card{margin:14px 14px 0;background:#fff3cd;border:1.5px solid #f0c850;border-radius:14px;padding:12px 14px;flex-shrink:0}
+.next-stop-card-label{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;color:#856404;letter-spacing:.1em;margin-bottom:6px}
+.next-stop-card-name{font-weight:700;font-size:16px;color:#1c1c1c;text-transform:uppercase}
+.next-stop-card-city{font-family:'Barlow',sans-serif;font-size:12px;color:#6a6866;margin-top:2px}
+.next-stop-card-dist{font-family:'Barlow',sans-serif;font-size:12px;color:#856404;margin-top:6px;display:flex;align-items:center;gap:5px}
+.maplive-stops-list{padding:12px 14px 4px;flex-shrink:0}
+.maplive-stop-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #f4f4f2}
+.maplive-stop-row:last-child{border:none}
+.maplive-stop-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0}
+.maplive-stop-num.done{background:#1f8a3d;color:#fff}
+.maplive-stop-num.next{background:#e8a020;color:#fff}
+.maplive-stop-num.todo{background:#eae8e3;color:#9a9894}
+.maplive-stop-info{flex:1;min-width:0}
+.maplive-stop-name{font-weight:700;font-size:13px;color:#1c1c1c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.maplive-stop-name.done{text-decoration:line-through;color:#9a9894}
+.maplive-stop-city{font-family:'Barlow',sans-serif;font-size:11px;color:#9a9894;margin-top:1px}
+.maplive-stop-km{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;color:#b0aea9;flex-shrink:0}
+.maplive-action-row{display:flex;gap:10px;padding:12px 14px 22px;flex-shrink:0;background:#fff;position:sticky;bottom:0;border-top:1px solid #f0eeea}
+.btn-fuel-confirm{flex:2;padding:14px;background:#1f8a3d;color:#fff;border:none;border-radius:12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;cursor:pointer;min-height:50px;display:none}
 .btn-fuel-confirm.show{display:block}
 .btn-fuel-confirm:active{background:#177030}
-.btn-end-trip{flex:1;padding:14px;background:#1c1c1c;color:#fff;border:none;border-radius:12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;cursor:pointer;min-height:50px}
+.btn-end-trip{flex:1;padding:14px;background:#1c1c1c;color:#fff;border:none;border-radius:12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;cursor:pointer;min-height:50px}
 .btn-end-trip:active{background:#333}
+/* Leaflet custom markers */
+.marker-truck{background:#1a6fb5;border:3px solid #fff;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 3px 10px rgba(26,111,181,.5);position:relative}
+.marker-truck::after{content:'Você';position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);background:#1a6fb5;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:9px;padding:2px 5px;border-radius:4px;white-space:nowrap}
+.marker-stop-next{background:#e8a020;border:3px solid #fff;border-radius:10px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 3px 8px rgba(232,160,32,.5)}
+.marker-stop-done{background:#1f8a3d;border:3px solid #fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 2px 6px rgba(31,138,61,.4)}
+.marker-stop-todo{background:#fff;border:2.5px solid #9a9894;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;color:#9a9894}
+.marker-origin{background:#262625;border:3px solid #fff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:13px}
+.marker-dest{background:#262625;border:3px solid #fff;border-radius:8px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:14px}
+.leaflet-popup-content-wrapper{border-radius:10px!important;font-family:'Barlow',sans-serif;font-size:13px}
 
 /* ═══ ADMIN TABS ═══ */
 .admin-tab-bar{display:flex;background:#f4f4f2;border-bottom:1px solid #e4e2dd;flex-shrink:0}
@@ -411,26 +435,38 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 <div class="screen" id="screenMapLive" style="background:#1c1c1c">
   <div class="maplive-header">
     <button class="back-btn" style="background:rgba(255,255,255,.1);color:#fff" onclick="showRoute(currentRouteIdx)">‹</button>
-    <div class="maplive-route-name" id="mapLiveRouteName">Em Viagem</div>
+    <div>
+      <div class="maplive-route-name" id="mapLiveRouteName">Em Viagem</div>
+      <div style="font-family:'Barlow',sans-serif;font-size:10px;color:#6a6866;margin-top:1px" id="mapLiveStates"></div>
+    </div>
     <div class="live-pill"><div class="live-pill-dot"></div><span class="live-pill-txt">AO VIVO</span></div>
   </div>
-  <div class="trip-stats-bar">
-    <div class="trip-stat-item"><div class="trip-stat-val" id="tsElapsed">00:00</div><div class="trip-stat-lbl">Tempo</div></div>
-    <div class="trip-stat-item"><div class="trip-stat-val green" id="tsPerc">—</div><div class="trip-stat-lbl">Percorrido</div></div>
-    <div class="trip-stat-item"><div class="trip-stat-val yellow" id="tsRest">—</div><div class="trip-stat-lbl">Restante</div></div>
-  </div>
   <div id="driverMapEl" class="driver-map-container"></div>
-  <div class="maplive-bottom">
-    <div class="next-stop-pill" id="nextStopPill">
-      <span class="next-stop-pill-icon">⛽</span>
-      <div class="next-stop-pill-info">
-        <div class="next-stop-pill-name" id="nextStopName">Calculando...</div>
-        <div class="next-stop-pill-dist" id="nextStopDist"></div>
+  <div class="maplive-panel">
+    <div class="trip-stats-bar">
+      <div class="trip-stat-item">
+        <div class="trip-stat-val green" id="tsPerc">—</div>
+        <div class="trip-stat-lbl">Percorrido</div>
+      </div>
+      <div class="trip-stat-item">
+        <div class="trip-stat-val" id="tsRest">—</div>
+        <div class="trip-stat-lbl">Restante</div>
+      </div>
+      <div class="trip-stat-item">
+        <div class="trip-stat-val yellow" id="tsElapsed">00:00</div>
+        <div class="trip-stat-lbl">Estimado</div>
       </div>
     </div>
-    <div class="maplive-btns">
-      <button class="btn-fuel-confirm" id="btnFuelConfirm" onclick="confirmFuelStop()">✅ Confirmar Abastecimento</button>
-      <button class="btn-end-trip" onclick="promptEndTrip()">⛔ Encerrar Viagem</button>
+    <div id="nextStopCard" class="next-stop-card">
+      <div class="next-stop-card-label">⚡ PRÓXIMO ABASTECIMENTO</div>
+      <div class="next-stop-card-name" id="nextStopName">Calculando...</div>
+      <div class="next-stop-card-city" id="nextStopCity"></div>
+      <div class="next-stop-card-dist" id="nextStopDist"></div>
+    </div>
+    <div id="stopsList" class="maplive-stops-list"></div>
+    <div class="maplive-action-row">
+      <button class="btn-fuel-confirm" id="btnFuelConfirm" onclick="confirmFuelStop()">⛽ Confirmar Abastecimento</button>
+      <button class="btn-end-trip" onclick="promptEndTrip()">⛔ Encerrar</button>
     </div>
   </div>
 </div>
@@ -480,6 +516,34 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 const FIREBASE_CONFIG={apiKey:"AIzaSyAbYd2RulYeBr-_IQ8G4ccmzxKf8gAjLPQ",authDomain:"rotogramas-confianca.firebaseapp.com",databaseURL:"https://rotogramas-confianca-default-rtdb.firebaseio.com",projectId:"rotogramas-confianca",storageBucket:"rotogramas-confianca.firebasestorage.app",messagingSenderId:"156398881281",appId:"1:156398881281:web:a67f3e2ee02b969ab78e00"};
 const ADMIN_USER='admin';
 const ADMIN_PASS='confianca2026';
+// Coordenadas aproximadas dos pontos das rotas (lat, lng)
+const ROUTE_COORDS={
+  'lucas-goiania':{
+    orig:[-13.0513,-55.9129],
+    stops:[[-13.05,-55.91],[-15.5542,-54.2883]],
+    dest:[-16.6869,-49.2648]
+  },
+  'goiania-cabedelo':{
+    orig:[-16.6869,-49.2648],
+    stops:[[-12.0957,-45.7882],[-12.5267,-40.3075],[-11.3441,-37.4625],[-7.8353,-34.9007]],
+    dest:[-6.9811,-34.8341]
+  },
+  'cabedelo-suape':{
+    orig:[-6.9811,-34.8341],
+    stops:[[-7.2604,-34.8993]],
+    dest:[-8.3890,-35.0320]
+  },
+  'goiania-sjcampos':{
+    orig:[-16.6869,-49.2648],
+    stops:[],
+    dest:[-23.1794,-45.8869]
+  },
+  'goiania-smateus':{
+    orig:[-16.6869,-49.2648],
+    stops:[],
+    dest:[-25.8766,-50.3828]
+  }
+};
 
 // ═══ STATE ═══
 let routes=[], drivers={}, viagens={}, posicoes={};
@@ -797,16 +861,55 @@ function updateNextStopUI(lat,lng){
   const confirmed=currentTrip.postosConfirmados||[];
   const nextIdx=confirmed.length;
   const nameEl=document.getElementById('nextStopName');
+  const cityEl=document.getElementById('nextStopCity');
   const distEl=document.getElementById('nextStopDist');
   const confirmBtn=document.getElementById('btnFuelConfirm');
-  if(nextIdx>=stops.length){if(nameEl)nameEl.textContent='Todos os postos confirmados ✓';if(distEl)distEl.textContent='';return;}
-  const next=stops[nextIdx];
-  if(nameEl)nameEl.textContent=next.nome+' — '+next.cidade;
-  if(next.lat&&next.lng&&lat&&lng){
-    const dist=calcDistance(lat,lng,next.lat,next.lng);
-    if(distEl)distEl.textContent=dist<1?Math.round(dist*1000)+'m até o posto':dist.toFixed(1)+'km até o posto';
-    if(confirmBtn){if(dist<0.5)confirmBtn.classList.add('show');else confirmBtn.classList.remove('show');}
-  }else{if(distEl)distEl.textContent='KM '+next.km+' da rota';}
+  // Next stop card
+  if(nextIdx>=stops.length){
+    if(nameEl)nameEl.textContent='Todos os postos confirmados ✓';
+    if(cityEl)cityEl.textContent='';
+    if(distEl)distEl.textContent='';
+    if(confirmBtn)confirmBtn.classList.remove('show');
+  }else{
+    const next=stops[nextIdx];
+    if(nameEl)nameEl.textContent=next.nome;
+    if(cityEl)cityEl.textContent=next.cidade;
+    const coords=ROUTE_COORDS[route.id];
+    const stopCoord=coords?.stops[nextIdx];
+    if(lat&&lng&&stopCoord){
+      const dist=calcDistance(lat,lng,stopCoord[0],stopCoord[1]);
+      const distTxt=dist<1?Math.round(dist*1000)+'m':'≅ '+Math.round(dist)+'km';
+      // Rough time: avg 80km/h
+      const hrs=dist/80;const hh=Math.floor(hrs);const mm=Math.round((hrs-hh)*60);
+      const timeTxt=hh>0?`~${hh}h${String(mm).padStart(2,'0')}m`:`~${mm}min`;
+      if(distEl)distEl.innerHTML='⏱ '+distTxt+' · '+timeTxt+' de distância';
+      if(confirmBtn){if(dist<0.5)confirmBtn.classList.add('show');else confirmBtn.classList.remove('show');}
+    }else{
+      if(distEl)distEl.innerHTML='⏱ KM '+next.km+' da rota';
+    }
+  }
+  // Render stops list
+  const listEl=document.getElementById('stopsList');
+  if(listEl){
+    let h='';
+    stops.forEach((s,i)=>{
+      const isDone=confirmed.includes(i);
+      const isNext=i===nextIdx;
+      let numHtml;
+      if(isDone)numHtml='<div class="maplive-stop-num done">✓</div>';
+      else if(isNext)numHtml='<div class="maplive-stop-num next">⛽</div>';
+      else numHtml=`<div class="maplive-stop-num todo">${i+1}</div>`;
+      h+=`<div class="maplive-stop-row">
+        ${numHtml}
+        <div class="maplive-stop-info">
+          <div class="maplive-stop-name ${isDone?'done':''}">${s.nome}</div>
+          <div class="maplive-stop-city">${s.cidade}</div>
+        </div>
+        <div class="maplive-stop-km">KM ${s.km}</div>
+      </div>`;
+    });
+    listEl.innerHTML=h;
+  }
 }
 
 // ═══ TRIP TIMER ═══
@@ -832,48 +935,76 @@ function updateTripStats(){
 }
 
 // ═══ LEAFLET — MAPA DO MOTORISTA ═══
+function mkIcon(html,size){return L.divIcon({html,className:'',iconSize:size,iconAnchor:[size[0]/2,size[1]/2]});}
 function initDriverMap(){
   if(driverMap){try{driverMap.remove();}catch(e){}driverMap=null;driverMarker=null;stopMarkers=[];}
   const el=document.getElementById('driverMapEl');if(!el)return;
   if(typeof L==='undefined'){
-    el.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;background:#1a2a1a;flex-direction:column;gap:12px"><div style="font-size:36px">🗺️</div><div style="color:#fff;font-family:Barlow,sans-serif;font-size:14px;text-align:center">Carregando mapa...<br><small style="opacity:.6">Verifique sua conexão</small></div></div>';
+    el.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;background:#1c2a1c;flex-direction:column;gap:12px"><div style="font-size:36px">🗺️</div><div style="color:#fff;font-family:Barlow,sans-serif;font-size:14px;text-align:center">Carregando mapa...<br><small style="opacity:.6">Verifique sua conexão</small></div></div>';
     setTimeout(initDriverMap,2000);return;
   }
   try{
-  driverMap=L.map('driverMapEl',{zoomControl:true,attributionControl:false}).setView([-15.77,-47.93],6);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(driverMap);
-  // Add stop markers for current route
-  if(currentRouteIdx>=0){
-    const route=routes[currentRouteIdx];
-    if(route){
-      route.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino').forEach((p,i)=>{
-        if(p.lat&&p.lng){
-          const confirmed=(currentTrip?.postosConfirmados||[]).includes(i);
-          const mk=L.circleMarker([p.lat,p.lng],{radius:10,fillColor:confirmed?'#1f8a3d':'#fe2627',color:'#fff',weight:2,fillOpacity:1});
-          mk.bindPopup('<b>'+p.nome+'</b><br>'+p.cidade+'<br>KM '+p.km);
-          mk.addTo(driverMap);stopMarkers.push(mk);
+    const route=currentRouteIdx>=0?routes[currentRouteIdx]:null;
+    const coords=route?ROUTE_COORDS[route.id]:null;
+    const center=coords?coords.orig:[-15.77,-47.93];
+    const zoom=coords&&coords.stops.length>0?6:10;
+    driverMap=L.map('driverMapEl',{zoomControl:false,attributionControl:false}).setView(center,zoom);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(driverMap);
+    L.control.zoom({position:'topright'}).addTo(driverMap);
+    // Draw route polyline
+    if(coords){
+      const allPts=[coords.orig,...coords.stops,coords.dest].filter(Boolean);
+      if(allPts.length>1){
+        L.polyline(allPts,{color:'#1a7a3c',weight:4,opacity:.8,dashArray:null}).addTo(driverMap);
+      }
+      // Origin marker
+      L.marker(coords.orig,{icon:mkIcon('<div class="marker-origin">🏠</div>',[26,26])}).addTo(driverMap);
+      // Destination marker
+      L.marker(coords.dest,{icon:mkIcon('<div class="marker-dest">🏁</div>',[28,28])}).addTo(driverMap);
+      // Stop markers
+      const fuelStops=route?route.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino'):[];
+      const confirmed=currentTrip?.postosConfirmados||[];
+      const nextIdx=confirmed.length;
+      coords.stops.forEach((c,i)=>{
+        const p=fuelStops[i];
+        const isDone=confirmed.includes(i);
+        const isNext=i===nextIdx;
+        let iconHtml;
+        if(isDone)iconHtml='<div class="marker-stop-done">✓</div>';
+        else if(isNext)iconHtml='<div class="marker-stop-next">⛽</div>';
+        else iconHtml=`<div class="marker-stop-todo">${i+1}</div>`;
+        const mk=L.marker(c,{icon:mkIcon(iconHtml,[isNext?32:26,isNext?32:26])});
+        if(p)mk.bindPopup('<b>'+p.nome+'</b><br><small>'+p.cidade+'</small><br>KM '+p.km);
+        mk.addTo(driverMap);stopMarkers.push(mk);
+        // "PRÓXIMO" label
+        if(isNext){
+          L.marker(c,{icon:L.divIcon({html:'<div style="background:#e8a020;color:#fff;font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:10px;padding:2px 6px;border-radius:5px;white-space:nowrap;margin-left:20px;margin-top:-8px">PRÓXIMO</div>',className:'',iconAnchor:[0,16]})}).addTo(driverMap);
         }
       });
     }
+    // Get GPS and add truck marker
+    if(navigator.geolocation){
+      navigator.geolocation.getCurrentPosition(pos=>{
+        const {latitude:lat,longitude:lng}=pos.coords;
+        updateDriverMarkerPos(lat,lng);
+        driverMap.setView([lat,lng],13);
+      },()=>{if(coords)driverMap.fitBounds([coords.orig,...(coords.stops||[]),coords.dest].map(c=>[c[0],c[1]]));},{enableHighAccuracy:true,timeout:8000});
+    }else if(coords){
+      driverMap.fitBounds([coords.orig,...(coords.stops||[]),coords.dest]);
+    }
+  }catch(e){
+    console.error('Map error:',e);
+    const el=document.getElementById('driverMapEl');
+    if(el)el.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;background:#1c2a1c;color:#fff;font-family:Barlow,sans-serif;font-size:13px;text-align:center;padding:20px">Erro ao carregar mapa.<br>Verifique sua conexão.</div>';
   }
-  // Get current position and center map
-  if(navigator.geolocation){
-    navigator.geolocation.getCurrentPosition(pos=>{
-      const {latitude:lat,longitude:lng}=pos.coords;
-      updateDriverMarkerPos(lat,lng);
-      driverMap.setView([lat,lng],12);
-    },()=>{});
-  }
-  }catch(e){console.error('Leaflet init error:',e);const el=document.getElementById('driverMapEl');if(el)el.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;background:#1a2a1a;color:#fff;font-family:Barlow,sans-serif;font-size:13px;text-align:center;padding:20px">Erro ao carregar mapa.<br>Verifique sua conexão e reabra a viagem.</div>';}
 }
 function updateDriverMarkerPos(lat,lng){
   if(!driverMap)return;
   if(!driverMarker){
-    const icon=L.divIcon({html:'<div style="width:22px;height:22px;background:#1a6fb5;border:3px solid #fff;border-radius:50%;box-shadow:0 2px 8px rgba(26,111,181,.5)"></div>',className:'',iconSize:[22,22],iconAnchor:[11,11]});
-    driverMarker=L.marker([lat,lng],{icon}).addTo(driverMap);
-    driverMarker.bindPopup('📍 Você');
+    const icon=L.divIcon({html:'<div class="marker-truck">🚛</div>',className:'',iconSize:[36,52],iconAnchor:[18,18]});
+    driverMarker=L.marker([lat,lng],{icon,zIndexOffset:1000}).addTo(driverMap);
   }else{driverMarker.setLatLng([lat,lng]);}
-  driverMap.panTo([lat,lng],{animate:true,duration:1});
+  driverMap.panTo([lat,lng],{animate:true,duration:0.8});
 }
 
 // ═══ LEAFLET — MAPA MONITOR ═══
@@ -1247,11 +1378,25 @@ function showSuccessMessage(nome){
 
 // ═══ NAV ═══
 function showScreen(id){
-  document.querySelectorAll('.screen').forEach(s=>{s.classList.remove('active');});
+  // Blur any focused input (prevents mobile keyboard from scrolling)
+  if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
+  document.querySelectorAll('.screen').forEach(s=>{
+    s.classList.remove('active');
+    s.scrollTop=0; // reset inner scroll of every screen
+  });
   const el=document.getElementById(id);
-  if(el){el.classList.add('active');el.scrollTop=0;}
-  window.scrollTo({top:0,left:0,behavior:'instant'});
-  document.body.scrollTop=0;document.documentElement.scrollTop=0;
+  if(el){
+    el.classList.add('active');
+    el.scrollTop=0;
+    // Force all scrollable children to top
+    el.querySelectorAll('[class*="scroll"],[class*="panel"],[class*="-list"]').forEach(c=>c.scrollTop=0);
+  }
+  // Reset window scroll via multiple methods (mobile compatibility)
+  requestAnimationFrame(()=>{
+    window.scrollTo(0,0);
+    document.body.scrollTop=0;
+    document.documentElement.scrollTop=0;
+  });
 }
 function showDriverLogin(){showScreen('screenDriverLogin');}
 function showHome(){
@@ -1282,18 +1427,20 @@ function showMapLive(){
   if(!currentTrip){showToast('Nenhuma viagem ativa — inicie uma viagem primeiro');return;}
   const route=currentRouteIdx>=0?routes[currentRouteIdx]:null;
   const nameEl=document.getElementById('mapLiveRouteName');
+  const statesEl=document.getElementById('mapLiveStates');
   if(nameEl&&route)nameEl.textContent=route.nome;
+  if(statesEl&&route)statesEl.textContent=route.estados||'';
   showScreen('screenMapLive');
-  // Reset trip stats display
-  const el=document.getElementById('tsElapsed');if(el)el.textContent='00:00';
+  // Reset stats
   const ep=document.getElementById('tsPerc');if(ep)ep.textContent='—';
   const er=document.getElementById('tsRest');if(er)er.textContent=route?route.distancia||'—':'—';
+  const et=document.getElementById('tsElapsed');if(et)et.textContent=route?route.tempo||'—':'—';
+  updateNextStopUI();
   setTimeout(()=>{
     initDriverMap();
     startTracking();
-    updateNextStopUI();
     if(!tripTimerInterval&&tripStartTs)startTripTimer();
-  },150);
+  },200);
 }
 function showAdmin(){isEditing=false;if(window._draftInterval)clearInterval(window._draftInterval);renderAdmin();showScreen('screenAdmin');}
 
