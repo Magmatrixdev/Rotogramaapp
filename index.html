@@ -342,6 +342,7 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .monitor-no-trips{text-align:center;padding:40px 20px;color:#9a9894;font-family:'Barlow',sans-serif}
 
 @keyframes fadeInSuccess{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+@keyframes slideUpIn{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 
 /* ═══ BI / ANÁLISE ═══ */
 .bi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px 20px 0}
@@ -1656,7 +1657,41 @@ window.addEventListener('offline',()=>{const t=document.getElementById('offlineT
 let dp;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();dp=e;document.getElementById('installBanner').classList.add('show')});
 document.getElementById('installBtn')?.addEventListener('click',async()=>{if(!dp)return;dp.prompt();await dp.userChoice;dp=null;document.getElementById('installBanner').classList.remove('show')});
 document.getElementById('installDismiss')?.addEventListener('click',()=>document.getElementById('installBanner').classList.remove('show'));
-if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+if('serviceWorker' in navigator){
+  let _swRefreshing=false;
+  navigator.serviceWorker.register('./sw.js').then(reg=>{
+    // Detecta quando nova versão do SW está instalando
+    reg.addEventListener('updatefound',()=>{
+      const newWorker=reg.installing;
+      newWorker.addEventListener('statechange',()=>{
+        // Nova versão instalada e aguardando — mostra botão de atualizar
+        if(newWorker.state==='installed'&&navigator.serviceWorker.controller){
+          showUpdateBanner(reg);
+        }
+      });
+    });
+    // Verifica se já há um SW esperando (ex: app foi reaberto com update pendente)
+    if(reg.waiting&&navigator.serviceWorker.controller){
+      showUpdateBanner(reg);
+    }
+  }).catch(()=>{});
+  // Quando SW assume controle (após skip waiting), recarrega a página
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    if(!_swRefreshing){_swRefreshing=true;location.reload();}
+  });
+}
+function showUpdateBanner(reg){
+  document.querySelector('.update-banner')?.remove();
+  const b=document.createElement('div');
+  b.className='update-banner';
+  b.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a7a3c;color:#fff;padding:13px 20px;border-radius:14px;font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:14px;z-index:9999;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,.35);white-space:nowrap;display:flex;align-items:center;gap:8px;animation:slideUpIn .3s ease';
+  b.innerHTML='🔄 <span>Nova versão disponível — toque para atualizar</span>';
+  b.onclick=()=>{
+    if(reg?.waiting)reg.waiting.postMessage({type:'SKIP_WAITING'});
+    else location.reload();
+  };
+  document.body.appendChild(b);
+}
 initFirebase();
 </script>
 </body>
