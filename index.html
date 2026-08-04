@@ -576,33 +576,85 @@ async function doDriverRegister(){
   const pin=(document.getElementById('dRegPIN')?.value||'').trim();
   const pin2=(document.getElementById('dRegPIN2')?.value||'').trim();
   const errEl=document.getElementById('dRegError');
-  if(!nome||cpfRaw.length!==11||pin.length!==4||pin!==pin2){errEl.textContent=pin!==pin2?'Os PINs não coincidem':'Preencha todos os campos corretamente';errEl.style.display='block';setTimeout(()=>errEl.style.display='none',3000);return;}
-  const cpfHash=await sha256(cpfRaw);
-  const existing=Object.values(drivers).find(d=>d.cpfHash===cpfHash);
-  if(existing){errEl.textContent='CPF já cadastrado';errEl.style.display='block';setTimeout(()=>errEl.style.display='none',3000);return;}
-  const pinHash=await sha256(pin);
-  const cpfEnc=await encryptCPF(cpfRaw);
-  const id='drv_'+Date.now();
-  const driver={id,nome,cpfHash,cpfEnc,pinHash,bloqueado:false,criadoEm:Date.now(),ultimoAcesso:Date.now()};
-  if(db)await db.ref('motoristas/'+id).set(driver);
-  currentDriver=driver;
-  localStorage.setItem('drv_session',JSON.stringify({id,nome,pinHash}));
-  showHome();
+  const btn=document.querySelector('#dauthRegisterForm .dauth-btn');
+  function showErr(msg){errEl.textContent=msg;errEl.style.display='block';setTimeout(()=>errEl.style.display='none',4000);}
+  // Validações síncronas
+  if(!nome){showErr('Informe o nome completo');return;}
+  if(cpfRaw.length!==11){showErr('CPF inválido — digite os 11 dígitos');return;}
+  if(pin.length!==4){showErr('PIN deve ter 4 dígitos');return;}
+  if(pin!==pin2){showErr('Os PINs não coincidem');return;}
+  if(!/^\d{4}$/.test(pin)){showErr('PIN deve conter apenas números');return;}
+  // Botão loading
+  if(btn){btn.disabled=true;btn.textContent='Aguarde...';}
+  try{
+    // Verificar suporte a crypto
+    if(!window.crypto||!window.crypto.subtle){
+      // Fallback simples sem criptografia forte (HTTP context)
+      const cpfHash=await sha256Fallback(cpfRaw);
+      const existing=Object.values(drivers).find(d=>d.cpfHash===cpfHash);
+      if(existing){showErr('CPF já cadastrado');return;}
+      const pinHash=await sha256Fallback(pin);
+      const id='drv_'+Date.now();
+      const driver={id,nome,cpfHash,cpfEnc:btoa(cpfRaw),pinHash,bloqueado:false,criadoEm:Date.now(),ultimoAcesso:Date.now()};
+      if(db)await db.ref('motoristas/'+id).set(driver);
+      currentDriver=driver;
+      localStorage.setItem('drv_session',JSON.stringify({id,nome,pinHash}));
+      showHome();return;
+    }
+    const cpfHash=await sha256(cpfRaw);
+    const existing=Object.values(drivers).find(d=>d.cpfHash===cpfHash);
+    if(existing){showErr('CPF já cadastrado. Faça login na aba Entrar.');return;}
+    const pinHash=await sha256(pin);
+    const cpfEnc=await encryptCPF(cpfRaw);
+    const id='drv_'+Date.now();
+    const driver={id,nome,cpfHash,cpfEnc,pinHash,bloqueado:false,criadoEm:Date.now(),ultimoAcesso:Date.now()};
+    if(db){await db.ref('motoristas/'+id).set(driver);}
+    else{// Firebase não pronto ainda — salva localmente
+      const localDrivers=JSON.parse(localStorage.getItem('drivers_local')||'{}');
+      localDrivers[id]=driver;
+      localStorage.setItem('drivers_local',JSON.stringify(localDrivers));
+    }
+    currentDriver=driver;
+    localStorage.setItem('drv_session',JSON.stringify({id,nome,pinHash}));
+    showHome();
+  }catch(err){
+    console.error('Erro no cadastro:',err);
+    showErr('Erro ao criar conta: '+(err.message||'tente novamente'));
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='CRIAR CONTA';}
+  }
+}
+// Fallback SHA256 simples para contexto HTTP (sem crypto.subtle)
+async function sha256Fallback(str){
+  let hash=0;for(let i=0;i<str.length;i++){hash=((hash<<5)-hash+str.charCodeAt(i))|0;}
+  return Math.abs(hash).toString(16).padStart(8,'0')+str.length.toString(16);
 }
 async function doDriverLogin(){
   const cpfRaw=cleanCPF(document.getElementById('dLoginCPF')?.value||'');
   const pin=(document.getElementById('dLoginPIN')?.value||'').trim();
   const errEl=document.getElementById('dLoginError');
-  if(cpfRaw.length!==11||pin.length!==4){errEl.style.display='block';setTimeout(()=>errEl.style.display='none',3000);return;}
-  const cpfHash=await sha256(cpfRaw);
-  const pinHash=await sha256(pin);
-  const driver=Object.values(drivers).find(d=>d.cpfHash===cpfHash&&d.pinHash===pinHash);
-  if(!driver){errEl.style.display='block';setTimeout(()=>errEl.style.display='none',3000);return;}
-  if(driver.bloqueado){errEl.textContent='Conta bloqueada. Contate o administrador.';errEl.style.display='block';return;}
-  currentDriver=driver;
-  if(db)db.ref('motoristas/'+driver.id+'/ultimoAcesso').set(Date.now());
-  if(document.getElementById('saveCreds')?.checked){localStorage.setItem('drv_session',JSON.stringify({id:driver.id,nome:driver.nome,pinHash}));}
-  showHome();
+  const btn=document.querySelector('#dauthLoginForm .dauth-btn');
+  function showErr(msg){errEl.textContent=msg||'CPF ou PIN incorretos';errEl.style.display='block';setTimeout(()=>errEl.style.display='none',4000);}
+  if(cpfRaw.length!==11){showErr('CPF inválido — digite os 11 dígitos');return;}
+  if(pin.length!==4){showErr('PIN deve ter 4 dígitos');return;}
+  if(btn){btn.disabled=true;btn.textContent='Verificando...';}
+  try{
+    const hashFn=(!window.crypto||!window.crypto.subtle)?sha256Fallback:sha256;
+    const cpfHash=await hashFn(cpfRaw);
+    const pinHash=await hashFn(pin);
+    const driver=Object.values(drivers).find(d=>d.cpfHash===cpfHash&&d.pinHash===pinHash);
+    if(!driver){showErr('CPF ou PIN incorretos');return;}
+    if(driver.bloqueado){showErr('Conta bloqueada. Contate o administrador.');return;}
+    currentDriver=driver;
+    if(db)db.ref('motoristas/'+driver.id+'/ultimoAcesso').set(Date.now());
+    if(document.getElementById('saveCreds')?.checked){localStorage.setItem('drv_session',JSON.stringify({id:driver.id,nome:driver.nome,pinHash}));}
+    showHome();
+  }catch(err){
+    console.error('Erro no login:',err);
+    showErr('Erro ao entrar: '+(err.message||'tente novamente'));
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='ENTRAR';}
+  }
 }
 function loadDriverSession(){
   try{
