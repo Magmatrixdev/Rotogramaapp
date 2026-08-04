@@ -31,7 +31,7 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .home-subtext{font-family:'Barlow',sans-serif;font-size:13px;color:#8a8886;margin-top:6px}
 .admin-toggle{position:absolute;top:20px;right:22px;width:42px;height:42px;border-radius:12px;background:#eae8e3;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px}
 .admin-toggle:active{background:#e4e2dd}
-.logout-btn{position:absolute;top:20px;left:22px;height:36px;border-radius:10px;background:rgba(254,38,39,.08);border:1.5px solid rgba(254,38,39,.18);display:none;align-items:center;gap:6px;padding:0 12px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;color:#fe2627}
+.logout-btn{position:absolute;top:70px;right:22px;height:32px;border-radius:9px;background:rgba(254,38,39,.08);border:1.5px solid rgba(254,38,39,.18);display:none;align-items:center;gap:6px;padding:0 11px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;color:#fe2627}
 .logout-btn:active{background:rgba(254,38,39,.15)}
 .logout-btn.show{display:flex}
 .driver-greeting{font-family:'Barlow',sans-serif;font-size:12px;color:#9a9894;margin-top:4px}
@@ -254,7 +254,8 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .live-pill-dot{width:7px;height:7px;border-radius:50%;background:#1f8a3d;animation:livepulse 1.4s ease-in-out infinite}
 @keyframes livepulse{0%,100%{opacity:1}50%{opacity:.3}}
 .live-pill-txt{font-family:'Barlow',sans-serif;font-weight:700;font-size:10px;color:#1f8a3d;letter-spacing:.06em}
-.driver-map-container{flex:0 0 46vh;min-height:200px;background:#e8eef0;position:relative;overflow:hidden}
+.driver-map-container{flex:0 0 46vh;height:46vh;min-height:220px;background:#e8eef0;position:relative;overflow:hidden}
+.driver-map-container .leaflet-container{position:absolute!important;inset:0!important;height:100%!important;width:100%!important}
 .maplive-panel{flex:1;overflow-y:auto;background:#fff;display:flex;flex-direction:column;min-height:0}
 .trip-stats-bar{display:flex;background:#1c1c1c;flex-shrink:0}
 .trip-stat-item{flex:1;padding:10px 8px;text-align:center;border-right:1px solid #2e2e2c}
@@ -1017,6 +1018,10 @@ function stopIconHTML(isDone,isNext,num){
 async function initDriverMap(){
   if(driverMap){try{driverMap.remove();}catch(e){}driverMap=null;driverMarker=null;stopMarkers=[];_routeGeometry=[];_routeLayerDone=null;_routeLayerRest=null;}
   const el=document.getElementById('driverMapEl');if(!el)return;
+  // iOS fix: força dimensões em pixels antes do Leaflet medir o container
+  const screenH=window.innerHeight||document.documentElement.clientHeight;
+  el.style.height=Math.round(screenH*0.44)+'px';
+  el.style.minHeight='220px';
   const route=currentRouteIdx>=0?routes[currentRouteIdx]:null;
   if(!route)return;
   const coords=ROUTE_COORDS[route.id];if(!coords)return;
@@ -1026,8 +1031,15 @@ async function initDriverMap(){
   // Inicializa mapa Leaflet com tiles CartoDB (visual limpo como o mockup)
   driverMap=L.map('driverMapEl',{zoomControl:false,attributionControl:false})
     .setView(coords.orig,7);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-    {maxZoom:19,subdomains:'abcd'}).addTo(driverMap);
+  // Tenta CartoDB primeiro (visual mais bonito), fallback para OSM
+  const tileLayer=L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+    {maxZoom:19,subdomains:'abcd',crossOrigin:true});
+  tileLayer.addTo(driverMap);
+  tileLayer.on('tileerror',()=>{
+    // Se CartoDB falhar, usa OpenStreetMap como backup
+    driverMap.eachLayer(l=>{if(l instanceof L.TileLayer)driverMap.removeLayer(l);});
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(driverMap);
+  });
   L.control.zoom({position:'topright'}).addTo(driverMap);
 
   // Loading indicator
@@ -1087,6 +1099,14 @@ async function initDriverMap(){
 
   // Ajusta zoom para mostrar a rota toda
   try{driverMap.fitBounds(L.latLngBounds(_routeGeometry),{padding:[40,40],maxZoom:12});}catch(e){}
+
+  // iOS fix: força o Leaflet a recalcular tamanho após renderizar
+  setTimeout(()=>{
+    if(driverMap){
+      driverMap.invalidateSize({animate:false});
+      try{if(_routeGeometry.length>1)driverMap.fitBounds(L.latLngBounds(_routeGeometry),{padding:[40,40],maxZoom:12});}catch(e){}
+    }
+  },400);
 
   // Pega posição GPS real do dispositivo
   if(navigator.geolocation){
@@ -1662,7 +1682,12 @@ function showMapLive(){
     const er=document.getElementById('tsRest');if(er)er.textContent=route?route.distancia||'—':'—';
     const et=document.getElementById('tsElapsed');if(et)et.textContent=route?route.tempo||'—':'—';
     updateNextStopUI();
-    setTimeout(()=>{initDriverMap();startTracking();if(!tripTimerInterval&&tripStartTs)startTripTimer();},250);
+    // iOS precisa de tempo para o container estar visível antes do Leaflet inicializar
+    setTimeout(async()=>{
+      await initDriverMap();
+      startTracking();
+      if(!tripTimerInterval&&tripStartTs)startTripTimer();
+    },350);
   });
 }
 
