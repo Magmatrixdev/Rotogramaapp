@@ -9,11 +9,10 @@
 <title>Rotogramas — Confiança</title>
 <link rel="manifest" href="./manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-<!-- FIREBASE SDK -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
-
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 ::-webkit-scrollbar{width:0;height:0}
@@ -58,11 +57,9 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .rcard-arrow{flex:0 0 auto;color:#c2c0ba;font-size:22px}
 .no-results{text-align:center;padding:50px 20px;color:#9a9894;font-family:'Barlow',sans-serif;display:none}
 .no-results span{font-size:40px;display:block;margin-bottom:8px}
-/* SYNC STATUS */
 .sync-bar{font-family:'Barlow',sans-serif;font-size:11px;text-align:center;padding:6px 22px;color:#1f8a3d;background:rgba(31,138,61,.08)}
 .sync-bar.off{color:#e8a020;background:rgba(232,160,32,.08)}
 .sync-bar.err{color:#fe2627;background:rgba(254,38,39,.08)}
-/* ROTOGRAMA */
 .roto-top{flex:0 0 auto;padding:14px 20px 0}
 .back-btn{cursor:pointer;width:42px;height:42px;border-radius:12px;background:#eae8e3;border:none;display:flex;align-items:center;justify-content:center;color:#1c1c1c;font-size:24px;font-weight:700}
 .back-btn:active{background:#e4e2dd}
@@ -79,7 +76,7 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .roto-stat .lbl{font-family:'Barlow',sans-serif;font-size:9.5px;color:#9a9894;letter-spacing:.1em;margin-top:1px}
 .rota-link{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:12px;padding:12px;background:#262625;border-radius:10px;color:#f4f4f2;font-weight:700;font-size:13px;text-decoration:none;min-height:46px}
 .rota-link:active{background:#3a3a38}
-.roto-scroll{flex:1;overflow-y:auto;padding:16px 20px 28px}
+.roto-scroll{flex:1;overflow-y:auto;padding:16px 20px 100px}
 .timeline-wrap{position:relative}
 .timeline-line{position:absolute;left:26px;top:10px;bottom:10px;width:2px;background:linear-gradient(#fe2627,#4a4a49)}
 .timeline-stops{display:flex;flex-direction:column;gap:16px}
@@ -120,7 +117,6 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .dest-stop{position:relative;padding-left:56px;margin-top:4px}
 .dest-stop .stop-node{top:2px}
 .dest-nome{padding:3px 0;font-weight:700;font-size:15px;color:#1c1c1c;text-transform:uppercase}
-/* ADMIN */
 .admin-top{padding:14px 20px;display:flex;align-items:center;gap:12px}
 .admin-title{flex:1;font-weight:700;font-size:20px;text-transform:uppercase}
 .admin-scroll{flex:1;overflow-y:auto;padding:0 20px 28px}
@@ -136,7 +132,6 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .admin-btn{flex:1;padding:10px;border-radius:8px;border:none;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;cursor:pointer;min-height:42px}
 .admin-btn-edit{background:#eae8e3;color:#1c1c1c}.admin-btn-edit:active{background:#e4e2dd}
 .admin-btn-del{background:rgba(254,38,39,.1);color:#fe2627}.admin-btn-del:active{background:rgba(254,38,39,.2)}
-/* EDITOR */
 .editor-scroll{flex:1;overflow-y:auto;padding:0 20px 28px}
 .editor-section{margin-bottom:18px}
 .editor-section-title{font-weight:700;font-size:13px;letter-spacing:.12em;color:#9a9894;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px}
@@ -169,7 +164,6 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .confirm-box p{font-family:'Barlow',sans-serif;font-size:14px;color:#8a8886;margin-bottom:18px}
 .confirm-box .btns{display:flex;gap:10px}
 .confirm-box .btns button{flex:1;padding:12px;border-radius:10px;border:none;font-weight:700;font-size:14px;cursor:pointer;min-height:44px}
-/* LOGIN */
 .login-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:300;padding:20px}
 .login-box{background:#fff;border-radius:20px;padding:28px 24px;max-width:340px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.2)}
 .login-logo{display:flex;align-items:center;gap:10px;margin-bottom:20px}
@@ -191,8 +185,6 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .install-bar p{flex:1;font-family:'Barlow',sans-serif;font-size:13px;color:#fff}
 .install-btn{background:#fe2627;color:#fff;border:none;border-radius:8px;padding:10px 18px;font-weight:700;font-size:14px;cursor:pointer;min-height:44px}
 .install-x{background:none;border:none;color:#666;font-size:20px;cursor:pointer}
-
-/* EMERGENCY CONTACTS BAR */
 .emergency-bar{background:#1c1c1c;border-radius:14px;margin:14px 20px 0;padding:14px 16px;box-shadow:0 4px 16px rgba(0,0,0,.15)}
 .emergency-title{font-family:'Barlow',sans-serif;font-weight:600;font-size:10px;letter-spacing:.12em;color:#9a9894;text-transform:uppercase;margin-bottom:10px;text-align:center}
 .emergency-btns{display:flex;gap:8px}
@@ -202,66 +194,338 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .emergency-btn-info{display:flex;flex-direction:column;align-items:flex-start}
 .emergency-btn-name{font-size:13px}
 .emergency-btn-sub{font-family:'Barlow',sans-serif;font-weight:500;font-size:9px;opacity:.8;margin-top:1px}
-
-/* SHARE BUTTON */
 .share-btn{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;padding:12px;background:#25d366;border-radius:10px;color:#fff;font-weight:700;font-size:13px;text-decoration:none;min-height:46px;border:none;width:100%;cursor:pointer;font-family:'Barlow Condensed',sans-serif}
 .share-btn:active{background:#1fb855}
-
-/* ALERT BANNER */
 .alert-banner{margin:12px 20px 0;padding:14px 16px;background:#fff3cd;border:1.5px solid #f0e68c;border-radius:12px;display:flex;align-items:flex-start;gap:10px}
 .alert-icon{font-size:20px;flex-shrink:0;margin-top:1px}
 .alert-content{flex:1}
 .alert-label{font-family:'Barlow',sans-serif;font-weight:700;font-size:10px;letter-spacing:.1em;color:#856404;text-transform:uppercase;margin-bottom:3px}
 .alert-text{font-family:'Barlow',sans-serif;font-size:13px;color:#856404;line-height:1.4}
-
-/* RETURN ROUTE TAG */
 .return-tag{display:flex;align-items:center;gap:8px;margin-top:10px;padding:10px 14px;background:rgba(26,111,181,.08);border:1px solid rgba(26,111,181,.15);border-radius:10px}
 .return-tag-icon{font-size:16px}
 .return-tag-text{font-family:'Barlow',sans-serif;font-size:12.5px;color:#1a6fb5;line-height:1.3}
-
-/* OFFLINE INDICATOR */
 .offline-toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#262625;color:#fff;font-family:'Barlow',sans-serif;font-size:13px;padding:10px 20px;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.3);z-index:400;display:none}
 .offline-toast.show{display:block}
+
+/* ═══ DRIVER AUTH SCREEN ═══ */
+.dauth-screen{background:#f4f4f2;display:flex;flex-direction:column;justify-content:space-between;min-height:100vh;padding:0}
+.dauth-top-bg{background:#1c1c1c;padding:48px 28px 36px;text-align:center}
+.dauth-logo-row{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:16px}
+.dauth-title{font-weight:700;font-size:28px;color:#fff;letter-spacing:.04em;text-transform:uppercase}
+.dauth-sub{font-family:'Barlow',sans-serif;font-size:13px;color:#6a6866;margin-top:4px}
+.dauth-card{background:#fff;border-radius:22px 22px 0 0;flex:1;padding:28px 24px 32px;margin-top:-16px}
+.dauth-tabs{display:flex;background:#f4f4f2;border-radius:12px;padding:4px;margin-bottom:24px}
+.dauth-tab{flex:1;padding:10px;border-radius:9px;border:none;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;color:#9a9894;background:transparent;cursor:pointer;transition:all .15s}
+.dauth-tab.active{background:#fff;color:#1c1c1c;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.dauth-field{margin-bottom:14px}
+.dauth-field label{display:block;font-family:'Barlow',sans-serif;font-weight:600;font-size:10.5px;letter-spacing:.08em;color:#9a9894;text-transform:uppercase;margin-bottom:5px}
+.dauth-field input{width:100%;padding:14px;border:1.5px solid #e4e2dd;border-radius:12px;font-family:'Barlow',sans-serif;font-size:15px;color:#1c1c1c;background:#fff;outline:none;-webkit-appearance:none}
+.dauth-field input:focus{border-color:#fe2627}
+.dauth-btn{width:100%;padding:15px;background:#fe2627;color:#fff;border:none;border-radius:12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;cursor:pointer;min-height:52px;margin-top:8px}
+.dauth-btn:active{background:#e01f20}
+.dauth-error{font-family:'Barlow',sans-serif;font-size:12px;color:#fe2627;text-align:center;margin-top:8px;display:none}
+.dauth-admin-link{display:block;text-align:center;font-family:'Barlow',sans-serif;font-size:12px;color:#9a9894;padding:20px;border:none;background:none;cursor:pointer;width:100%}
+.save-creds-row{display:flex;align-items:center;gap:10px;margin-top:14px;padding:12px;background:#f4f4f2;border-radius:10px}
+.save-creds-row input[type=checkbox]{width:18px;height:18px;accent-color:#fe2627;cursor:pointer}
+.save-creds-row label{font-family:'Barlow',sans-serif;font-size:13px;color:#6a6866;cursor:pointer;flex:1}
+
+/* ═══ ACTIVE TRIP BANNER ═══ */
+.active-trip-banner{display:none;margin:12px 22px 0;padding:12px 16px;background:#1a6fb5;border-radius:12px;align-items:center;gap:10px;cursor:pointer}
+.active-trip-banner.show{display:flex}
+.active-trip-banner-txt{flex:1;font-family:'Barlow',sans-serif;font-size:13px;color:#fff;font-weight:600}
+.active-trip-banner-arr{color:rgba(255,255,255,.7);font-size:20px}
+
+/* ═══ DRIVER TRIP BAR (bottom of route screen) ═══ */
+.driver-trip-bar{display:none;padding:14px 20px;background:#f4f4f2;border-top:1px solid #e4e2dd;gap:10px}
+.driver-trip-bar.show{display:flex}
+.btn-start-trip{flex:1;padding:15px;background:#fe2627;color:#fff;border:none;border-radius:12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;cursor:pointer;min-height:52px}
+.btn-start-trip:active{background:#e01f20}
+.btn-view-static{flex:1;padding:15px;background:#eae8e3;color:#1c1c1c;border:none;border-radius:12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;cursor:pointer;min-height:52px}
+
+/* ═══ LIVE MAP SCREEN ═══ */
+.maplive-header{padding:14px 16px 10px;display:flex;align-items:center;gap:10px;flex-shrink:0;background:#1c1c1c}
+.maplive-route-name{flex:1;font-weight:700;font-size:15px;color:#fff;text-transform:uppercase;line-height:1.1}
+.live-pill{display:flex;align-items:center;gap:5px;background:rgba(31,138,61,.2);border:1px solid rgba(31,138,61,.4);border-radius:8px;padding:5px 10px}
+.live-pill-dot{width:7px;height:7px;border-radius:50%;background:#1f8a3d;animation:livepulse 1.4s ease-in-out infinite}
+@keyframes livepulse{0%,100%{opacity:1}50%{opacity:.3}}
+.live-pill-txt{font-family:'Barlow',sans-serif;font-weight:700;font-size:10px;color:#1f8a3d;letter-spacing:.06em}
+.trip-stats-bar{display:flex;background:#262625;flex-shrink:0}
+.trip-stat-item{flex:1;padding:10px 8px;text-align:center;border-right:1px solid #333}
+.trip-stat-item:last-child{border:none}
+.trip-stat-val{font-weight:700;font-size:18px;color:#fff;line-height:1}
+.trip-stat-val.green{color:#1f8a3d}
+.trip-stat-val.yellow{color:#e8a020}
+.trip-stat-lbl{font-family:'Barlow',sans-serif;font-size:8px;color:#666;letter-spacing:.08em;text-transform:uppercase;margin-top:2px}
+.driver-map-container{flex:1;min-height:0;background:#d8e8d0}
+.maplive-bottom{flex-shrink:0;background:#fff;border-top:1px solid #e4e2dd;padding:12px 16px 20px}
+.next-stop-pill{background:#f4f4f2;border-radius:10px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.next-stop-pill-icon{font-size:18px}
+.next-stop-pill-info{flex:1}
+.next-stop-pill-name{font-weight:700;font-size:14px;color:#1c1c1c}
+.next-stop-pill-dist{font-family:'Barlow',sans-serif;font-size:11px;color:#9a9894;margin-top:2px}
+.maplive-btns{display:flex;gap:10px}
+.btn-fuel-confirm{flex:1;padding:14px;background:#1f8a3d;color:#fff;border:none;border-radius:12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;cursor:pointer;min-height:50px;display:none}
+.btn-fuel-confirm.show{display:block}
+.btn-fuel-confirm:active{background:#177030}
+.btn-end-trip{flex:1;padding:14px;background:#1c1c1c;color:#fff;border:none;border-radius:12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;cursor:pointer;min-height:50px}
+.btn-end-trip:active{background:#333}
+
+/* ═══ ADMIN TABS ═══ */
+.admin-tab-bar{display:flex;background:#f4f4f2;border-bottom:1px solid #e4e2dd;flex-shrink:0}
+.admin-tab-btn{flex:1;padding:12px 4px;border:none;background:transparent;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;color:#9a9894;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+.admin-tab-btn.active{color:#fe2627;border-bottom-color:#fe2627}
+.admin-tab-content{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.admin-tab-pane{display:none;flex:1;flex-direction:column;overflow:hidden}
+.admin-tab-pane.active{display:flex}
+
+/* ═══ DRIVER MANAGEMENT ═══ */
+.driver-card{background:#fff;border:1.5px solid #e8e6e1;border-radius:16px;padding:14px 16px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.driver-card.blocked{border-color:rgba(254,38,39,.3);background:rgba(254,38,39,.02)}
+.driver-card-head{display:flex;align-items:center;gap:10px}
+.driver-card-avatar{width:40px;height:40px;border-radius:12px;background:#262625;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;color:#f4f4f2;flex-shrink:0}
+.driver-card-info{flex:1;min-width:0}
+.driver-card-name{font-weight:700;font-size:15px;color:#1c1c1c;text-transform:uppercase}
+.driver-card-cpf{font-family:'Barlow',sans-serif;font-size:11px;color:#9a9894;margin-top:2px}
+.driver-card-status{font-family:'Barlow',sans-serif;font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap}
+.status-active{background:rgba(31,138,61,.12);color:#1f8a3d}
+.status-blocked{background:rgba(254,38,39,.12);color:#fe2627}
+.status-traveling{background:rgba(26,111,181,.12);color:#1a6fb5}
+.driver-card-meta{font-family:'Barlow',sans-serif;font-size:11px;color:#b0aea9;margin-top:6px}
+.driver-card-actions{display:flex;gap:6px;margin-top:10px}
+.driver-btn{flex:1;padding:9px;border-radius:8px;border:none;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;cursor:pointer;min-height:38px}
+.driver-btn-block{background:rgba(254,38,39,.1);color:#fe2627}
+.driver-btn-unblock{background:rgba(31,138,61,.1);color:#1f8a3d}
+.driver-btn-del{background:#f4f4f2;color:#9a9894}
+
+/* ═══ MONITORING ═══ */
+.monitor-stats{display:flex;gap:8px;padding:14px 20px 0;flex-shrink:0}
+.monitor-stat{flex:1;background:#fff;border:1px solid #e8e6e1;border-radius:12px;padding:10px 8px;text-align:center}
+.monitor-stat-val{font-weight:700;font-size:22px;color:#1c1c1c}
+.monitor-stat-val.green{color:#1f8a3d}
+.monitor-stat-val.blue{color:#1a6fb5}
+.monitor-stat-lbl{font-family:'Barlow',sans-serif;font-size:9px;color:#9a9894;letter-spacing:.08em;text-transform:uppercase;margin-top:2px}
+.monitor-toggle{display:flex;margin:12px 20px 0;background:#eae8e3;border-radius:10px;padding:3px}
+.monitor-toggle-btn{flex:1;padding:9px;border:none;border-radius:8px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;color:#9a9894;background:transparent;cursor:pointer}
+.monitor-toggle-btn.active{background:#fff;color:#1c1c1c;box-shadow:0 2px 6px rgba(0,0,0,.08)}
+.monitor-cards-view{flex:1;overflow-y:auto;padding:12px 20px 20px}
+.monitor-map-view{flex:1;display:none}
+.monitor-map-view.active{display:flex;flex-direction:column}
+.monitor-map-container{flex:1;min-height:0}
+.monitor-driver-card{background:#fff;border:1.5px solid #e8e6e1;border-radius:14px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;gap:12px}
+.monitor-driver-dot{width:10px;height:10px;border-radius:50%;background:#1f8a3d;flex-shrink:0}
+.monitor-driver-dot.offline{background:#e4e2dd}
+.monitor-driver-info{flex:1}
+.monitor-driver-name{font-weight:700;font-size:14px;color:#1c1c1c}
+.monitor-driver-route{font-family:'Barlow',sans-serif;font-size:11px;color:#9a9894;margin-top:2px}
+.monitor-driver-time{font-family:'Barlow',sans-serif;font-size:10px;color:#b0aea9;margin-top:2px}
+.monitor-no-trips{text-align:center;padding:40px 20px;color:#9a9894;font-family:'Barlow',sans-serif}
+
+/* ═══ BI / ANÁLISE ═══ */
+.bi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px 20px 0}
+.bi-card{background:#fff;border:1.5px solid #e8e6e1;border-radius:14px;padding:14px;text-align:center}
+.bi-val{font-weight:700;font-size:30px;color:#1c1c1c;line-height:1}
+.bi-val.green{color:#1f8a3d}
+.bi-val.red{color:#fe2627}
+.bi-val.blue{color:#1a6fb5}
+.bi-lbl{font-family:'Barlow',sans-serif;font-size:10px;color:#9a9894;letter-spacing:.06em;text-transform:uppercase;margin-top:5px}
+.bi-section{margin:16px 20px 0}
+.bi-section-title{font-weight:700;font-size:12px;letter-spacing:.12em;color:#9a9894;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.bi-section-title .bar{width:4px;height:13px;background:#fe2627;border-radius:2px}
+.bi-row{background:#fff;border:1px solid #e8e6e1;border-radius:10px;padding:10px 14px;margin-bottom:8px}
+.bi-row-name{font-weight:700;font-size:13px;color:#1c1c1c}
+.bi-row-detail{font-family:'Barlow',sans-serif;font-size:11px;color:#9a9894;margin-top:3px}
+.bi-empty{font-family:'Barlow',sans-serif;font-size:13px;color:#9a9894;text-align:center;padding:20px}
 </style>
 </head>
 <body>
 <div class="install-bar" id="installBanner"><p>Instale o app</p><button class="install-btn" id="installBtn">Instalar</button><button class="install-x" id="installDismiss">✕</button></div>
 <div class="offline-toast" id="offlineToast">📡 Modo offline — dados salvos localmente</div>
-<div class="screen active" id="screenHome">
+
+<!-- ═══ TELA LOGIN MOTORISTA ═══ -->
+<div class="screen active dauth-screen" id="screenDriverLogin">
+  <div class="dauth-top-bg">
+    <div class="dauth-logo-row">
+      <div class="logo-box"><span>C</span></div>
+      <div><div class="logo-title" style="color:#fff">CONFIANÇA</div><div class="logo-sub">SEGURANÇA QUE MOVE</div></div>
+    </div>
+    <div class="dauth-title">Rotogramas</div>
+    <div class="dauth-sub">Plataforma de abastecimento</div>
+  </div>
+  <div class="dauth-card" id="dauthCard">
+    <div class="dauth-tabs">
+      <button class="dauth-tab active" id="tabLoginBtn" onclick="switchAuthTab('login')">Entrar</button>
+      <button class="dauth-tab" id="tabRegisterBtn" onclick="switchAuthTab('register')">Criar conta</button>
+    </div>
+    <div id="dauthLoginForm">
+      <div class="dauth-field"><label>CPF</label><input type="text" id="dLoginCPF" placeholder="000.000.000-00" maxlength="14" oninput="fmtCPF(this)"></div>
+      <div class="dauth-field"><label>PIN (4 dígitos)</label><input type="password" id="dLoginPIN" placeholder="••••" maxlength="4" inputmode="numeric"></div>
+      <div class="save-creds-row">
+        <input type="checkbox" id="saveCreds" checked>
+        <label for="saveCreds">Lembrar credenciais neste dispositivo</label>
+      </div>
+      <button class="dauth-btn" onclick="doDriverLogin()">ENTRAR</button>
+      <div class="dauth-error" id="dLoginError">CPF ou PIN incorretos</div>
+    </div>
+    <div id="dauthRegisterForm" style="display:none">
+      <div class="dauth-field"><label>Nome completo</label><input type="text" id="dRegNome" placeholder="João da Silva"></div>
+      <div class="dauth-field"><label>CPF</label><input type="text" id="dRegCPF" placeholder="000.000.000-00" maxlength="14" oninput="fmtCPF(this)"></div>
+      <div class="dauth-field"><label>PIN (4 dígitos)</label><input type="password" id="dRegPIN" placeholder="••••" maxlength="4" inputmode="numeric"></div>
+      <div class="dauth-field"><label>Confirmar PIN</label><input type="password" id="dRegPIN2" placeholder="••••" maxlength="4" inputmode="numeric"></div>
+      <button class="dauth-btn" onclick="doDriverRegister()">CRIAR CONTA</button>
+      <div class="dauth-error" id="dRegError">Preencha todos os campos</div>
+    </div>
+  </div>
+  <button class="dauth-admin-link" onclick="showAdminLogin()">⚙️ Acesso administrativo</button>
+</div>
+
+<!-- ═══ HOME ═══ -->
+<div class="screen" id="screenHome">
   <div class="home-top" style="position:relative">
-    <button class="admin-toggle" onclick="showLogin()">⚙️</button>
+    <button class="admin-toggle" onclick="showAdminLogin()">⚙️</button>
     <div class="logo-row"><div class="logo-box"><span>C</span></div><div><div class="logo-title">CONFIANÇA</div><div class="logo-sub">SEGURANÇA QUE MOVE</div></div></div>
     <div class="home-heading">Rotogramas</div>
     <div class="home-subtext" id="routeCountText">Carregando...</div>
     <div class="search-wrap"><div class="search-icon"></div><input class="search-input" id="searchInput" placeholder="Buscar rota, cidade ou destino" autocomplete="off" autocorrect="off" spellcheck="false"><button class="search-clear" id="searchClear" onclick="clearSearch()">✕</button></div>
   </div>
   <div class="sync-bar" id="syncBar">⏳ Conectando...</div>
+  <div id="activeTripBanner" class="active-trip-banner" onclick="showMapLive()">
+    <span style="font-size:20px">🚛</span>
+    <div class="active-trip-banner-txt" id="activeTripBannerTxt">Viagem em andamento</div>
+    <span class="active-trip-banner-arr">›</span>
+  </div>
+  <div class="emergency-bar" style="margin:14px 22px 0"><div class="emergency-title">Contato de emergência — Abastecimento</div><div class="emergency-btns"><a class="emergency-btn whatsapp" href="https://wa.me/5562998780792" target="_blank">💬<div class="emergency-btn-info"><span class="emergency-btn-name">Pedro</span><span class="emergency-btn-sub">Seg a Sex</span></div></a><a class="emergency-btn whatsapp" href="https://wa.me/5562999943443" target="_blank">💬<div class="emergency-btn-info"><span class="emergency-btn-name">Maria</span><span class="emergency-btn-sub">Sáb e Dom</span></div></a></div></div>
   <div class="home-scroll" id="routeList"></div>
 </div>
-<div class="screen" id="screenRoute"><div id="routeContent"></div></div>
-<div class="screen" id="screenAdmin"><div class="admin-top"><button class="back-btn" onclick="showHome()">‹</button><div class="admin-title">Gerenciar Rotas</div></div><div class="admin-scroll" id="adminList"></div></div>
-<div class="screen" id="screenEditor"><div class="admin-top"><button class="back-btn" onclick="showAdmin()">‹</button><div class="admin-title" id="editorTitle">Nova Rota</div></div><div class="editor-scroll" id="editorContent"></div><div class="editor-save"><button class="cancel" onclick="cancelEdit()">Cancelar</button><button class="save" onclick="saveRoute()">Salvar Rota</button></div></div>
+
+<!-- ═══ ROTA (estático) ═══ -->
+<div class="screen" id="screenRoute">
+  <div id="routeContent"></div>
+  <div class="driver-trip-bar" id="driverTripBar">
+    <button class="btn-start-trip" id="btnStartTrip" onclick="startTrip()">🚛 Iniciar Viagem</button>
+  </div>
+</div>
+
+<!-- ═══ MAPA AO VIVO ═══ -->
+<div class="screen" id="screenMapLive" style="background:#1c1c1c">
+  <div class="maplive-header">
+    <button class="back-btn" style="background:rgba(255,255,255,.1);color:#fff" onclick="showRoute(currentRouteIdx)">‹</button>
+    <div class="maplive-route-name" id="mapLiveRouteName">Em Viagem</div>
+    <div class="live-pill"><div class="live-pill-dot"></div><span class="live-pill-txt">AO VIVO</span></div>
+  </div>
+  <div class="trip-stats-bar">
+    <div class="trip-stat-item"><div class="trip-stat-val" id="tsElapsed">00:00</div><div class="trip-stat-lbl">Tempo</div></div>
+    <div class="trip-stat-item"><div class="trip-stat-val green" id="tsPerc">—</div><div class="trip-stat-lbl">Percorrido</div></div>
+    <div class="trip-stat-item"><div class="trip-stat-val yellow" id="tsRest">—</div><div class="trip-stat-lbl">Restante</div></div>
+  </div>
+  <div id="driverMapEl" class="driver-map-container"></div>
+  <div class="maplive-bottom">
+    <div class="next-stop-pill" id="nextStopPill">
+      <span class="next-stop-pill-icon">⛽</span>
+      <div class="next-stop-pill-info">
+        <div class="next-stop-pill-name" id="nextStopName">Calculando...</div>
+        <div class="next-stop-pill-dist" id="nextStopDist"></div>
+      </div>
+    </div>
+    <div class="maplive-btns">
+      <button class="btn-fuel-confirm" id="btnFuelConfirm" onclick="confirmFuelStop()">✅ Confirmar Abastecimento</button>
+      <button class="btn-end-trip" onclick="promptEndTrip()">⛔ Encerrar Viagem</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ADMIN ═══ -->
+<div class="screen" id="screenAdmin">
+  <div class="admin-top"><button class="back-btn" onclick="showHome()">‹</button><div class="admin-title">Administração</div></div>
+  <div class="admin-tab-bar">
+    <button class="admin-tab-btn active" onclick="switchAdminTab('routes',this)">Rotas</button>
+    <button class="admin-tab-btn" onclick="switchAdminTab('drivers',this)">Motoristas</button>
+    <button class="admin-tab-btn" onclick="switchAdminTab('monitor',this)">Monitor</button>
+    <button class="admin-tab-btn" onclick="switchAdminTab('bi',this)">Análise</button>
+  </div>
+  <div class="admin-tab-content">
+    <div id="adminTabRoutes" class="admin-tab-pane active">
+      <div class="admin-scroll" id="adminList"></div>
+    </div>
+    <div id="adminTabDrivers" class="admin-tab-pane">
+      <div class="admin-scroll" id="adminDriversList"></div>
+    </div>
+    <div id="adminTabMonitor" class="admin-tab-pane">
+      <div class="monitor-stats" id="monitorStats"></div>
+      <div class="monitor-toggle">
+        <button class="monitor-toggle-btn active" id="monTogCards" onclick="switchMonitorView('cards',this)">📋 Cards</button>
+        <button class="monitor-toggle-btn" id="monTogMap" onclick="switchMonitorView('map',this)">🗺️ Mapa</button>
+      </div>
+      <div class="monitor-cards-view" id="monitorCardsView"></div>
+      <div class="monitor-map-view" id="monitorMapView">
+        <div id="monitorMapEl" class="monitor-map-container"></div>
+      </div>
+    </div>
+    <div id="adminTabBI" class="admin-tab-pane" style="overflow-y:auto">
+      <div id="biContent"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ EDITOR ═══ -->
+<div class="screen" id="screenEditor">
+  <div class="admin-top"><button class="back-btn" onclick="showAdmin()">‹</button><div class="admin-title" id="editorTitle">Nova Rota</div></div>
+  <div class="editor-scroll" id="editorContent"></div>
+  <div class="editor-save"><button class="cancel" onclick="cancelEdit()">Cancelar</button><button class="save" onclick="saveRoute()">Salvar Rota</button></div>
+</div>
 
 <script>
-// ══════════════════════════════════════════════
-// 🔥 FIREBASE CONFIG
-// Substitua com as credenciais do seu projeto Firebase
-// ══════════════════════════════════════════════
-const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyAbYd2RulYeBr-_IQ8G4ccmzxKf8gAjLPQ",
-  authDomain: "rotogramas-confianca.firebaseapp.com",
-  databaseURL: "https://rotogramas-confianca-default-rtdb.firebaseio.com",
-  projectId: "rotogramas-confianca",
-  storageBucket: "rotogramas-confianca.firebasestorage.app",
-  messagingSenderId: "156398881281",
-  appId: "1:156398881281:web:a67f3e2ee02b969ab78e00"
-};
-// ══════════════════════════════════════════════
-
+// ═══ FIREBASE CONFIG ═══
+const FIREBASE_CONFIG={apiKey:"AIzaSyAbYd2RulYeBr-_IQ8G4ccmzxKf8gAjLPQ",authDomain:"rotogramas-confianca.firebaseapp.com",databaseURL:"https://rotogramas-confianca-default-rtdb.firebaseio.com",projectId:"rotogramas-confianca",storageBucket:"rotogramas-confianca.firebasestorage.app",messagingSenderId:"156398881281",appId:"1:156398881281:web:a67f3e2ee02b969ab78e00"};
 const ADMIN_USER='admin';
 const ADMIN_PASS='confianca2026';
 
-// ═══ DEFAULT DATA ═══
+// ═══ STATE ═══
+let routes=[], drivers={}, viagens={}, posicoes={};
+let currentDriver=null, currentTrip=null, currentRouteIdx=-1;
+let geoWatchId=null, tripTimerInterval=null, tripStartTs=null;
+let driverMap=null, driverMarker=null, stopMarkers=[];
+let monitorMap=null, monitorMarkers={}, monitorMapInit=false;
+let db=null, firebaseReady=false, isEditing=false, editingIndex=-1, editData={};
+let adminMode=false, _cryptoKey=null;
+
+// ═══ CRYPTO ═══
+async function getCryptoKey(){
+  if(_cryptoKey)return _cryptoKey;
+  const raw=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('rotograma-confianca-2026'));
+  _cryptoKey=await crypto.subtle.importKey('raw',raw,{name:'AES-GCM'},false,['encrypt','decrypt']);
+  return _cryptoKey;
+}
+async function encryptCPF(cpf){
+  const key=await getCryptoKey();
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const enc=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode(cpf));
+  const combined=new Uint8Array(iv.length+enc.byteLength);
+  combined.set(iv);combined.set(new Uint8Array(enc),iv.length);
+  return btoa(String.fromCharCode(...combined));
+}
+async function decryptCPF(encStr){
+  try{
+    const combined=Uint8Array.from(atob(encStr),c=>c.charCodeAt(0));
+    const key=await getCryptoKey();
+    const dec=await crypto.subtle.decrypt({name:'AES-GCM',iv:combined.slice(0,12)},key,combined.slice(12));
+    return new TextDecoder().decode(dec);
+  }catch(e){return '***.***.***-**';}
+}
+async function sha256(str){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function fmtCPF(el){
+  let v=el.value.replace(/\D/g,'').slice(0,11);
+  if(v.length>9)v=v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/,'$1.$2.$3-$4');
+  else if(v.length>6)v=v.replace(/(\d{3})(\d{3})(\d{1,3})/,'$1.$2.$3');
+  else if(v.length>3)v=v.replace(/(\d{3})(\d{1,3})/,'$1.$2');
+  el.value=v;
+}
+function cleanCPF(cpf){return cpf.replace(/\D/g,'');}
+
+// ═══ FIREBASE INIT ═══
+const REGION_ORDER=['Centro-Oeste','Nordeste','Sudeste','Sul'];
 const DEFAULTS=[
 {id:'lucas-goiania',nome:'Lucas do Rio Verde → Goiânia',estados:'MT → GO',numero:'01',regiao:'Centro-Oeste',subtitulo:'Rota 01',linkRota:'https://maps.app.goo.gl/RQmTr6AP3kjDG65Z8',distancia:'~900 km',tempo:'~12h',paradas:[
 {ordem:0,tipo:'origem',nome:'Lucas do Rio Verde — MT',cidade:'Após carregar',detalhe:'BR-163 → MT-251 → BR-070 → BR-060',km:'0'},
@@ -287,61 +551,277 @@ const DEFAULTS=[
 {ordem:1,tipo:'destino',nome:'São Mateus do Sul — PR',cidade:'Sem abastecer — abastece no Cais Ponta Grossa na volta',km:'1.200'}]}
 ];
 
-const REGION_ORDER=['Centro-Oeste','Nordeste','Sudeste','Sul'];
-let routes=[];
-let db=null;
-let firebaseReady=false;
-
-// ═══ FIREBASE ═══
-let isEditing=false;
-
 function initFirebase(){
   try{
-    if(FIREBASE_CONFIG.apiKey==='COLE_AQUI_SUA_API_KEY'){
-      setSyncStatus('off','Firebase não configurado — dados locais');
-      loadLocal();return;
-    }
     firebase.initializeApp(FIREBASE_CONFIG);
     db=firebase.database();
     db.ref('rotogramas').on('value',snap=>{
       const data=snap.val();
-      if(data&&Array.isArray(data)){routes=data;firebaseReady=true;localStorage.setItem('rotogramas_cache',JSON.stringify(routes));setSyncStatus('on','Sincronizado com Firebase');if(!isEditing)renderHome()}
-      else if(!data){
-        db.ref('rotogramas').set(DEFAULTS).then(()=>{routes=DEFAULTS;firebaseReady=true;setSyncStatus('on','Sincronizado com Firebase');if(!isEditing)renderHome()});
-      }
-    },err=>{
-      console.error('Firebase error:',err);
-      setSyncStatus('err','Erro Firebase — dados locais');
-      loadLocal();
-    });
-  }catch(e){
-    console.error('Firebase init error:',e);
-    setSyncStatus('err','Erro Firebase — dados locais');
-    loadLocal();
+      if(data&&Array.isArray(data)){routes=data;firebaseReady=true;localStorage.setItem('rotogramas_cache',JSON.stringify(routes));setSyncStatus('on','Sincronizado');if(!isEditing)renderHome()}
+      else if(!data){db.ref('rotogramas').set(DEFAULTS).then(()=>{routes=DEFAULTS;firebaseReady=true;setSyncStatus('on','Sincronizado');renderHome()})}
+    },err=>{setSyncStatus('err','Erro Firebase — dados locais');loadLocal()});
+    db.ref('motoristas').on('value',snap=>{const d=snap.val();drivers=d||{};if(adminMode)renderDriverManager();renderMonitoring();renderBI();});
+    db.ref('viagens').on('value',snap=>{const d=snap.val();viagens=d||{};checkActiveTrip();renderMonitoring();renderBI();});
+    db.ref('posicoes').on('value',snap=>{const d=snap.val();posicoes=d||{};updateMonitorMap();renderMonitoring();});
+  }catch(e){setSyncStatus('err','Erro Firebase');loadLocal();}
+}
+function saveToFirebase(){if(db&&firebaseReady){db.ref('rotogramas').set(routes).then(()=>setSyncStatus('on','Salvo e sincronizado')).catch(()=>setSyncStatus('err','Erro ao salvar'))}else{localStorage.setItem('rotogramas_data',JSON.stringify(routes))}}
+function loadLocal(){const c=localStorage.getItem('rotogramas_cache'),m=localStorage.getItem('rotogramas_data'),s=c||m;if(s){try{routes=JSON.parse(s);renderHome();return}catch(e){}}routes=JSON.parse(JSON.stringify(DEFAULTS));renderHome();}
+function setSyncStatus(t,txt){const el=document.getElementById('syncBar');if(!el)return;el.className='sync-bar'+(t==='on'?'':t==='off'?' off':' err');el.textContent=(t==='on'?'🟢':t==='off'?'🟡':'🔴')+' '+txt;}
+
+// ═══ DRIVER AUTH ═══
+async function doDriverRegister(){
+  const nome=(document.getElementById('dRegNome')?.value||'').trim();
+  const cpfRaw=cleanCPF(document.getElementById('dRegCPF')?.value||'');
+  const pin=(document.getElementById('dRegPIN')?.value||'').trim();
+  const pin2=(document.getElementById('dRegPIN2')?.value||'').trim();
+  const errEl=document.getElementById('dRegError');
+  if(!nome||cpfRaw.length!==11||pin.length!==4||pin!==pin2){errEl.textContent=pin!==pin2?'Os PINs não coincidem':'Preencha todos os campos corretamente';errEl.style.display='block';setTimeout(()=>errEl.style.display='none',3000);return;}
+  const cpfHash=await sha256(cpfRaw);
+  const existing=Object.values(drivers).find(d=>d.cpfHash===cpfHash);
+  if(existing){errEl.textContent='CPF já cadastrado';errEl.style.display='block';setTimeout(()=>errEl.style.display='none',3000);return;}
+  const pinHash=await sha256(pin);
+  const cpfEnc=await encryptCPF(cpfRaw);
+  const id='drv_'+Date.now();
+  const driver={id,nome,cpfHash,cpfEnc,pinHash,bloqueado:false,criadoEm:Date.now(),ultimoAcesso:Date.now()};
+  if(db)await db.ref('motoristas/'+id).set(driver);
+  currentDriver=driver;
+  localStorage.setItem('drv_session',JSON.stringify({id,nome,pinHash}));
+  showHome();
+}
+async function doDriverLogin(){
+  const cpfRaw=cleanCPF(document.getElementById('dLoginCPF')?.value||'');
+  const pin=(document.getElementById('dLoginPIN')?.value||'').trim();
+  const errEl=document.getElementById('dLoginError');
+  if(cpfRaw.length!==11||pin.length!==4){errEl.style.display='block';setTimeout(()=>errEl.style.display='none',3000);return;}
+  const cpfHash=await sha256(cpfRaw);
+  const pinHash=await sha256(pin);
+  const driver=Object.values(drivers).find(d=>d.cpfHash===cpfHash&&d.pinHash===pinHash);
+  if(!driver){errEl.style.display='block';setTimeout(()=>errEl.style.display='none',3000);return;}
+  if(driver.bloqueado){errEl.textContent='Conta bloqueada. Contate o administrador.';errEl.style.display='block';return;}
+  currentDriver=driver;
+  if(db)db.ref('motoristas/'+driver.id+'/ultimoAcesso').set(Date.now());
+  if(document.getElementById('saveCreds')?.checked){localStorage.setItem('drv_session',JSON.stringify({id:driver.id,nome:driver.nome,pinHash}));}
+  showHome();
+}
+function loadDriverSession(){
+  try{
+    const s=JSON.parse(localStorage.getItem('drv_session'));
+    if(!s||!s.id)return false;
+    // Will verify against Firebase when loaded
+    currentDriver={id:s.id,nome:s.nome,pinHash:s.pinHash,_fromSession:true};
+    return true;
+  }catch(e){return false;}
+}
+function verifyDriverSession(){
+  if(!currentDriver||!currentDriver._fromSession)return;
+  const d=drivers[currentDriver.id];
+  if(!d||d.bloqueado||d.pinHash!==currentDriver.pinHash){currentDriver=null;localStorage.removeItem('drv_session');showDriverLogin();return;}
+  currentDriver=d;
+}
+function logoutDriver(){currentDriver=null;localStorage.removeItem('drv_session');showDriverLogin();}
+function switchAuthTab(tab){
+  const isLogin=tab==='login';
+  document.getElementById('tabLoginBtn').classList.toggle('active',isLogin);
+  document.getElementById('tabRegisterBtn').classList.toggle('active',!isLogin);
+  document.getElementById('dauthLoginForm').style.display=isLogin?'block':'none';
+  document.getElementById('dauthRegisterForm').style.display=isLogin?'none':'block';
+}
+
+// ═══ TRIP MANAGEMENT ═══
+async function startTrip(){
+  if(!currentDriver||currentRouteIdx<0)return;
+  const route=routes[currentRouteIdx];
+  const id='vgm_'+Date.now();
+  const trip={id,motoristaId:currentDriver.id,motoristaNome:currentDriver.nome,rotaId:route.id,rotaNome:route.nome,status:'em_viagem',iniciadaEm:Date.now(),finalizadaEm:null,postosConfirmados:[]};
+  if(db){await db.ref('viagens/'+id).set(trip);}
+  currentTrip=trip;
+  tripStartTs=trip.iniciadaEm;
+  startTracking();
+  startTripTimer();
+  updateActiveTripBanner();
+  showMapLive();
+}
+async function promptEndTrip(){
+  const ov=document.createElement('div');ov.className='confirm-overlay';
+  ov.innerHTML=`<div class="confirm-box"><h3>Encerrar viagem?</h3><p>A viagem será finalizada e o mapa desativado.</p><div class="btns"><button style="background:#eae8e3;color:#1c1c1c" onclick="this.closest('.confirm-overlay').remove()">Cancelar</button><button style="background:#fe2627;color:#fff" onclick="endTrip();this.closest('.confirm-overlay').remove()">Encerrar</button></div></div>`;
+  document.body.appendChild(ov);
+}
+async function endTrip(){
+  if(!currentTrip)return;
+  stopTracking();stopTripTimer();
+  if(db){await db.ref('viagens/'+currentTrip.id+'/status').set('finalizada');await db.ref('viagens/'+currentTrip.id+'/finalizadaEm').set(Date.now());await db.ref('posicoes/'+currentDriver.id).remove();}
+  currentTrip=null;tripStartTs=null;
+  updateActiveTripBanner();
+  showHome();
+}
+async function confirmFuelStop(){
+  if(!currentTrip||!currentDriver)return;
+  const route=routes[currentRouteIdx];
+  if(!route)return;
+  const stops=route.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino');
+  const confirmed=currentTrip.postosConfirmados||[];
+  const nextIdx=confirmed.length;
+  if(nextIdx>=stops.length)return;
+  const newConfirmed=[...confirmed,nextIdx];
+  if(db)await db.ref('viagens/'+currentTrip.id+'/postosConfirmados').set(newConfirmed);
+  currentTrip.postosConfirmados=newConfirmed;
+  updateNextStopUI();
+  document.getElementById('btnFuelConfirm').classList.remove('show');
+  showToast('✅ Abastecimento confirmado!');
+}
+function checkActiveTrip(){
+  if(!currentDriver)return;
+  const active=Object.values(viagens).find(v=>v.motoristaId===currentDriver.id&&v.status==='em_viagem');
+  if(active){
+    currentTrip=active;tripStartTs=active.iniciadaEm;
+    const ri=routes.findIndex(r=>r.id===active.rotaId);
+    if(ri>=0)currentRouteIdx=ri;
+    updateActiveTripBanner();
+    if(!tripTimerInterval)startTripTimer();
+  }
+}
+function updateActiveTripBanner(){
+  const banner=document.getElementById('activeTripBanner');
+  const txt=document.getElementById('activeTripBannerTxt');
+  if(banner&&currentTrip){txt.textContent='Em viagem: '+currentTrip.rotaNome;banner.classList.add('show');}
+  else if(banner){banner.classList.remove('show');}
+}
+
+// ═══ GEOLOCATION ═══
+function startTracking(){
+  if(!navigator.geolocation)return;
+  if(geoWatchId)navigator.geolocation.clearWatch(geoWatchId);
+  geoWatchId=navigator.geolocation.watchPosition(pos=>{handlePosition(pos.coords.latitude,pos.coords.longitude);},{enableHighAccuracy:true,maximumAge:15000,timeout:15000});
+}
+function stopTracking(){if(geoWatchId){navigator.geolocation.clearWatch(geoWatchId);geoWatchId=null;}}
+async function handlePosition(lat,lng){
+  updateDriverMarkerPos(lat,lng);
+  updateNextStopUI(lat,lng);
+  if(currentTrip&&currentDriver&&db){
+    const route=routes[currentRouteIdx];
+    const pos={lat,lng,timestamp:Date.now(),motoristaId:currentDriver.id,motoristaNome:currentDriver.nome,rotaNome:route?route.nome:'',viagemId:currentTrip.id};
+    db.ref('posicoes/'+currentDriver.id).set(pos);
+    // Update approx distance
+    if(route){
+      const orig=route.paradas.find(p=>p.tipo==='origem');
+      if(orig&&orig.lat&&orig.lng){const dist=calcDistance(orig.lat,orig.lng,lat,lng);db.ref('viagens/'+currentTrip.id+'/distanciaPercorrida').set(Math.round(dist));}
+    }
+  }
+}
+function calcDistance(lat1,lon1,lat2,lon2){
+  const R=6371;const dLat=(lat2-lat1)*Math.PI/180;const dLon=(lon2-lon1)*Math.PI/180;
+  const a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+function updateNextStopUI(lat,lng){
+  if(!currentTrip||currentRouteIdx<0)return;
+  const route=routes[currentRouteIdx];if(!route)return;
+  const stops=route.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino');
+  const confirmed=currentTrip.postosConfirmados||[];
+  const nextIdx=confirmed.length;
+  const nameEl=document.getElementById('nextStopName');
+  const distEl=document.getElementById('nextStopDist');
+  const confirmBtn=document.getElementById('btnFuelConfirm');
+  if(nextIdx>=stops.length){if(nameEl)nameEl.textContent='Todos os postos confirmados ✓';if(distEl)distEl.textContent='';return;}
+  const next=stops[nextIdx];
+  if(nameEl)nameEl.textContent=next.nome+' — '+next.cidade;
+  if(next.lat&&next.lng&&lat&&lng){
+    const dist=calcDistance(lat,lng,next.lat,next.lng);
+    if(distEl)distEl.textContent=dist<1?Math.round(dist*1000)+'m até o posto':dist.toFixed(1)+'km até o posto';
+    if(confirmBtn){if(dist<0.5)confirmBtn.classList.add('show');else confirmBtn.classList.remove('show');}
+  }else{if(distEl)distEl.textContent='KM '+next.km+' da rota';}
+}
+
+// ═══ TRIP TIMER ═══
+function startTripTimer(){
+  if(tripTimerInterval)clearInterval(tripTimerInterval);
+  tripTimerInterval=setInterval(updateTripStats,1000);
+  updateTripStats();
+}
+function stopTripTimer(){if(tripTimerInterval){clearInterval(tripTimerInterval);tripTimerInterval=null;}}
+function updateTripStats(){
+  if(!tripStartTs)return;
+  const elapsed=Math.floor((Date.now()-tripStartTs)/1000);
+  const h=Math.floor(elapsed/3600),m=Math.floor((elapsed%3600)/60),s=elapsed%60;
+  const timeStr=h>0?h+'h'+String(m).padStart(2,'0')+'m':String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  const el=document.getElementById('tsElapsed');if(el)el.textContent=timeStr;
+  if(currentTrip){
+    const dist=currentTrip.distanciaPercorrida;
+    const percEl=document.getElementById('tsPerc');if(percEl)percEl.textContent=dist?Math.round(dist)+'km':'—';
+    const route=currentRouteIdx>=0?routes[currentRouteIdx]:null;
+    const restEl=document.getElementById('tsRest');
+    if(restEl&&route){const total=parseInt((route.distancia||'0').replace(/[^0-9]/g,''));if(total&&dist)restEl.textContent=Math.max(0,total-Math.round(dist))+'km';else restEl.textContent=route.distancia||'—';}
   }
 }
 
-function saveToFirebase(){
-  if(db&&firebaseReady){db.ref('rotogramas').set(routes).then(()=>setSyncStatus('on','Salvo e sincronizado')).catch(()=>setSyncStatus('err','Erro ao salvar'))}
-  else{localStorage.setItem('rotogramas_data',JSON.stringify(routes))}
+// ═══ LEAFLET — MAPA DO MOTORISTA ═══
+function initDriverMap(){
+  if(driverMap){driverMap.remove();driverMap=null;driverMarker=null;stopMarkers=[];}
+  const el=document.getElementById('driverMapEl');if(!el)return;
+  driverMap=L.map('driverMapEl',{zoomControl:true,attributionControl:false}).setView([-15.77,-47.93],6);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(driverMap);
+  // Add stop markers for current route
+  if(currentRouteIdx>=0){
+    const route=routes[currentRouteIdx];
+    if(route){
+      route.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino').forEach((p,i)=>{
+        if(p.lat&&p.lng){
+          const confirmed=(currentTrip?.postosConfirmados||[]).includes(i);
+          const mk=L.circleMarker([p.lat,p.lng],{radius:10,fillColor:confirmed?'#1f8a3d':'#fe2627',color:'#fff',weight:2,fillOpacity:1});
+          mk.bindPopup('<b>'+p.nome+'</b><br>'+p.cidade+'<br>KM '+p.km);
+          mk.addTo(driverMap);stopMarkers.push(mk);
+        }
+      });
+    }
+  }
+  // Get current position and center map
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(pos=>{
+      const {latitude:lat,longitude:lng}=pos.coords;
+      updateDriverMarkerPos(lat,lng);
+      driverMap.setView([lat,lng],12);
+    });
+  }
+}
+function updateDriverMarkerPos(lat,lng){
+  if(!driverMap)return;
+  if(!driverMarker){
+    const icon=L.divIcon({html:'<div style="width:22px;height:22px;background:#1a6fb5;border:3px solid #fff;border-radius:50%;box-shadow:0 2px 8px rgba(26,111,181,.5)"></div>',className:'',iconSize:[22,22],iconAnchor:[11,11]});
+    driverMarker=L.marker([lat,lng],{icon}).addTo(driverMap);
+    driverMarker.bindPopup('📍 Você');
+  }else{driverMarker.setLatLng([lat,lng]);}
+  driverMap.panTo([lat,lng],{animate:true,duration:1});
 }
 
-function loadLocal(){
-  // Try Firebase cache first, then manual saves, then defaults
-  const cache=localStorage.getItem('rotogramas_cache');
-  const manual=localStorage.getItem('rotogramas_data');
-  const src=cache||manual;
-  if(src){try{routes=JSON.parse(src);renderHome();return}catch(e){}}
-  routes=JSON.parse(JSON.stringify(DEFAULTS));renderHome()
+// ═══ LEAFLET — MAPA MONITOR ═══
+function initMonitorMap(){
+  if(monitorMapInit)return;
+  const el=document.getElementById('monitorMapEl');if(!el||el.offsetHeight===0)return;
+  monitorMap=L.map('monitorMapEl',{zoomControl:true,attributionControl:false}).setView([-15.77,-47.93],5);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(monitorMap);
+  monitorMapInit=true;
+  updateMonitorMap();
 }
-
-function setSyncStatus(type,text){const el=document.getElementById('syncBar');if(!el)return;el.className='sync-bar'+(type==='on'?'':type==='off'?' off':' err');const icons={on:'🟢',off:'🟡',err:'🔴'};el.textContent=`${icons[type]||''} ${text}`}
+function updateMonitorMap(){
+  if(!monitorMap)return;
+  // Remove old markers
+  Object.values(monitorMarkers).forEach(m=>m.remove());
+  monitorMarkers={};
+  Object.values(posicoes).forEach(p=>{
+    if(!p.lat||!p.lng)return;
+    const icon=L.divIcon({html:'<div style="background:#1a6fb5;color:#fff;font-size:10px;font-weight:700;padding:4px 6px;border-radius:8px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.3)">🚛 '+p.motoristaNome.split(' ')[0]+'</div>',className:'',iconAnchor:[0,0]});
+    const mk=L.marker([p.lat,p.lng],{icon}).addTo(monitorMap);
+    mk.bindPopup('<b>'+p.motoristaNome+'</b><br>'+p.rotaNome+'<br><small>'+new Date(p.timestamp).toLocaleTimeString('pt-BR')+'</small>');
+    monitorMarkers[p.motoristaId]=mk;
+  });
+}
 
 // ═══ RENDER HOME ═══
 function norm(s){return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()}
 function searchText(r){const p=[r.nome,r.estados,r.subtitulo,r.numero,r.regiao||''];for(const s of r.paradas)p.push(s.nome,s.cidade,s.cartao||'',s.razaoSocial||'');return p.join(' ')}
 function renderHome(){
-  const el=document.getElementById('routeList');
+  const el=document.getElementById('routeList');if(!el)return;
   const rm={};routes.forEach((r,i)=>{const g=r.regiao||'Outras';if(!rm[g])rm[g]=[];rm[g].push({r,i})});
   const sorted=Object.keys(rm).sort((a,b)=>{const ia=REGION_ORDER.indexOf(a),ib=REGION_ORDER.indexOf(b);return(ia<0?99:ia)-(ib<0?99:ib)});
   let h='';
@@ -351,14 +831,18 @@ function renderHome(){
       h+=`<div class="rcard" data-search="${norm(searchText(r))}" onclick="showRoute(${i})"><div class="rcard-uf">${r.numero}</div><div class="rcard-info"><div class="rcard-nome">${r.nome}</div><div class="rcard-detail">${r.estados}</div><div class="rcard-stats"><span>${r.distancia||''}</span><span class="dot">·</span><span>${r.tempo||''}</span><span class="dot">·</span><span class="red">⛽ ${stops} posto${stops!==1?'s':''}</span></div></div><div class="rcard-arrow">›</div></div>`}
     h+='</div>'}
   h+='<div class="no-results" id="noResults"><span>🔍</span>Nenhuma rota encontrada</div>';
-  el.innerHTML=h;document.getElementById('routeCountText').textContent=`${routes.length} rotas ativas · toque para abrir`;
+  el.innerHTML=h;
+  document.getElementById('routeCountText').textContent=`${routes.length} rotas ativas · toque para abrir`;
   const inp=document.getElementById('searchInput');if(inp&&inp.value.trim())filterRoutes(inp.value);
+  verifyDriverSession();
+  checkActiveTrip();
+  updateActiveTripBanner();
 }
 function filterRoutes(q){const cards=document.querySelectorAll('.rcard'),regs=document.querySelectorAll('.region'),nr=document.getElementById('noResults'),cl=document.getElementById('searchClear');const n=norm(q.trim());if(!n){cards.forEach(c=>c.style.display='');regs.forEach(r=>r.style.display='');nr.style.display='none';cl.classList.remove('vis');return}cl.classList.add('vis');const terms=n.split(/\s+/);let vis=0;cards.forEach(c=>{const m=terms.every(x=>(c.dataset.search||'').includes(x));c.style.display=m?'':'none';if(m)vis++});regs.forEach(r=>{r.style.display=[...r.querySelectorAll('.rcard')].some(c=>c.style.display!=='none')?'':'none'});nr.style.display=vis?'none':'block'}
 function clearSearch(){const i=document.getElementById('searchInput');i.value='';filterRoutes('');i.focus()}
 
-// ═══ ROTOGRAMA ═══
-function cartaoBadge(c){const m={truckpag:['badge-truckpag','TRUCKPAG'],shell:['badge-shell','SHELL'],shell_expers:['badge-shell','SHELL EXPERS'],compra_antecipada:['badge-compra_antecipada','COMPRA ANTECIPADA']};const v=m[c];return v?`<span class="badge-cartao ${v[0]}">${v[1]}</span>`:''}
+// ═══ RENDER ROUTE ═══
+function cartaoBadge(c){const m={truckpag:['badge-truckpag','TRUCKPAG'],shell:['badge-shell','SHELL'],shell_expers:['badge-shell','SHELL EXPERS'],redefrota:['badge-truckpag','REDE FROTA'],compra_antecipada:['badge-compra_antecipada','COMPRA ANTECIPADA']};const v=m[c];return v?`<span class="badge-cartao ${v[0]}">${v[1]}</span>`:''}
 function renderStop(p){const ip=p.tipo==='parcial';let d='';if(p.litragem)d+=`<div class="scard-detail">⛽ <strong>${p.litragem}</strong></div>`;if(p.razaoSocial)d+=`<div class="scard-detail">📋 ${p.razaoSocial}</div>`;if(p.vantagem)d+=`<div class="scard-detail">💰 ${p.vantagem}</div>`;if(p.detalhe)d+=`<div class="scard-detail">🛣️ ${p.detalhe}</div>`;let note=p.nota?`<div class="scard-note"><strong>Estratégia:</strong> ${p.nota}</div>`:'';let bt='';if(p.marcas&&p.marcas.length){bt='<table class="brand-tbl"><thead><tr><th>Marca</th><th>Litragem</th></tr></thead><tbody>';for(const m of p.marcas){bt+=`<tr><td class="bname">${m.marca}</td><td class="${m.litros.toLowerCase().includes('não')?'bqty zero':'bqty'}">${m.litros}</td></tr>`}bt+='</tbody></table>'}
   let link=p.link?`<a class="rota-link" href="${p.link}" target="_blank" style="margin:12px 14px 14px;border-radius:10px">📍 ABRIR LOCALIZAÇÃO NO MAPS</a>`:'';
   return `<div class="stop"><div class="stop-node ${ip?'parcial':''}"><div class="stop-node-dot"></div></div><div class="stop-km ${ip?'parcial':''}">KM ${p.km}</div><div class="scard"><div class="scard-body"><div class="scard-brand-row"><div class="scard-brand-dot" style="background:${ip?'#e8a020':'#fe2627'}"></div><span class="scard-brand-name">${ip?p.ordem+'º Abast. · Parcial':p.ordem+'º Abastecimento'}</span></div><div class="scard-nome">${p.nome}</div><div class="scard-cidade">${p.cidade}</div>${d?`<div class="scard-details">${d}</div>`:''}${bt}<div class="badge-row">${cartaoBadge(p.cartao)}</div>${note}</div>${link}</div></div>`}
@@ -366,79 +850,192 @@ function renderAlt(a){let d=a.litragem?`<div class="scard-details"><div class="s
 function renderRoute(r){const orig=r.paradas.find(p=>p.tipo==='origem'),dest=r.paradas.find(p=>p.tipo==='destino'),stops=r.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino');const oc=(orig?orig.nome:'').split('—')[0].trim(),dc=(dest?dest.nome:'').split('—')[0].trim();
   let h=`<div class="roto-top"><button class="back-btn" onclick="showHome()">‹</button><div class="roto-header"><div class="roto-route-row"><div class="roto-chip"><div class="city">${oc}</div><div class="lbl">ORIGEM</div></div><span class="roto-arrow">→</span><div class="roto-chip"><div class="city">${dc}</div><div class="lbl">DESTINO</div></div></div><div class="roto-stats"><div class="roto-stat"><div class="val">${r.distancia||'—'}</div><div class="lbl">DISTÂNCIA</div></div><div class="roto-stat"><div class="val">${r.tempo||'—'}</div><div class="lbl">ESTIMADO</div></div><div class="roto-stat"><div class="val red">${stops.length}</div><div class="lbl">POSTOS</div></div></div>`;
   if(r.linkRota)h+=`<a class="rota-link" href="${r.linkRota}" target="_blank">📍 VER ROTA COMPLETA NO MAPS</a>`;
-  // Share WhatsApp button
   const appUrl=location.origin+location.pathname+'#rota='+encodeURIComponent(r.id);
   const shareText=encodeURIComponent(`🚛 Rotograma: ${r.nome}\n📍 ${r.estados}\n📏 ${r.distancia||''} · ${r.tempo||''}\n⛽ ${stops.length} postos de abastecimento\n\nAbra a rota: ${appUrl}`);
   h+=`<a class="share-btn" href="https://wa.me/?text=${shareText}" target="_blank">📤 COMPARTILHAR ROTA VIA WHATSAPP</a>`;
   h+=`</div></div>`;
-  // Alert banner
   if(r.observacao)h+=`<div class="alert-banner"><span class="alert-icon">⚠️</span><div class="alert-content"><div class="alert-label">Aviso desta rota</div><div class="alert-text">${r.observacao}</div></div></div>`;
-  // Emergency contacts
   h+=`<div class="emergency-bar"><div class="emergency-title">Contato de emergência — Abastecimento</div><div class="emergency-btns"><a class="emergency-btn whatsapp" href="https://wa.me/5562998780792" target="_blank">💬<div class="emergency-btn-info"><span class="emergency-btn-name">Pedro</span><span class="emergency-btn-sub">Seg a Sex</span></div></a><a class="emergency-btn whatsapp" href="https://wa.me/5562999943443" target="_blank">💬<div class="emergency-btn-info"><span class="emergency-btn-name">Maria</span><span class="emergency-btn-sub">Sáb e Dom</span></div></a></div></div>`;
-  // Return route tag
   if(r.retorno)h+=`<div class="return-tag" style="margin:12px 20px 0"><span class="return-tag-icon">🔄</span><span class="return-tag-text">${r.retorno}</span></div>`;
-  // Timeline
   h+=`<div class="roto-scroll"><div class="timeline-wrap"><div class="timeline-line"></div><div class="timeline-stops">`;
   if(orig){let od=orig.detalhe?`<div class="scard-details"><div class="scard-detail">🛣️ ${orig.detalhe}</div></div>`:'';h+=`<div class="stop"><div class="stop-node"><div class="stop-node-dot"></div></div><div class="stop-km">KM 0</div><div class="scard"><div class="scard-body"><div class="scard-brand-row"><div class="scard-brand-dot" style="background:#1c1c1c"></div><span class="scard-brand-name">Origem</span></div><div class="scard-nome">${orig.nome}</div><div class="scard-cidade">${orig.cidade}</div>${od}</div></div></div>`}
   for(const p of r.paradas){if(p.tipo==='origem'||p.tipo==='destino')continue;h+=renderStop(p);if(p.alternativa)h+=renderAlt(p.alternativa)}
   if(dest)h+=`<div class="dest-stop"><div class="stop-node dest"><div class="stop-node-dot"></div></div><div class="dest-nome">Chegada · ${dc}</div></div>`;
   return h+`</div></div></div>`}
 
-// ═══ ADMIN ═══
-function renderAdmin(){const el=document.getElementById('adminList');let h=`<button class="admin-add" onclick="editRoute(-1)">＋ NOVA ROTA</button>`;
+// ═══ RENDER ADMIN — ROTAS ═══
+function renderAdmin(){
+  const el=document.getElementById('adminList');if(!el)return;
+  let h=`<button class="admin-add" onclick="editRoute(-1)">＋ NOVA ROTA</button>`;
   routes.forEach((r,i)=>{const stops=r.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino').length;
     h+=`<div class="admin-rcard"><div class="admin-rcard-head"><div class="admin-rcard-num">${r.numero}</div><div class="admin-rcard-info"><div class="admin-rcard-name">${r.nome}</div><div class="admin-rcard-sub">${r.regiao} · ${stops} postos · ${r.distancia}</div></div></div><div class="admin-rcard-actions"><button class="admin-btn admin-btn-edit" onclick="editRoute(${i})">✏️ Editar</button><button class="admin-btn admin-btn-del" onclick="deleteRoute(${i})">🗑️ Excluir</button></div></div>`});
-  el.innerHTML=h}
-function deleteRoute(i){const r=routes[i];const ov=document.createElement('div');ov.className='confirm-overlay';ov.innerHTML=`<div class="confirm-box"><h3>Excluir rota?</h3><p>${r.nome}</p><div class="btns"><button style="background:#eae8e3;color:#1c1c1c" onclick="this.closest('.confirm-overlay').remove()">Cancelar</button><button style="background:#fe2627;color:#fff" onclick="confirmDelete(${i});this.closest('.confirm-overlay').remove()">Excluir</button></div></div>`;document.body.appendChild(ov)}
-function confirmDelete(i){routes.splice(i,1);saveToFirebase();renderAdmin()}
+  el.innerHTML=h;
+}
+function deleteRoute(i){const r=routes[i];const ov=document.createElement('div');ov.className='confirm-overlay';ov.innerHTML=`<div class="confirm-box"><h3>Excluir rota?</h3><p>${r.nome}</p><div class="btns"><button style="background:#eae8e3;color:#1c1c1c" onclick="this.closest('.confirm-overlay').remove()">Cancelar</button><button style="background:#fe2627;color:#fff" onclick="confirmDeleteRoute(${i});this.closest('.confirm-overlay').remove()">Excluir</button></div></div>`;document.body.appendChild(ov)}
+function confirmDeleteRoute(i){routes.splice(i,1);saveToFirebase();renderAdmin()}
+
+// ═══ RENDER DRIVER MANAGER ═══
+async function renderDriverManager(){
+  const el=document.getElementById('adminDriversList');if(!el)return;
+  const driverList=Object.values(drivers);
+  if(driverList.length===0){el.innerHTML=`<div style="text-align:center;padding:40px 20px;color:#9a9894;font-family:'Barlow',sans-serif"><span style="font-size:40px">👤</span><p style="margin-top:8px">Nenhum motorista cadastrado</p><p style="font-size:12px;margin-top:4px">Os motoristas se cadastram pelo app</p></div>`;return;}
+  let h='';
+  for(const d of driverList.sort((a,b)=>a.nome.localeCompare(b.nome))){
+    const initials=d.nome.split(' ').slice(0,2).map(n=>n[0]).join('').toUpperCase();
+    const isOnTrip=Object.values(viagens).some(v=>v.motoristaId===d.id&&v.status==='em_viagem');
+    const lastAccess=d.ultimoAcesso?new Date(d.ultimoAcesso).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'Nunca';
+    let statusClass='status-active',statusTxt='Ativo';
+    if(d.bloqueado){statusClass='status-blocked';statusTxt='Bloqueado';}
+    else if(isOnTrip){statusClass='status-traveling';statusTxt='🚛 Em viagem';}
+    let cpfMask='***.***.***-**';
+    try{const cpf=await decryptCPF(d.cpfEnc);if(cpf&&cpf.length===11)cpfMask=cpf.slice(0,3)+'.'+cpf.slice(3,6)+'.'+cpf.slice(6,9)+'-'+cpf.slice(9);}catch(e){}
+    h+=`<div class="driver-card ${d.bloqueado?'blocked':''}">
+      <div class="driver-card-head">
+        <div class="driver-card-avatar">${initials}</div>
+        <div class="driver-card-info">
+          <div class="driver-card-name">${d.nome}</div>
+          <div class="driver-card-cpf">CPF: ${cpfMask}</div>
+        </div>
+        <span class="driver-card-status ${statusClass}">${statusTxt}</span>
+      </div>
+      <div class="driver-card-meta">Último acesso: ${lastAccess}</div>
+      <div class="driver-card-actions">
+        <button class="driver-btn ${d.bloqueado?'driver-btn-unblock':'driver-btn-block'}" onclick="toggleBlockDriver('${d.id}',${d.bloqueado})">${d.bloqueado?'🔓 Desbloquear':'🔒 Bloquear'}</button>
+        <button class="driver-btn driver-btn-del" onclick="deleteDriver('${d.id}')">🗑️ Excluir</button>
+      </div>
+    </div>`;
+  }
+  el.innerHTML=h;
+}
+async function toggleBlockDriver(id,blocked){
+  if(db)await db.ref('motoristas/'+id+'/bloqueado').set(!blocked);
+}
+async function deleteDriver(id){
+  const ov=document.createElement('div');ov.className='confirm-overlay';
+  ov.innerHTML=`<div class="confirm-box"><h3>Excluir motorista?</h3><p>Esta ação não pode ser desfeita.</p><div class="btns"><button style="background:#eae8e3;color:#1c1c1c" onclick="this.closest('.confirm-overlay').remove()">Cancelar</button><button style="background:#fe2627;color:#fff" onclick="confirmDeleteDriver('${id}');this.closest('.confirm-overlay').remove()">Excluir</button></div></div>`;
+  document.body.appendChild(ov);
+}
+async function confirmDeleteDriver(id){if(db)await db.ref('motoristas/'+id).remove();}
+
+// ═══ RENDER MONITORING ═══
+function renderMonitoring(){
+  const activeTrips=Object.values(viagens).filter(v=>v.status==='em_viagem');
+  const totalDrivers=Object.values(drivers).length;
+  const onlineNow=Object.values(posicoes).filter(p=>(Date.now()-p.timestamp)<5*60*1000).length;
+  const statsEl=document.getElementById('monitorStats');
+  if(statsEl)statsEl.innerHTML=`
+    <div class="monitor-stat"><div class="monitor-stat-val green">${activeTrips.length}</div><div class="monitor-stat-lbl">Em viagem</div></div>
+    <div class="monitor-stat"><div class="monitor-stat-val blue">${onlineNow}</div><div class="monitor-stat-lbl">Online agora</div></div>
+    <div class="monitor-stat"><div class="monitor-stat-val">${totalDrivers}</div><div class="monitor-stat-lbl">Motoristas</div></div>`;
+  const cardsEl=document.getElementById('monitorCardsView');
+  if(!cardsEl)return;
+  if(activeTrips.length===0){cardsEl.innerHTML=`<div class="monitor-no-trips"><span style="font-size:36px">🛑</span><p style="margin-top:8px;font-weight:700">Nenhuma viagem ativa</p></div>`;return;}
+  let h='';
+  activeTrips.forEach(v=>{
+    const pos=posicoes[v.motoristaId];
+    const lastSeen=pos?new Date(pos.timestamp).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'—';
+    const online=pos&&(Date.now()-pos.timestamp)<5*60*1000;
+    const elapsed=Math.floor((Date.now()-v.iniciadaEm)/1000/60);
+    const hh=Math.floor(elapsed/60),mm=elapsed%60;
+    const timeStr=hh>0?hh+'h'+String(mm).padStart(2,'0')+'m':mm+'min';
+    const confirmed=(v.postosConfirmados||[]).length;
+    const route=routes.find(r=>r.id===v.rotaId);
+    const totalStops=route?route.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino').length:0;
+    h+=`<div class="monitor-driver-card">
+      <div class="monitor-driver-dot ${online?'':'offline'}"></div>
+      <div class="monitor-driver-info">
+        <div class="monitor-driver-name">${v.motoristaNome}</div>
+        <div class="monitor-driver-route">${v.rotaNome}</div>
+        <div class="monitor-driver-time">⏱ ${timeStr} em viagem · ⛽ ${confirmed}/${totalStops} postos · 📡 ${online?'Online':'Último: '+lastSeen}</div>
+      </div>
+    </div>`;
+  });
+  cardsEl.innerHTML=h;
+}
+function switchMonitorView(view,el){
+  document.querySelectorAll('.monitor-toggle-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  const cardsView=document.getElementById('monitorCardsView');
+  const mapView=document.getElementById('monitorMapView');
+  if(view==='cards'){cardsView.style.display='';mapView.classList.remove('active');}
+  else{cardsView.style.display='none';mapView.classList.add('active');setTimeout(()=>{initMonitorMap();if(monitorMap)monitorMap.invalidateSize();},100);}
+}
+
+// ═══ RENDER BI ═══
+function renderBI(){
+  const el=document.getElementById('biContent');if(!el)return;
+  const allDrivers=Object.values(drivers);
+  const allTrips=Object.values(viagens);
+  const activeTrips=allTrips.filter(v=>v.status==='em_viagem');
+  const completedTrips=allTrips.filter(v=>v.status==='finalizada');
+  const blockedDrivers=allDrivers.filter(d=>d.bloqueado);
+  const now=Date.now();
+  const recentActive=allDrivers.filter(d=>d.ultimoAcesso&&(now-d.ultimoAcesso)<24*60*60*1000);
+  const incompleteTrips=completedTrips.filter(v=>{
+    const route=routes.find(r=>r.id===v.rotaId);if(!route)return false;
+    const stops=route.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino').length;
+    return stops>(v.postosConfirmados?.length||0);
+  });
+  let h=`<div class="bi-grid">
+    <div class="bi-card"><div class="bi-val">${allDrivers.length}</div><div class="bi-lbl">Motoristas cadastrados</div></div>
+    <div class="bi-card"><div class="bi-val green">${activeTrips.length}</div><div class="bi-lbl">Em viagem agora</div></div>
+    <div class="bi-card"><div class="bi-val blue">${allTrips.length}</div><div class="bi-lbl">Total de viagens</div></div>
+    <div class="bi-card"><div class="bi-val red">${blockedDrivers.length}</div><div class="bi-lbl">Bloqueados</div></div>
+  </div>
+  <div class="bi-section">
+    <div class="bi-section-title"><span class="bar"></span>Atividade recente (24h)</div>`;
+  if(recentActive.length===0){h+=`<div class="bi-empty">Nenhum acesso nas últimas 24h</div>`;}
+  else{recentActive.forEach(d=>{const isOnTrip=activeTrips.some(v=>v.motoristaId===d.id);h+=`<div class="bi-row"><div class="bi-row-name">${d.nome} ${isOnTrip?'🚛':''}</div><div class="bi-row-detail">Último acesso: ${new Date(d.ultimoAcesso).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</div></div>`;});}
+  h+=`</div><div class="bi-section">
+    <div class="bi-section-title"><span class="bar"></span>Postos não confirmados</div>`;
+  if(incompleteTrips.length===0){h+=`<div class="bi-empty">✅ Todos os postos foram confirmados nas viagens concluídas</div>`;}
+  else{incompleteTrips.slice(0,10).forEach(v=>{const route=routes.find(r=>r.id===v.rotaId);const total=route?route.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino').length:0;const confirmed=(v.postosConfirmados?.length||0);h+=`<div class="bi-row"><div class="bi-row-name">${v.motoristaNome}</div><div class="bi-row-detail">${v.rotaNome} · ${confirmed}/${total} postos confirmados · ${new Date(v.iniciadaEm).toLocaleDateString('pt-BR')}</div></div>`;});}
+  h+=`</div><div class="bi-section" style="padding-bottom:24px">
+    <div class="bi-section-title"><span class="bar"></span>Viagens concluídas</div>`;
+  if(completedTrips.length===0){h+=`<div class="bi-empty">Nenhuma viagem concluída ainda</div>`;}
+  else{completedTrips.slice(-5).reverse().forEach(v=>{const dur=v.finalizadaEm?Math.floor((v.finalizadaEm-v.iniciadaEm)/1000/60):null;const durStr=dur?Math.floor(dur/60)+'h'+String(dur%60).padStart(2,'0')+'m':'—';h+=`<div class="bi-row"><div class="bi-row-name">${v.motoristaNome}</div><div class="bi-row-detail">${v.rotaNome} · ${durStr} · ${new Date(v.iniciadaEm).toLocaleDateString('pt-BR')}</div></div>`;});}
+  h+=`</div>`;
+  el.innerHTML=h;
+}
+
+// ═══ ADMIN TAB SWITCH ═══
+function switchAdminTab(tab,el){
+  document.querySelectorAll('.admin-tab-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.admin-tab-pane').forEach(p=>p.classList.remove('active'));
+  const paneMap={routes:'adminTabRoutes',drivers:'adminTabDrivers',monitor:'adminTabMonitor',bi:'adminTabBI'};
+  const pane=document.getElementById(paneMap[tab]);if(pane)pane.classList.add('active');
+  if(tab==='routes')renderAdmin();
+  else if(tab==='drivers')renderDriverManager();
+  else if(tab==='monitor'){renderMonitoring();}
+  else if(tab==='bi')renderBI();
+}
 
 // ═══ EDITOR ═══
-let editingIndex=-1;let editData={};
-
-// Auto-save draft every time a field changes
-function saveDraft(){
-  captureEditorFields();
-  localStorage.setItem('rotograma_draft',JSON.stringify({index:editingIndex,data:editData}));
-}
+let editingRouteIndex=-1;
+function saveDraft(){captureEditorFields();localStorage.setItem('rotograma_draft',JSON.stringify({index:editingIndex,data:editData}));}
 function clearDraft(){localStorage.removeItem('rotograma_draft')}
 function loadDraft(){try{const d=JSON.parse(localStorage.getItem('rotograma_draft'));if(d&&d.data&&d.data.nome)return d}catch(e){}return null}
-
-// Capture current field values into editData without re-rendering
 function captureEditorFields(){
   const v=k=>document.getElementById(k)?.value;
   if(v('ed_nome')!==undefined){
-    editData.nome=v('ed_nome')||editData.nome;
-    editData.numero=v('ed_numero')||editData.numero;
-    editData.regiao=v('ed_regiao')||editData.regiao;
-    editData.estados=v('ed_estados')||editData.estados;
-    editData.distancia=v('ed_distancia')||editData.distancia;
-    editData.tempo=v('ed_tempo')||editData.tempo;
-    editData.linkRota=v('ed_linkRota')||editData.linkRota;
-    editData.observacao=v('ed_observacao')||'';
-    editData.retorno=v('ed_retorno')||'';
+    editData.nome=v('ed_nome')||editData.nome;editData.numero=v('ed_numero')||editData.numero;
+    editData.regiao=v('ed_regiao')||editData.regiao;editData.estados=v('ed_estados')||editData.estados;
+    editData.distancia=v('ed_distancia')||editData.distancia;editData.tempo=v('ed_tempo')||editData.tempo;
+    editData.linkRota=v('ed_linkRota')||editData.linkRota;editData.observacao=v('ed_observacao')||'';editData.retorno=v('ed_retorno')||'';
     const orig=editData.paradas.find(p=>p.tipo==='origem');
     if(orig){orig.nome=v('ed_orig_nome')||orig.nome;orig.cidade=v('ed_orig_cidade')||orig.cidade;orig.detalhe=v('ed_orig_detalhe')||orig.detalhe}
     const dest=editData.paradas.find(p=>p.tipo==='destino');
     if(dest){dest.nome=v('ed_dest_nome')||dest.nome;dest.cidade=v('ed_dest_cidade')||dest.cidade;dest.km=v('ed_dest_km')||dest.km}
   }
 }
-
 function editRoute(i){
   isEditing=true;editingIndex=i;
-  // Check for saved draft
   const draft=loadDraft();
-  if(draft&&draft.index===i){
-    editData=draft.data;
-    document.getElementById('editorTitle').textContent=i>=0?'Editar Rota (rascunho)':'Nova Rota (rascunho)';
-  }else if(i>=0){
-    editData=JSON.parse(JSON.stringify(routes[i]));
-    document.getElementById('editorTitle').textContent='Editar Rota';
-  }else{
-    editData={id:'',nome:'',estados:'',numero:String(routes.length+1).padStart(2,'0'),regiao:'Centro-Oeste',subtitulo:'',linkRota:'',distancia:'',tempo:'',paradas:[{ordem:0,tipo:'origem',nome:'',cidade:'',km:'0',detalhe:''},{ordem:1,tipo:'destino',nome:'',cidade:'',km:''}]};
-    document.getElementById('editorTitle').textContent='Nova Rota';
-  }
+  if(draft&&draft.index===i){editData=draft.data;document.getElementById('editorTitle').textContent=i>=0?'Editar Rota (rascunho)':'Nova Rota (rascunho)';}
+  else if(i>=0){editData=JSON.parse(JSON.stringify(routes[i]));document.getElementById('editorTitle').textContent='Editar Rota';}
+  else{editData={id:'',nome:'',estados:'',numero:String(routes.length+1).padStart(2,'0'),regiao:'Centro-Oeste',subtitulo:'',linkRota:'',distancia:'',tempo:'',paradas:[{ordem:0,tipo:'origem',nome:'',cidade:'',km:'0',detalhe:''},{ordem:1,tipo:'destino',nome:'',cidade:'',km:''}]};document.getElementById('editorTitle').textContent='Nova Rota';}
   renderEditor();showScreen('screenEditor');
-  // Start auto-save interval
   if(window._draftInterval)clearInterval(window._draftInterval);
   window._draftInterval=setInterval(saveDraft,3000);
 }
@@ -450,8 +1047,8 @@ function renderEditor(){
   <div class="field"><label>Estados</label><input id="ed_estados" value="${esc(d.estados)}" placeholder="GO → BA → SE"></div>
   <div class="field-row"><div class="field"><label>Distância</label><input id="ed_distancia" value="${esc(d.distancia)}" placeholder="~900 km"></div><div class="field"><label>Tempo</label><input id="ed_tempo" value="${esc(d.tempo)}" placeholder="~12h"></div></div>
   <div class="field"><label>Link rota Google Maps</label><input id="ed_linkRota" value="${esc(d.linkRota)}" placeholder="https://maps.app.goo.gl/..."></div>
-  <div class="field"><label>⚠️ Observação / Alerta (exibido em destaque)</label><textarea id="ed_observacao" placeholder="Ex: BR-242 com obra no km 380, desvio pela BA-046">${esc(d.observacao||'')}</textarea></div>
-  <div class="field"><label>🔄 Informações da volta</label><input id="ed_retorno" value="${esc(d.retorno||'')}" placeholder="Ex: Na volta, abastecer no Posto XYZ em Feira de Santana"></div></div>`;
+  <div class="field"><label>⚠️ Observação / Alerta</label><textarea id="ed_observacao" placeholder="Ex: BR-242 com obra no km 380">${esc(d.observacao||'')}</textarea></div>
+  <div class="field"><label>🔄 Informações da volta</label><input id="ed_retorno" value="${esc(d.retorno||'')}" placeholder="Ex: Na volta, abastecer no Posto XYZ"></div></div>`;
   h+=`<div class="editor-section"><div class="editor-section-title"><span class="bar"></span>Origem</div>
   <div class="field"><label>Local</label><input id="ed_orig_nome" value="${esc(orig.nome)}" placeholder="Goiânia — GO"></div>
   <div class="field"><label>Descrição</label><input id="ed_orig_cidade" value="${esc(orig.cidade)}" placeholder="Saída da garagem"></div>
@@ -463,8 +1060,11 @@ function renderEditor(){
   <div class="field"><label>Local</label><input id="ed_dest_nome" value="${esc(dest.nome)}" placeholder="Cabedelo — PB"></div>
   <div class="field"><label>Descrição</label><input id="ed_dest_cidade" value="${esc(dest.cidade)}" placeholder="Chegada ao destino"></div>
   <div class="field"><label>KM total</label><input id="ed_dest_km" value="${esc(dest.km)}" placeholder="2.450"></div></div>`;
-  document.getElementById('editorContent').innerHTML=h}
-function renderStopEditor(s,si){const hasAlt=!!s.alternativa;const a=s.alternativa||{};let mh='';if(s.marcas&&s.marcas.length){s.marcas.forEach((m,mi)=>{mh+=`<div class="marca-row"><div class="field" style="margin:0"><input value="${esc(m.marca)}" onchange="editData.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino')[${si}].marcas[${mi}].marca=this.value" placeholder="Marca"></div><div class="field" style="margin:0;display:flex;gap:4px"><input value="${esc(m.litros)}" onchange="editData.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino')[${si}].marcas[${mi}].litros=this.value" placeholder="Litros"><button style="background:#fe2627;color:#fff;border:none;border-radius:6px;width:32px;cursor:pointer;font-size:16px" onclick="removeMarca(${si},${mi})">✕</button></div></div>`})}
+  document.getElementById('editorContent').innerHTML=h;
+}
+function renderStopEditor(s,si){
+  const hasAlt=!!s.alternativa;const a=s.alternativa||{};let mh='';
+  if(s.marcas&&s.marcas.length){s.marcas.forEach((m,mi)=>{mh+=`<div class="marca-row"><div class="field" style="margin:0"><input value="${esc(m.marca)}" onchange="editData.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino')[${si}].marcas[${mi}].marca=this.value" placeholder="Marca"></div><div class="field" style="margin:0;display:flex;gap:4px"><input value="${esc(m.litros)}" onchange="editData.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino')[${si}].marcas[${mi}].litros=this.value" placeholder="Litros"><button style="background:#fe2627;color:#fff;border:none;border-radius:6px;width:32px;cursor:pointer;font-size:16px" onclick="removeMarca(${si},${mi})">✕</button></div></div>`})}
   return `<div class="stop-editor"><div class="stop-editor-head"><span class="stop-editor-num">${si+1}º Posto</span><button class="stop-editor-del" onclick="removeStop(${si})">✕</button></div>
   <div class="field"><label>Nome do posto</label><input value="${esc(s.nome)}" onchange="updateStop(${si},'nome',this.value)"></div>
   <div class="field"><label>Cidade — UF</label><input value="${esc(s.cidade)}" onchange="updateStop(${si},'cidade',this.value)"></div>
@@ -490,27 +1090,89 @@ function saveRoute(){captureEditorFields();
   let ord=1;editData.paradas.forEach(p=>{if(p.tipo!=='origem'&&p.tipo!=='destino')p.ordem=ord++});
   if(editingIndex>=0)routes[editingIndex]=editData;else routes.push(editData);
   clearDraft();isEditing=false;if(window._draftInterval)clearInterval(window._draftInterval);
-  saveToFirebase();showAdmin()}
-
+  saveToFirebase();showAdmin();}
 function cancelEdit(){
   saveDraft();
   const ov=document.createElement('div');ov.className='confirm-overlay';
-  ov.innerHTML=`<div class="confirm-box"><h3>Sair da edição?</h3><p>Seu rascunho foi salvo automaticamente. Quando voltar a editar, os dados estarão preservados.</p><div class="btns"><button style="background:#eae8e3;color:#1c1c1c" onclick="clearDraft();this.closest('.confirm-overlay').remove();showAdmin()">Descartar</button><button style="background:#fe2627;color:#fff" onclick="this.closest('.confirm-overlay').remove();showAdmin()">Manter rascunho</button></div></div>`;
-  document.body.appendChild(ov)}
+  ov.innerHTML=`<div class="confirm-box"><h3>Sair da edição?</h3><p>Seu rascunho foi salvo automaticamente.</p><div class="btns"><button style="background:#eae8e3;color:#1c1c1c" onclick="clearDraft();this.closest('.confirm-overlay').remove();showAdmin()">Descartar</button><button style="background:#fe2627;color:#fff" onclick="this.closest('.confirm-overlay').remove();showAdmin()">Manter rascunho</button></div></div>`;
+  document.body.appendChild(ov);}
+
+// ═══ TOAST ═══
+function showToast(msg){const t=document.createElement('div');t.className='offline-toast';t.textContent=msg;t.style.display='block';document.body.appendChild(t);setTimeout(()=>t.remove(),3000);}
 
 // ═══ NAV ═══
-function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0)}
-function showHome(){isEditing=false;if(window._draftInterval)clearInterval(window._draftInterval);history.replaceState(null,'',location.pathname);renderHome();showScreen('screenHome')}
-function showRoute(i){const r=routes[i];history.replaceState(null,'',location.pathname+'#rota='+encodeURIComponent(r.id));document.getElementById('routeContent').innerHTML=renderRoute(r);showScreen('screenRoute')}
-function showAdmin(){isEditing=false;if(window._draftInterval)clearInterval(window._draftInterval);renderAdmin();showScreen('screenAdmin')}
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0);}
+function showDriverLogin(){showScreen('screenDriverLogin');}
+function showHome(){
+  if(!currentDriver&&!adminMode){showDriverLogin();return;}
+  isEditing=false;if(window._draftInterval)clearInterval(window._draftInterval);
+  history.replaceState(null,'',location.pathname);renderHome();showScreen('screenHome');
+}
+function showRoute(i){
+  const r=routes[i];currentRouteIdx=i;
+  history.replaceState(null,'',location.pathname+'#rota='+encodeURIComponent(r.id));
+  document.getElementById('routeContent').innerHTML=renderRoute(r);
+  // Show trip bar only for logged-in drivers
+  const bar=document.getElementById('driverTripBar');
+  const btn=document.getElementById('btnStartTrip');
+  if(bar&&currentDriver){
+    bar.classList.add('show');
+    // If already in a trip for this route, change button
+    if(currentTrip&&currentTrip.rotaId===r.id){btn.textContent='🗺️ Ver Mapa ao Vivo';btn.onclick=showMapLive;}
+    else if(currentTrip){btn.textContent='🚛 Em outra viagem';btn.disabled=true;}
+    else{btn.textContent='🚛 Iniciar Viagem';btn.onclick=startTrip;btn.disabled=false;}
+  }else if(bar){bar.classList.remove('show');}
+  showScreen('screenRoute');
+}
+function showMapLive(){
+  if(!currentTrip){showToast('Nenhuma viagem ativa');return;}
+  const route=currentRouteIdx>=0?routes[currentRouteIdx]:null;
+  const nameEl=document.getElementById('mapLiveRouteName');
+  if(nameEl&&route)nameEl.textContent=route.nome;
+  showScreen('screenMapLive');
+  setTimeout(()=>{
+    initDriverMap();
+    startTracking();
+    updateNextStopUI();
+    if(!tripTimerInterval&&tripStartTs)startTripTimer();
+  },100);
+}
+function showAdmin(){isEditing=false;if(window._draftInterval)clearInterval(window._draftInterval);renderAdmin();showScreen('screenAdmin');}
 
-// ═══ LOGIN ═══
-function showLogin(){document.querySelector('.login-overlay')?.remove();const ov=document.createElement('div');ov.className='login-overlay';ov.innerHTML=`<div class="login-box"><div class="login-logo"><div class="lb"><span>C</span></div><span class="lt">CONFIANÇA</span></div><div class="login-title">Área Restrita</div><div class="login-sub">Digite suas credenciais para gerenciar as rotas</div><div class="login-field"><label>Usuário</label><input type="text" id="loginUser" placeholder="Usuário" autocomplete="off"></div><div class="login-field"><label>Senha</label><input type="password" id="loginPass" placeholder="Senha"></div><button class="login-btn" onclick="doLogin()">ENTRAR</button><div class="login-error" id="loginError">Usuário ou senha incorretos</div><button class="login-cancel" onclick="this.closest('.login-overlay').remove()">Cancelar</button></div>`;document.body.appendChild(ov);setTimeout(()=>document.getElementById('loginUser')?.focus(),100);ov.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()})}
-function doLogin(){const u=(document.getElementById('loginUser')?.value||'').trim(),p=(document.getElementById('loginPass')?.value||'').trim();if(u===ADMIN_USER&&p===ADMIN_PASS){document.querySelector('.login-overlay')?.remove();showAdmin()}else{const e=document.getElementById('loginError');if(e){e.style.display='block';setTimeout(()=>e.style.display='none',3000)}}}
+// ═══ ADMIN LOGIN ═══
+function showAdminLogin(){
+  document.querySelector('.login-overlay')?.remove();
+  const ov=document.createElement('div');ov.className='login-overlay';
+  ov.innerHTML=`<div class="login-box"><div class="login-logo"><div class="lb"><span>C</span></div><span class="lt">CONFIANÇA</span></div><div class="login-title">Área Restrita</div><div class="login-sub">Credenciais de administrador</div><div class="login-field"><label>Usuário</label><input type="text" id="loginUser" placeholder="Usuário" autocomplete="off"></div><div class="login-field"><label>Senha</label><input type="password" id="loginPass" placeholder="Senha"></div><button class="login-btn" onclick="doAdminLogin()">ENTRAR</button><div class="login-error" id="loginError">Usuário ou senha incorretos</div><button class="login-cancel" onclick="this.closest('.login-overlay').remove()">Cancelar</button></div>`;
+  document.body.appendChild(ov);setTimeout(()=>document.getElementById('loginUser')?.focus(),100);
+  ov.addEventListener('keydown',e=>{if(e.key==='Enter')doAdminLogin()});
+}
+function doAdminLogin(){
+  const u=(document.getElementById('loginUser')?.value||'').trim(),p=(document.getElementById('loginPass')?.value||'').trim();
+  if(u===ADMIN_USER&&p===ADMIN_PASS){adminMode=true;document.querySelector('.login-overlay')?.remove();showAdmin();}
+  else{const e=document.getElementById('loginError');if(e){e.style.display='block';setTimeout(()=>e.style.display='none',3000);}}
+}
+
+// ═══ DEEP LINK ═══
+function checkDeepLink(){
+  const hash=location.hash;
+  if(hash.startsWith('#rota=')){const rotaId=decodeURIComponent(hash.replace('#rota=',''));const idx=routes.findIndex(r=>r.id===rotaId);if(idx>=0){showRoute(idx);return true;}}
+  return false;
+}
+window.addEventListener('hashchange',()=>{if(!checkDeepLink())showHome()});
+const _origRenderHome=renderHome;
+renderHome=function(){_origRenderHome();checkDeepLink()};
 
 // ═══ INIT ═══
-document.addEventListener('DOMContentLoaded',()=>{document.getElementById('searchInput')?.addEventListener('input',e=>filterRoutes(e.target.value))});
-// Offline detection
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('searchInput')?.addEventListener('input',e=>filterRoutes(e.target.value));
+  // Check for saved driver session
+  if(loadDriverSession()){
+    // Show home and verify when Firebase loads
+    showScreen('screenHome');
+  }
+  // If no session, screenDriverLogin is already active (default in HTML)
+});
 window.addEventListener('online',()=>{document.getElementById('offlineToast').classList.remove('show');setSyncStatus('on','Reconectado')});
 window.addEventListener('offline',()=>{const t=document.getElementById('offlineToast');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),4000);setSyncStatus('off','Sem conexão — modo offline')});
 let dp;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();dp=e;document.getElementById('installBanner').classList.add('show')});
@@ -518,23 +1180,6 @@ document.getElementById('installBtn')?.addEventListener('click',async()=>{if(!dp
 document.getElementById('installDismiss')?.addEventListener('click',()=>document.getElementById('installBanner').classList.remove('show'));
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 initFirebase();
-
-// Deep link: check URL hash for #rota=id
-function checkDeepLink(){
-  const hash=location.hash;
-  if(hash.startsWith('#rota=')){
-    const rotaId=decodeURIComponent(hash.replace('#rota=',''));
-    const idx=routes.findIndex(r=>r.id===rotaId);
-    if(idx>=0){showRoute(idx);return true}
-  }
-  return false;
-}
-// Listen for hash changes (back button, etc)
-window.addEventListener('hashchange',()=>{if(!checkDeepLink())showHome()});
-// Initial deep link check after data loads
-const _origRenderHome=renderHome;
-renderHome=function(){_origRenderHome();checkDeepLink()};
-
 </script>
 </body>
 </html>
