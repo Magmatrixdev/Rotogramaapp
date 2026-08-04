@@ -282,15 +282,10 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .btn-fuel-confirm:active{background:#177030}
 .btn-end-trip{flex:1;padding:14px;background:#1c1c1c;color:#fff;border:none;border-radius:12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;cursor:pointer;min-height:50px}
 .btn-end-trip:active{background:#333}
-/* Leaflet custom markers */
-.marker-truck{background:#1a6fb5;border:3px solid #fff;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 3px 10px rgba(26,111,181,.5);position:relative}
-.marker-truck::after{content:'Você';position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);background:#1a6fb5;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:9px;padding:2px 5px;border-radius:4px;white-space:nowrap}
-.marker-stop-next{background:#e8a020;border:3px solid #fff;border-radius:10px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 3px 8px rgba(232,160,32,.5)}
-.marker-stop-done{background:#1f8a3d;border:3px solid #fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 2px 6px rgba(31,138,61,.4)}
-.marker-stop-todo{background:#fff;border:2.5px solid #9a9894;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;color:#9a9894}
-.marker-origin{background:#262625;border:3px solid #fff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:13px}
-.marker-dest{background:#262625;border:3px solid #fff;border-radius:8px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:14px}
-.leaflet-popup-content-wrapper{border-radius:10px!important;font-family:'Barlow',sans-serif;font-size:13px}
+/* SVG Map */
+@keyframes truckpulse{0%,100%{box-shadow:0 3px 10px rgba(26,111,181,.6)}50%{box-shadow:0 3px 18px rgba(26,111,181,.9),0 0 0 6px rgba(26,111,181,.15)}}
+@keyframes nextpulse{0%,100%{box-shadow:0 3px 8px rgba(232,160,32,.5)}50%{box-shadow:0 3px 14px rgba(232,160,32,.8),0 0 0 5px rgba(232,160,32,.15)}}
+.svg-map-inner{width:100%;height:100%;position:relative;transition:transform .25s ease;transform-origin:center center}
 
 /* ═══ ADMIN TABS ═══ */
 .admin-tab-bar{display:flex;background:#f4f4f2;border-bottom:1px solid #e4e2dd;flex-shrink:0}
@@ -813,6 +808,8 @@ async function confirmFuelStop(){
   document.getElementById('btnFuelConfirm')?.classList.remove('show');
   showToast('✅ Abastecimento confirmado!','#1a7a3c');
   if(db)db.ref('viagens/'+currentTrip.id+'/postosConfirmados').set(newConfirmed).catch(()=>{});
+  // Atualiza mapa SVG para refletir posto confirmado
+  setTimeout(()=>{initDriverMap();},100);
 }
 function checkActiveTrip(){
   if(!currentDriver)return;
@@ -947,76 +944,128 @@ function updateTripStats(){
 }
 
 // ═══ LEAFLET — MAPA DO MOTORISTA ═══
-function mkIcon(html,size){return L.divIcon({html,className:'',iconSize:size,iconAnchor:[size[0]/2,size[1]/2]});}
-function initDriverMap(){
-  if(driverMap){try{driverMap.remove();}catch(e){}driverMap=null;driverMarker=null;stopMarkers=[];}
-  const el=document.getElementById('driverMapEl');if(!el)return;
-  if(typeof L==='undefined'){
-    el.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;background:#1c2a1c;flex-direction:column;gap:12px"><div style="font-size:36px">🗺️</div><div style="color:#fff;font-family:Barlow,sans-serif;font-size:14px;text-align:center">Carregando mapa...<br><small style="opacity:.6">Verifique sua conexão</small></div></div>';
-    setTimeout(initDriverMap,2000);return;
-  }
-  try{
-    const route=currentRouteIdx>=0?routes[currentRouteIdx]:null;
-    const coords=route?ROUTE_COORDS[route.id]:null;
-    const center=coords?coords.orig:[-15.77,-47.93];
-    const zoom=coords&&coords.stops.length>0?6:10;
-    driverMap=L.map('driverMapEl',{zoomControl:false,attributionControl:false}).setView(center,zoom);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(driverMap);
-    L.control.zoom({position:'topright'}).addTo(driverMap);
-    // Draw route polyline
-    if(coords){
-      const allPts=[coords.orig,...coords.stops,coords.dest].filter(Boolean);
-      if(allPts.length>1){
-        L.polyline(allPts,{color:'#1a7a3c',weight:4,opacity:.8,dashArray:null}).addTo(driverMap);
-      }
-      // Origin marker
-      L.marker(coords.orig,{icon:mkIcon('<div class="marker-origin">🏠</div>',[26,26])}).addTo(driverMap);
-      // Destination marker
-      L.marker(coords.dest,{icon:mkIcon('<div class="marker-dest">🏁</div>',[28,28])}).addTo(driverMap);
-      // Stop markers
-      const fuelStops=route?route.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino'):[];
-      const confirmed=currentTrip?.postosConfirmados||[];
-      const nextIdx=confirmed.length;
-      coords.stops.forEach((c,i)=>{
-        const p=fuelStops[i];
-        const isDone=confirmed.includes(i);
-        const isNext=i===nextIdx;
-        let iconHtml;
-        if(isDone)iconHtml='<div class="marker-stop-done">✓</div>';
-        else if(isNext)iconHtml='<div class="marker-stop-next">⛽</div>';
-        else iconHtml=`<div class="marker-stop-todo">${i+1}</div>`;
-        const mk=L.marker(c,{icon:mkIcon(iconHtml,[isNext?32:26,isNext?32:26])});
-        if(p)mk.bindPopup('<b>'+p.nome+'</b><br><small>'+p.cidade+'</small><br>KM '+p.km);
-        mk.addTo(driverMap);stopMarkers.push(mk);
-        // "PRÓXIMO" label
-        if(isNext){
-          L.marker(c,{icon:L.divIcon({html:'<div style="background:#e8a020;color:#fff;font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:10px;padding:2px 6px;border-radius:5px;white-space:nowrap;margin-left:20px;margin-top:-8px">PRÓXIMO</div>',className:'',iconAnchor:[0,16]})}).addTo(driverMap);
-        }
-      });
-    }
-    // Get GPS and add truck marker
-    if(navigator.geolocation){
-      navigator.geolocation.getCurrentPosition(pos=>{
-        const {latitude:lat,longitude:lng}=pos.coords;
-        updateDriverMarkerPos(lat,lng);
-        driverMap.setView([lat,lng],13);
-      },()=>{if(coords)driverMap.fitBounds([coords.orig,...(coords.stops||[]),coords.dest].map(c=>[c[0],c[1]]));},{enableHighAccuracy:true,timeout:8000});
-    }else if(coords){
-      driverMap.fitBounds([coords.orig,...(coords.stops||[]),coords.dest]);
-    }
-  }catch(e){
-    console.error('Map error:',e);
-    const el=document.getElementById('driverMapEl');
-    if(el)el.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;background:#1c2a1c;color:#fff;font-family:Barlow,sans-serif;font-size:13px;text-align:center;padding:20px">Erro ao carregar mapa.<br>Verifique sua conexão.</div>';
-  }
+// ═══ SVG MAP (mapa simbólico estilo mockup) ═══
+const SVG_W=360,SVG_H=240;
+const SVG_ORIG={x:30,y:215};
+const SVG_DEST={x:334,y:27};
+const SVG_CP1={x:88,y:192};
+const SVG_CP2={x:272,y:52};
+let svgZoomLevel=1;
+
+function bpt(t){
+  const p0=SVG_ORIG,p1=SVG_CP1,p2=SVG_CP2,p3=SVG_DEST,u=1-t;
+  return{x:u*u*u*p0.x+3*u*u*t*p1.x+3*u*t*t*p2.x+t*t*t*p3.x,y:u*u*u*p0.y+3*u*u*t*p1.y+3*u*t*t*p2.y+t*t*t*p3.y};
 }
+function bpts(n){return Array.from({length:n+1},(_,i)=>bpt(i/n));}
+
+function calcTruckProgress(){
+  if(!currentTrip||currentRouteIdx<0)return 0.05;
+  const route=routes[currentRouteIdx];if(!route)return 0.05;
+  const totalKm=parseInt((route.distancia||'0').replace(/[^0-9]/g,''));
+  const traveled=currentTrip.distanciaPercorrida||0;
+  if(totalKm>0&&traveled>0)return Math.min(0.05+traveled/totalKm*0.9,0.95);
+  const fuelStops=route.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino');
+  const confirmed=currentTrip?.postosConfirmados||[];
+  if(!fuelStops.length)return 0.05;
+  if(confirmed.length>=fuelStops.length)return 0.93;
+  return 0.05+(confirmed.length/(fuelStops.length+1))*0.88;
+}
+
+function pct(pt){return{l:(pt.x/SVG_W*100).toFixed(2)+'%',t:(pt.y/SVG_H*100).toFixed(2)+'%'};}
+
+function initDriverMap(){
+  const el=document.getElementById('driverMapEl');if(!el)return;
+  el.innerHTML='';
+  const route=currentRouteIdx>=0?routes[currentRouteIdx]:null;
+  const fuelStops=route?route.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino'):[];
+  const confirmed=currentTrip?.postosConfirmados||[];
+  const progress=calcTruckProgress();
+  const n=fuelStops.length;
+  const stopPts=fuelStops.map((_,i)=>bpt((i+1)/(n+1)));
+  const truckPt=bpt(progress);
+  const allPts=bpts(120);
+  const progIdx=Math.min(Math.round(progress*120),119);
+  const donePts=allPts.slice(0,progIdx+1).map(p=>p.x.toFixed(1)+','+p.y.toFixed(1)).join(' ');
+  const restPts=allPts.slice(progIdx).map(p=>p.x.toFixed(1)+','+p.y.toFixed(1)).join(' ');
+  const tp=pct(truckPt);
+  const op=pct(SVG_ORIG);const dp=pct(SVG_DEST);
+
+  // Build pins HTML
+  let pins='';
+  pins+=`<div style="position:absolute;left:${op.l};top:${op.t};transform:translate(-50%,-50%);z-index:2"><div style="width:26px;height:26px;background:#262625;border:2.5px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;box-shadow:0 2px 6px rgba(0,0,0,.35)">🏠</div></div>`;
+  pins+=`<div style="position:absolute;left:${dp.l};top:${dp.t};transform:translate(-50%,-50%);z-index:2"><div style="width:26px;height:26px;background:#262625;border:2.5px solid #fff;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;box-shadow:0 2px 6px rgba(0,0,0,.35)">🏁</div></div>`;
+  fuelStops.forEach((s,i)=>{
+    const pt=stopPts[i];const pp=pct(pt);
+    const isDone=confirmed.includes(i);const isNext=i===confirmed.length;
+    if(isDone){
+      pins+=`<div style="position:absolute;left:${pp.l};top:${pp.t};transform:translate(-50%,-50%);z-index:3"><div style="width:28px;height:28px;background:#1f8a3d;border:2.5px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 6px rgba(31,138,61,.5)">✓</div></div>`;
+    }else if(isNext){
+      pins+=`<div style="position:absolute;left:${pp.l};top:${pp.t};transform:translate(-50%,-65%);z-index:5"><div style="width:34px;height:34px;background:#e8a020;border:3px solid #fff;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 3px 10px rgba(232,160,32,.55);animation:nextpulse 2s ease-in-out infinite">⛽</div><div style="position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);background:#e8a020;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:9px;padding:2px 6px;border-radius:4px;white-space:nowrap">PRÓXIMO</div></div>`;
+    }else{
+      pins+=`<div style="position:absolute;left:${pp.l};top:${pp.t};transform:translate(-50%,-50%);z-index:2"><div style="width:26px;height:26px;background:#fff;border:2.5px solid #b0aea9;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;color:#9a9894;box-shadow:0 2px 5px rgba(0,0,0,.15)">${i+1}</div></div>`;
+    }
+  });
+  pins+=`<div id="svgTruckPin" style="position:absolute;left:${tp.l};top:${tp.t};transform:translate(-50%,-50%);z-index:10;transition:left .9s cubic-bezier(.4,0,.2,1),top .9s cubic-bezier(.4,0,.2,1)"><div style="width:36px;height:36px;background:#1a6fb5;border:3px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;animation:truckpulse 2.2s ease-in-out infinite">🚛</div><div style="position:absolute;bottom:-19px;left:50%;transform:translateX(-50%);background:#1a6fb5;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:9px;padding:2px 6px;border-radius:4px;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.2)">Você</div></div>`;
+
+  el.innerHTML=`<div class="svg-map-inner" id="svgMapInner">
+    <svg width="100%" height="100%" viewBox="0 0 ${SVG_W} ${SVG_H}" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;pointer-events:none">
+      <rect width="${SVG_W}" height="${SVG_H}" fill="#d4e8cc"/>
+      <rect x="0" y="0" width="130" height="95" fill="#c6dfc0"/>
+      <rect x="165" y="68" width="125" height="92" fill="#cbe0c4"/>
+      <rect x="48" y="142" width="105" height="98" fill="#c4dbbe"/>
+      <rect x="268" y="0" width="92" height="75" fill="#c8e0c2"/>
+      <rect x="135" y="8" width="28" height="58" fill="#bdd6b8" opacity=".45" rx="1"/>
+      <rect x="202" y="88" width="62" height="38" fill="#b8d2b3" opacity=".4" rx="1"/>
+      <rect x="18" y="102" width="44" height="33" fill="#bdd6b8" opacity=".4" rx="1"/>
+      <rect x="305" y="100" width="50" height="42" fill="#c0d8ba" opacity=".38" rx="1"/>
+      <line x1="0" y1="72" x2="${SVG_W}" y2="72" stroke="#fff" stroke-width="5" opacity=".62"/>
+      <line x1="0" y1="150" x2="${SVG_W}" y2="150" stroke="#fff" stroke-width="4" opacity=".52"/>
+      <line x1="72" y1="0" x2="72" y2="${SVG_H}" stroke="#fff" stroke-width="4" opacity=".52"/>
+      <line x1="192" y1="0" x2="192" y2="${SVG_H}" stroke="#fff" stroke-width="4" opacity=".48"/>
+      <line x1="292" y1="0" x2="292" y2="${SVG_H}" stroke="#fff" stroke-width="3" opacity=".38"/>
+      <line x1="0" y1="18" x2="205" y2="${SVG_H}" stroke="#dedad2" stroke-width="3" opacity=".55"/>
+      <line x1="105" y1="0" x2="${SVG_W}" y2="186" stroke="#dedad2" stroke-width="3" opacity=".48"/>
+      <line x1="0" y1="110" x2="${SVG_W}" y2="110" stroke="#fff" stroke-width="1.5" opacity=".28"/>
+      <line x1="138" y1="0" x2="138" y2="${SVG_H}" stroke="#fff" stroke-width="1.5" opacity=".28"/>
+      <line x1="238" y1="0" x2="238" y2="${SVG_H}" stroke="#fff" stroke-width="1.5" opacity=".28"/>
+      <polyline id="svgRouteRest" points="${restPts}" fill="none" stroke="#1a6fb5" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="10,6" opacity=".85"/>
+      <polyline id="svgRouteDone" points="${donePts}" fill="none" stroke="#1f8a3d" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <div style="position:absolute;inset:0;pointer-events:none">${pins}</div>
+    <div style="position:absolute;top:10px;right:10px;display:flex;flex-direction:column;gap:4px;z-index:10;pointer-events:auto">
+      <button onclick="svgZoomIn()" style="width:32px;height:32px;border-radius:8px;border:none;background:#fff;font-size:18px;font-weight:700;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.2);color:#1c1c1c;line-height:1">+</button>
+      <button onclick="svgZoomOut()" style="width:32px;height:32px;border-radius:8px;border:none;background:#fff;font-size:18px;font-weight:700;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.2);color:#1c1c1c;line-height:1">−</button>
+    </div>
+  </div>`;
+}
+
 function updateDriverMarkerPos(lat,lng){
-  if(!driverMap)return;
-  if(!driverMarker){
-    const icon=L.divIcon({html:'<div class="marker-truck">🚛</div>',className:'',iconSize:[36,52],iconAnchor:[18,18]});
-    driverMarker=L.marker([lat,lng],{icon,zIndexOffset:1000}).addTo(driverMap);
-  }else{driverMarker.setLatLng([lat,lng]);}
-  driverMap.panTo([lat,lng],{animate:true,duration:0.8});
+  // Update progress based on GPS distance traveled
+  updateSVGProgress();
+}
+
+function updateSVGProgress(){
+  const progress=calcTruckProgress();
+  const pt=bpt(progress);const tp=pct(pt);
+  // Move truck
+  const truckEl=document.getElementById('svgTruckPin');
+  if(truckEl){truckEl.style.left=tp.l;truckEl.style.top=tp.t;}
+  // Update route split lines
+  const allPts=bpts(120);
+  const progIdx=Math.min(Math.round(progress*120),119);
+  const donePts=allPts.slice(0,progIdx+1).map(p=>p.x.toFixed(1)+','+p.y.toFixed(1)).join(' ');
+  const restPts=allPts.slice(progIdx).map(p=>p.x.toFixed(1)+','+p.y.toFixed(1)).join(' ');
+  const dEl=document.getElementById('svgRouteDone');if(dEl)dEl.setAttribute('points',donePts);
+  const rEl=document.getElementById('svgRouteRest');if(rEl)rEl.setAttribute('points',restPts);
+}
+
+function svgZoomIn(){
+  svgZoomLevel=Math.min(svgZoomLevel*1.4,4);
+  const el=document.getElementById('svgMapInner');if(el)el.style.transform=`scale(${svgZoomLevel})`;
+}
+function svgZoomOut(){
+  svgZoomLevel=Math.max(svgZoomLevel/1.4,0.5);
+  const el=document.getElementById('svgMapInner');if(el)el.style.transform=`scale(${svgZoomLevel})`;
 }
 
 // ═══ LEAFLET — MAPA MONITOR ═══
