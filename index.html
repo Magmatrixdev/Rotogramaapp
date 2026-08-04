@@ -31,6 +31,10 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .home-subtext{font-family:'Barlow',sans-serif;font-size:13px;color:#8a8886;margin-top:6px}
 .admin-toggle{position:absolute;top:20px;right:22px;width:42px;height:42px;border-radius:12px;background:#eae8e3;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px}
 .admin-toggle:active{background:#e4e2dd}
+.logout-btn{position:absolute;top:20px;left:22px;height:36px;border-radius:10px;background:rgba(254,38,39,.08);border:1.5px solid rgba(254,38,39,.18);display:none;align-items:center;gap:6px;padding:0 12px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;color:#fe2627}
+.logout-btn:active{background:rgba(254,38,39,.15)}
+.logout-btn.show{display:flex}
+.driver-greeting{font-family:'Barlow',sans-serif;font-size:12px;color:#9a9894;margin-top:4px}
 .search-wrap{margin-top:18px;position:relative}
 .search-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);width:15px;height:15px;border:2px solid #b0aea9;border-radius:50%}
 .search-icon::after{content:'';position:absolute;left:11px;top:12px;width:7px;height:2px;background:#b0aea9;transform:rotate(45deg);transform-origin:left}
@@ -401,8 +405,10 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 <div class="screen" id="screenHome">
   <div class="home-top" style="position:relative">
     <button class="admin-toggle" onclick="showAdminLogin()">⚙️</button>
+    <button class="logout-btn" id="logoutBtn" onclick="promptLogout()">↩ Sair</button>
     <div class="logo-row"><div class="logo-box"><span>C</span></div><div><div class="logo-title">CONFIANÇA</div><div class="logo-sub">SEGURANÇA QUE MOVE</div></div></div>
     <div class="home-heading">Rotogramas</div>
+    <div id="driverGreeting" class="driver-greeting"></div>
     <div class="home-subtext" id="routeCountText">Carregando...</div>
     <div class="search-wrap"><div class="search-icon"></div><input class="search-input" id="searchInput" placeholder="Buscar rota, cidade ou destino" autocomplete="off" autocorrect="off" spellcheck="false"><button class="search-clear" id="searchClear" onclick="clearSearch()">✕</button></div>
   </div>
@@ -744,7 +750,16 @@ function verifyDriverSession(){
   }
   currentDriver=d;
 }
-function logoutDriver(){currentDriver=null;localStorage.removeItem('drv_session');showDriverLogin();}
+function logoutDriver(){
+  currentDriver=null;adminMode=false;
+  localStorage.removeItem('drv_session');
+  navReset('screenDriverLogin');
+}
+function promptLogout(){
+  const ov=document.createElement('div');ov.className='confirm-overlay';
+  ov.innerHTML=`<div class="confirm-box"><h3>Sair do app?</h3><p>Você precisará fazer login novamente na próxima vez.</p><div class="btns"><button style="background:#eae8e3;color:#1c1c1c;flex:1;padding:12px;border-radius:10px;border:none;font-weight:700;cursor:pointer" onclick="this.closest('.confirm-overlay').remove()">Cancelar</button><button style="background:#fe2627;color:#fff;flex:1;padding:12px;border-radius:10px;border:none;font-weight:700;cursor:pointer" onclick="logoutDriver();this.closest('.confirm-overlay').remove()">Sair</button></div></div>`;
+  document.body.appendChild(ov);
+}
 function switchAuthTab(tab){
   const isLogin=tab==='login';
   document.getElementById('tabLoginBtn').classList.toggle('active',isLogin);
@@ -1117,6 +1132,18 @@ function renderHome(){
   verifyDriverSession();
   checkActiveTrip();
   updateActiveTripBanner();
+  // Show/hide logout button and driver greeting
+  const logoutBtn=document.getElementById('logoutBtn');
+  const greeting=document.getElementById('driverGreeting');
+  if(logoutBtn){
+    if(currentDriver){logoutBtn.classList.add('show');}
+    else{logoutBtn.classList.remove('show');}
+  }
+  if(greeting){
+    if(currentDriver){greeting.textContent='Olá, '+currentDriver.nome.split(' ')[0]+'!';}
+    else if(adminMode){greeting.textContent='Modo administrador';}
+    else{greeting.textContent='';}
+  }
 }
 function filterRoutes(q){const cards=document.querySelectorAll('.rcard'),regs=document.querySelectorAll('.region'),nr=document.getElementById('noResults'),cl=document.getElementById('searchClear');const n=norm(q.trim());if(!n){cards.forEach(c=>c.style.display='');regs.forEach(r=>r.style.display='');nr.style.display='none';cl.classList.remove('vis');return}cl.classList.add('vis');const terms=n.split(/\s+/);let vis=0;cards.forEach(c=>{const m=terms.every(x=>(c.dataset.search||'').includes(x));c.style.display=m?'':'none';if(m)vis++});regs.forEach(r=>{r.style.display=[...r.querySelectorAll('.rcard')].some(c=>c.style.display!=='none')?'':'none'});nr.style.display=vis?'none':'block'}
 function clearSearch(){const i=document.getElementById('searchInput');i.value='';filterRoutes('');i.focus()}
