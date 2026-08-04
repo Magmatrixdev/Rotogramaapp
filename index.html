@@ -9,8 +9,6 @@
 <title>Rotogramas — Confiança</title>
 <link rel="manifest" href="./manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link href="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.css" rel="stylesheet">
-<script src="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <style>
@@ -653,6 +651,25 @@ const DEFAULTS=[
 {ordem:1,tipo:'destino',nome:'São Mateus do Sul — PR',cidade:'Sem abastecer — abastece no Cais Ponta Grossa na volta',km:'1.200'}]}
 ];
 
+// Carrega Mapbox GL JS dinamicamente (evita SW e garante carregamento correto)
+let _mapboxLoaded=false;
+function loadMapboxGL(){
+  return new Promise((resolve,reject)=>{
+    if(typeof mapboxgl!=='undefined'){_mapboxLoaded=true;resolve();return;}
+    // CSS
+    const link=document.createElement('link');
+    link.rel='stylesheet';
+    link.href='https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.css';
+    document.head.appendChild(link);
+    // JS
+    const script=document.createElement('script');
+    script.src='https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js';
+    script.onload=()=>{_mapboxLoaded=true;console.log('Mapbox GL JS carregado');resolve();};
+    script.onerror=(e)=>{console.error('Falha ao carregar Mapbox GL JS',e);reject(new Error('Mapbox load failed'));};
+    document.head.appendChild(script);
+  });
+}
+
 function initFirebase(){
   try{
     firebase.initializeApp(FIREBASE_CONFIG);
@@ -1036,32 +1053,69 @@ function makeStopEl(isDone,isNext,num){
 }
 
 async function initDriverMap(){
-  // Limpa mapa anterior
   if(_mbMap){try{_mbMap.remove();}catch(e){}_mbMap=null;_mbTruckMarker=null;_mbStopMarkers=[];}
   _routeGeometry=[];_routeLayerDone=null;_routeLayerRest=null;
 
   const el=document.getElementById('driverMapEl');
   if(!el)return;
+
+  // ── DIAGNÓSTICO VISUAL ──────────────────────────────
+  function showMapStatus(msg, color='#1a6fb5'){
+    let s=document.getElementById('mapStatus');
+    if(!s){s=document.createElement('div');s.id='mapStatus';
+      s.style.cssText='position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;font-family:Barlow,sans-serif;font-size:13px;z-index:50;pointer-events:none;padding:20px;text-align:center';
+      el.appendChild(s);}
+    s.style.color=color;
+    s.innerHTML='<span style="font-size:28px">🗺️</span><span>'+msg+'</span><span style="font-size:10px;opacity:.6">W:'+el.offsetWidth+' H:'+el.offsetHeight+'</span>';
+  }
+  showMapStatus('Iniciando mapa...');
+
+  // 1. Verificar se Mapbox GL carregou
+  if(typeof mapboxgl==='undefined'){
+    showMapStatus('⚠️ Mapbox não carregou.<br>Tentando novamente...','#e8a020');
+    setTimeout(initDriverMap,1000);return;
+  }
+
+  // 2. Verificar WebGL
+  if(!mapboxgl.supported()){
+    showMapStatus('❌ WebGL não suportado neste dispositivo.','#fe2627');
+    return;
+  }
+
   const route=currentRouteIdx>=0?routes[currentRouteIdx]:null;
   if(!route)return;
   const coords=ROUTE_COORDS[route.id];if(!coords)return;
   const fuelStops=route.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino');
   const confirmed=currentTrip?.postosConfirmados||[];
 
-  if(typeof mapboxgl==='undefined'){setTimeout(initDriverMap,800);return;}
+  showMapStatus('Conectando ao Mapbox...');
 
   mapboxgl.accessToken=MAPBOX_TOKEN;
-  mapboxgl.workerCount=1; // reduz uso de memória no iOS
 
   // Inicializa Mapbox GL — funciona nativamente no Safari iOS com WebGL
-  _mbMap=new mapboxgl.Map({
-    container:el,
-    style:'mapbox://styles/mapbox/streets-v12',
-    center:ll(coords.orig),
-    zoom:7,
-    attributionControl:false,
-    logoPosition:'bottom-left',
+  let _mapInitErr=null;
+  try{
+    _mbMap=new mapboxgl.Map({
+      container:el,
+      style:'mapbox://styles/mapbox/streets-v12',
+      center:ll(coords.orig),
+      zoom:7,
+      attributionControl:false,
+      logoPosition:'bottom-left',
+      failIfMajorPerformanceCaveat:false,
+    });
+  }catch(e){
+    showMapStatus('❌ Erro ao iniciar mapa:<br>'+e.message,'#fe2627');
+    console.error('Mapbox init error:',e);
+    return;
+  }
+  if(!_mbMap){showMapStatus('❌ Mapa não criado','#fe2627');return;}
+
+  _mbMap.on('error',e=>{
+    console.error('Mapbox error:',e);
+    showMapStatus('❌ Erro Mapbox: '+(e.error?.message||e.message||JSON.stringify(e)),'#fe2627');
   });
+  _mbMap.on('style.load',()=>{ const s=document.getElementById('mapStatus');if(s)s.remove(); });
 
   _mbMap.addControl(new mapboxgl.NavigationControl({showCompass:false}),'top-right');
 
@@ -1702,8 +1756,14 @@ function showMapLive(){
     const er=document.getElementById('tsRest');if(er)er.textContent=route?route.distancia||'—':'—';
     const et=document.getElementById('tsElapsed');if(et)et.textContent=route?route.tempo||'—':'—';
     updateNextStopUI();
-    // Aguarda transição de tela (navPush 260ms) + tempo para o container ter dimensões
     setTimeout(async()=>{
+      // Carrega Mapbox GL JS se ainda não carregou
+      try{ await loadMapboxGL(); }
+      catch(e){
+        const el=document.getElementById('driverMapEl');
+        if(el)el.innerHTML='<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#fe2627;font-family:Barlow,sans-serif;font-size:13px;text-align:center;padding:20px"><span style="font-size:28px">❌</span><span>Falha ao carregar o mapa.<br>Verifique sua conexão com a internet.</span></div>';
+        startTracking();if(!tripTimerInterval&&tripStartTs)startTripTimer();return;
+      }
       await initDriverMap();
       startTracking();
       if(!tripTimerInterval&&tripStartTs)startTripTimer();
