@@ -254,9 +254,8 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .live-pill-dot{width:7px;height:7px;border-radius:50%;background:#1f8a3d;animation:livepulse 1.4s ease-in-out infinite}
 @keyframes livepulse{0%,100%{opacity:1}50%{opacity:.3}}
 .live-pill-txt{font-family:'Barlow',sans-serif;font-weight:700;font-size:10px;color:#1f8a3d;letter-spacing:.06em}
-.driver-map-container{flex:0 0 46vh;height:46vh;min-height:220px;background:#e8eef0;position:relative;overflow:hidden}
-.driver-map-container .leaflet-container{position:absolute!important;inset:0!important;height:100%!important;width:100%!important}
-.maplive-panel{flex:1;overflow-y:auto;background:#fff;display:flex;flex-direction:column;min-height:0}
+.driver-map-container{flex:0 0 46vh;height:46vh;min-height:220px;background:#e8eef0;overflow:hidden}
+.maplive-panel{flex:1;overflow-y:auto;background:#fff;display:flex;flex-direction:column;min-height:0;max-height:56vh}
 .trip-stats-bar{display:flex;background:#1c1c1c;flex-shrink:0}
 .trip-stat-item{flex:1;padding:10px 8px;text-align:center;border-right:1px solid #2e2e2c}
 .trip-stat-item:last-child{border:none}
@@ -437,7 +436,7 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 </div>
 
 <!-- ═══ MAPA AO VIVO ═══ -->
-<div class="screen" id="screenMapLive" style="background:#1c1c1c">
+<div class="screen" id="screenMapLive" style="background:#1c1c1c;overflow:hidden">
   <div class="maplive-header">
     <button class="back-btn" style="background:rgba(255,255,255,.1);color:#fff" onclick="navPop()">‹</button>
     <div>
@@ -1017,30 +1016,49 @@ function stopIconHTML(isDone,isNext,num){
 
 async function initDriverMap(){
   if(driverMap){try{driverMap.remove();}catch(e){}driverMap=null;driverMarker=null;stopMarkers=[];_routeGeometry=[];_routeLayerDone=null;_routeLayerRest=null;}
-  const el=document.getElementById('driverMapEl');if(!el)return;
-  // iOS fix: força dimensões em pixels antes do Leaflet medir o container
-  const screenH=window.innerHeight||document.documentElement.clientHeight;
-  el.style.height=Math.round(screenH*0.44)+'px';
-  el.style.minHeight='220px';
+
+  // Verifica se Leaflet carregou
+  if(typeof L==='undefined'){
+    setTimeout(initDriverMap,1500);
+    return;
+  }
+
+  const el=document.getElementById('driverMapEl');
+  if(!el)return;
+
   const route=currentRouteIdx>=0?routes[currentRouteIdx]:null;
   if(!route)return;
   const coords=ROUTE_COORDS[route.id];if(!coords)return;
   const fuelStops=route.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino');
   const confirmed=currentTrip?.postosConfirmados||[];
 
-  // Inicializa mapa Leaflet com tiles CartoDB (visual limpo como o mockup)
-  driverMap=L.map('driverMapEl',{zoomControl:false,attributionControl:false})
-    .setView(coords.orig,7);
-  // Tenta CartoDB primeiro (visual mais bonito), fallback para OSM
-  const tileLayer=L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-    {maxZoom:19,subdomains:'abcd',crossOrigin:true});
-  tileLayer.addTo(driverMap);
-  tileLayer.on('tileerror',()=>{
-    // Se CartoDB falhar, usa OpenStreetMap como backup
-    driverMap.eachLayer(l=>{if(l instanceof L.TileLayer)driverMap.removeLayer(l);});
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(driverMap);
-  });
+  // iOS Safari: precisa de altura em px explícita — vh e flex não funcionam com Leaflet
+  const ph=Math.round((window.innerHeight||screen.height)*0.44);
+  el.style.cssText=`width:100%;height:${Math.max(ph,220)}px;position:relative;background:#e8eef0;overflow:hidden;`;
+
+  // Aguarda 1 frame para garantir que o container está no DOM com as dimensões corretas
+  await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+
+  // Inicializa o mapa
+  driverMap=L.map(el,{
+    zoomControl:false,
+    attributionControl:false,
+    preferCanvas:true,   // melhor performance no iOS
+    tap:true,            // suporte a toque no iOS
+    tapTolerance:15,
+  }).setView(coords.orig,7);
+
+  // OSM como tile principal (mais confiável, sem CORS issues)
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    maxZoom:19,
+    subdomains:['a','b','c'],
+    detectRetina:true,
+  }).addTo(driverMap);
+
   L.control.zoom({position:'topright'}).addTo(driverMap);
+
+  // Força recálculo de tamanho após adicionar tiles
+  driverMap.invalidateSize({animate:false});
 
   // Loading indicator
   const loadEl=document.createElement('div');
@@ -1100,13 +1118,15 @@ async function initDriverMap(){
   // Ajusta zoom para mostrar a rota toda
   try{driverMap.fitBounds(L.latLngBounds(_routeGeometry),{padding:[40,40],maxZoom:12});}catch(e){}
 
-  // iOS fix: força o Leaflet a recalcular tamanho após renderizar
-  setTimeout(()=>{
+  // Força recálculo de tamanho múltiplas vezes (iOS precisa disso)
+  [200,600,1200].forEach(ms=>setTimeout(()=>{
     if(driverMap){
       driverMap.invalidateSize({animate:false});
-      try{if(_routeGeometry.length>1)driverMap.fitBounds(L.latLngBounds(_routeGeometry),{padding:[40,40],maxZoom:12});}catch(e){}
+      if(ms===600&&_routeGeometry.length>1){
+        try{driverMap.fitBounds(L.latLngBounds(_routeGeometry),{padding:[40,40],maxZoom:12});}catch(e){}
+      }
     }
-  },400);
+  },ms));
 
   // Pega posição GPS real do dispositivo
   if(navigator.geolocation){
@@ -1682,12 +1702,16 @@ function showMapLive(){
     const er=document.getElementById('tsRest');if(er)er.textContent=route?route.distancia||'—':'—';
     const et=document.getElementById('tsElapsed');if(et)et.textContent=route?route.tempo||'—':'—';
     updateNextStopUI();
-    // iOS precisa de tempo para o container estar visível antes do Leaflet inicializar
+    // iOS Safari: aguarda a transição de tela completar antes de iniciar o mapa
     setTimeout(async()=>{
       await initDriverMap();
+      // Segundo invalidateSize após tudo renderizado
+      if(driverMap){
+        setTimeout(()=>driverMap?.invalidateSize({animate:false}),300);
+      }
       startTracking();
       if(!tripTimerInterval&&tripStartTs)startTripTimer();
-    },350);
+    },500);
   });
 }
 
