@@ -1025,23 +1025,65 @@ function updateTripStats(){
 // ═══ MAPA REAL (Mapbox GL JS + OSRM) ═══
 const ll=([lat,lng])=>[lng,lat]; // [lat,lng] → Mapbox [lng,lat]
 
-async function fetchOSRMRoute(points){
-  // points: [[lat,lng],...] — OSRM espera lng,lat
-  const coords=points.map(p=>p[1]+','+p[0]).join(';');
-  const url='https://router.project-osrm.org/route/v1/driving/'+coords+'?overview=full&geometries=geojson&steps=false';
+// Rota um único segmento (A→B) via OSRM
+async function _osrmSegment(from, to){
+  const url='https://router.project-osrm.org/route/v1/driving/'
+    +from[1]+','+from[0]+';'+to[1]+','+to[0]
+    +'?overview=full&geometries=geojson&steps=false';
   try{
-    // AbortController manual — compatível com iOS 13+
     const ctrl=new AbortController();
-    const tid=setTimeout(()=>ctrl.abort(),12000);
+    const tid=setTimeout(()=>ctrl.abort(),25000); // 25s por segmento
     const r=await fetch(url,{signal:ctrl.signal});
     clearTimeout(tid);
+    if(!r.ok)return null;
     const d=await r.json();
     if(d.code==='Ok'&&d.routes[0]){
       return d.routes[0].geometry.coordinates.map(c=>[c[1],c[0]]);
     }
-    console.warn('OSRM code:',d.code);
-  }catch(e){console.warn('OSRM erro:',e.message);}
+    console.warn('OSRM segmento:',d.code,d.message);
+  }catch(e){console.warn('OSRM segmento erro:',e.message);}
   return null;
+}
+
+// Rota completa: segmento por segmento e concatena
+async function fetchOSRMRoute(points){
+  const valid=points.filter(p=>p&&Array.isArray(p)&&p[0]!==undefined&&p[1]!==undefined);
+  if(valid.length<2)return null;
+
+  // Tenta rota completa de uma vez (mais rápido)
+  try{
+    const coords=valid.map(p=>p[1]+','+p[0]).join(';');
+    const url='https://router.project-osrm.org/route/v1/driving/'+coords
+      +'?overview=full&geometries=geojson&steps=false';
+    const ctrl=new AbortController();
+    const tid=setTimeout(()=>ctrl.abort(),20000);
+    const r=await fetch(url,{signal:ctrl.signal});
+    clearTimeout(tid);
+    if(r.ok){
+      const d=await r.json();
+      if(d.code==='Ok'&&d.routes[0]){
+        console.log('OSRM completo OK, pontos:',d.routes[0].geometry.coordinates.length);
+        return d.routes[0].geometry.coordinates.map(c=>[c[1],c[0]]);
+      }
+      console.warn('OSRM completo:',d.code);
+    }
+  }catch(e){console.warn('OSRM completo erro:',e.message);}
+
+  // Fallback: segmento por segmento
+  console.log('OSRM: tentando segmento a segmento...');
+  let fullRoute=[];
+  for(let i=0;i<valid.length-1;i++){
+    const seg=await _osrmSegment(valid[i],valid[i+1]);
+    if(seg){
+      // Evita duplicar o ponto de junção entre segmentos
+      fullRoute=fullRoute.concat(i===0?seg:seg.slice(1));
+    }else{
+      // Segmento falhou — usa linha reta para esse trecho
+      if(fullRoute.length===0||fullRoute[fullRoute.length-1]!==valid[i])fullRoute.push(valid[i]);
+      fullRoute.push(valid[i+1]);
+    }
+  }
+  return fullRoute.length>=2?fullRoute:null;
 }
 
 // Cache de geocodificação (localStorage para persistir entre sessões)
@@ -1095,7 +1137,8 @@ async function getCoordsForRoute(route){
   for(const s of fuelStops){
     await new Promise(r=>setTimeout(r,600));
     const c=await geocodeCity(s.cidade||s.nome);
-    stopCoords.push(c||origC);
+    if(c)stopCoords.push(c);
+    // Se geocode falhar: pula o posto do mapa (não bloqueia o routing OSRM)
   }
   const result={orig:origC,stops:stopCoords,dest:destC};
   return result;
@@ -1224,11 +1267,11 @@ async function initDriverMap(){
     _mbMap.addSource('route-rest',{type:'geojson',data:{type:'Feature',geometry:{type:'LineString',coordinates:provisCoords}}});
     _mbMap.addLayer({id:'route-rest',type:'line',source:'route-rest',paint:{'line-color':'#1a6fb5','line-width':5,'line-opacity':.85,'line-dasharray':[3,2],'line-cap':'round','line-join':'round'}});
 
-    // Loading indicator sutil
+    // Indicador de carregamento com progresso
     const loadEl=document.createElement('div');
     loadEl.id='mapLoader';
-    loadEl.style.cssText='position:fixed;bottom:38%;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.65);color:#fff;padding:8px 14px;border-radius:9px;font-family:Barlow,sans-serif;font-size:12px;z-index:9999;pointer-events:none;white-space:nowrap';
-    loadEl.textContent='🛣️ Ajustando rota nas estradas...';
+    loadEl.style.cssText='position:fixed;bottom:38%;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.75);color:#fff;padding:10px 16px;border-radius:10px;font-family:Barlow,sans-serif;font-size:12px;z-index:9999;pointer-events:none;text-align:center;min-width:200px';
+    loadEl.innerHTML='🛣️ Calculando rota pelas estradas...<br><small style="opacity:.7">'+waypoints.length+' pontos na rota</small>';
     document.body.appendChild(loadEl);
 
     let geom=await fetchOSRMRoute(waypoints);
