@@ -708,7 +708,7 @@ function initFirebase(){
 
     db.ref('rotogramas').on('value',snap=>{
       const data=snap.val();
-      if(data&&Array.isArray(data)){routes=data;firebaseReady=true;localStorage.setItem('rotogramas_cache',JSON.stringify(routes));setSyncStatus('on','Sincronizado');if(!isEditing)renderHome()}
+      if(data&&Array.isArray(data)){routes=data;firebaseReady=true;localStorage.setItem('rotogramas_cache',JSON.stringify(routes));setSyncStatus('on','Sincronizado');if(!isEditing)renderHome();_handleDeepLink()}
       else if(!data){db.ref('rotogramas').set(DEFAULTS).then(()=>{routes=DEFAULTS;firebaseReady=true;setSyncStatus('on','Sincronizado');renderHome()})}
     },err=>{setSyncStatus('err','Erro Firebase — dados locais');loadLocal()});
     db.ref('motoristas').on('value',snap=>{
@@ -1498,7 +1498,7 @@ function renderRoute(r){const orig=r.paradas.find(p=>p.tipo==='origem'),dest=r.p
   let h=`<div class="roto-top"><button class="back-btn" onclick="navPop(renderHome)">‹</button><div class="roto-header"><div class="roto-route-row"><div class="roto-chip"><div class="city">${oc}</div><div class="lbl">ORIGEM</div></div><span class="roto-arrow">→</span><div class="roto-chip"><div class="city">${dc}</div><div class="lbl">DESTINO</div></div></div><div class="roto-stats"><div class="roto-stat"><div class="val">${r.distancia||'—'}</div><div class="lbl">DISTÂNCIA</div></div><div class="roto-stat"><div class="val">${r.tempo||'—'}</div><div class="lbl">ESTIMADO</div></div><div class="roto-stat"><div class="val red">${stops.length}</div><div class="lbl">POSTOS</div></div></div>`;
   if(r.linkRota)h+=`<a class="rota-link" href="${r.linkRota}" target="_blank">📍 VER ROTA COMPLETA NO MAPS</a>`;
   const appUrl=location.origin+location.pathname+'#rota='+encodeURIComponent(r.id);
-  const _stopsList=stops.map((p,i)=>`${i+1}. ${p.nome} — ${p.cidade}${p.km?' ('+p.km+')':''}`).join('\n');
+  const _stopsList=stops.map((p,i)=>{const c=p.cartao?` [${p.cartao.toUpperCase()}]`:'';return `${i+1}. ${p.nome} — ${p.cidade}${p.km?' ('+p.km+')':''}${c}`;}).join('\n');
   window._lastShareRaw=`🚛 Rotograma: ${r.nome}\n📍 ${r.estados}\n📏 ${r.distancia||''} · ${r.tempo||''}\n⛽ ${stops.length} postos de abastecimento\n\n${_stopsList}\n\nAbra a rota: ${appUrl}`;
   const shareRaw=window._lastShareRaw;
   const shareText=encodeURIComponent(shareRaw);
@@ -1998,7 +1998,27 @@ function doAdminLogin(){
 
 // ═══ DEEP LINK ═══
 function checkDeepLink(){return false;} // deep links desativados com nova navegação
-window.addEventListener('hashchange',()=>{});
+// ═══ DEEP LINK: #rota=ID ═══
+function _handleDeepLink(){
+  const hash=location.hash||'';
+  if(!hash.startsWith('#rota='))return false;
+  const rotaId=decodeURIComponent(hash.replace('#rota=',''));
+  if(!rotaId)return false;
+  const idx=routes.findIndex(r=>r.id===rotaId);
+  if(idx<0){
+    // Tenta buscar por nome parcial
+    const idx2=routes.findIndex(r=>r.nome.toLowerCase().includes(rotaId.toLowerCase()));
+    if(idx2<0){showToast('❌ Rota não encontrada: '+rotaId,'#fe2627');return false;}
+    currentRouteIdx=idx2;
+  }else{currentRouteIdx=idx;}
+  const el=document.getElementById('routeContent');
+  if(el)el.innerHTML=renderRoute(routes[currentRouteIdx]);
+  navPush('screenRoute');
+  // Limpa hash para não re-processar
+  history.replaceState(null,'',location.pathname);
+  return true;
+}
+window.addEventListener('hashchange',()=>_handleDeepLink());
 
 // ═══ INIT ═══
 document.addEventListener('DOMContentLoaded',()=>{
