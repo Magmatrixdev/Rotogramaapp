@@ -18,11 +18,9 @@
 ::-webkit-scrollbar{width:0;height:0}
 body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;min-height:100vh;overscroll-behavior-y:contain}
 @keyframes spin{to{transform:rotate(360deg)}}
-.screen{display:none;flex-direction:column;min-height:100vh;overflow-x:hidden}
-.screen.active{display:flex}
-/* Fade-in on screen switch */
-@keyframes screenIn{from{opacity:.6}to{opacity:1}}
-.screen.active{animation:screenIn .18s ease}
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;background:#f4f4f2;visibility:hidden;transform:translateX(100%)}
+.screen.active{visibility:visible;transform:translateX(0)}
+.screen.behind{visibility:visible;transform:translateX(-22%)}
 .home-top{padding:20px 22px 0}
 .logo-row{display:flex;align-items:center;gap:11px;margin-bottom:22px}
 .logo-box{width:42px;height:42px;background:#fe2627;border-radius:11px;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(254,38,39,.28)}
@@ -211,7 +209,7 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .offline-toast.show{display:block}
 
 /* ═══ DRIVER AUTH SCREEN ═══ */
-.dauth-screen{background:#f4f4f2;display:flex;flex-direction:column;justify-content:space-between;min-height:100vh;padding:0}
+.dauth-screen{background:#f4f4f2;display:flex;flex-direction:column;justify-content:space-between;padding:0}
 .dauth-top-bg{background:#1c1c1c;padding:48px 28px 36px;text-align:center}
 .dauth-logo-row{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:16px}
 .dauth-title{font-weight:700;font-size:28px;color:#fff;letter-spacing:.04em;text-transform:uppercase}
@@ -434,7 +432,7 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 <!-- ═══ MAPA AO VIVO ═══ -->
 <div class="screen" id="screenMapLive" style="background:#1c1c1c">
   <div class="maplive-header">
-    <button class="back-btn" style="background:rgba(255,255,255,.1);color:#fff" onclick="showRoute(currentRouteIdx)">‹</button>
+    <button class="back-btn" style="background:rgba(255,255,255,.1);color:#fff" onclick="navPop()">‹</button>
     <div>
       <div class="maplive-route-name" id="mapLiveRouteName">Em Viagem</div>
       <div style="font-family:'Barlow',sans-serif;font-size:10px;color:#6a6866;margin-top:1px" id="mapLiveStates"></div>
@@ -473,7 +471,7 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 
 <!-- ═══ ADMIN ═══ -->
 <div class="screen" id="screenAdmin">
-  <div class="admin-top"><button class="back-btn" onclick="showHome()">‹</button><div class="admin-title">Administração</div></div>
+  <div class="admin-top"><button class="back-btn" onclick="navPop(renderHome)">‹</button><div class="admin-title">Administração</div></div>
   <div class="admin-tab-bar">
     <button class="admin-tab-btn active" onclick="switchAdminTab('routes',this)">Rotas</button>
     <button class="admin-tab-btn" onclick="switchAdminTab('drivers',this)">Motoristas</button>
@@ -506,7 +504,7 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 
 <!-- ═══ EDITOR ═══ -->
 <div class="screen" id="screenEditor">
-  <div class="admin-top"><button class="back-btn" onclick="showAdmin()">‹</button><div class="admin-title" id="editorTitle">Nova Rota</div></div>
+  <div class="admin-top"><button class="back-btn" onclick="cancelEdit()">‹</button><div class="admin-title" id="editorTitle">Nova Rota</div></div>
   <div class="editor-scroll" id="editorContent"></div>
   <div class="editor-save"><button class="cancel" onclick="cancelEdit()">Cancelar</button><button class="save" onclick="saveRoute()">Salvar Rota</button></div>
 </div>
@@ -547,7 +545,7 @@ const ROUTE_COORDS={
 
 // ═══ STATE ═══
 let routes=[], drivers={}, viagens={}, posicoes={};
-let currentDriver=null, currentTrip=null, currentRouteIdx=-1;
+let currentDriver=null, currentTrip=null, currentRouteIdx=-1, _justEndedTripId=null;
 let geoWatchId=null, tripTimerInterval=null, tripStartTs=null;
 let driverMap=null, driverMarker=null, stopMarkers=[];
 let monitorMap=null, monitorMarkers={}, monitorMapInit=false;
@@ -786,13 +784,19 @@ async function endTrip(){
   stopTracking();stopTripTimer();
   const tripId=currentTrip.id;
   const driverId=currentDriver?.id;
+  // Guard: marcar localmente como finalizada ANTES de limpar currentTrip
+  // Isso evita que checkActiveTrip() restaure a viagem ao reler o Firebase
+  if(viagens[tripId])viagens[tripId].status='finalizada';
+  _justEndedTripId=tripId;
   currentTrip=null;tripStartTs=null;
   updateActiveTripBanner();
-  showHome();
-  // Firebase em background — não bloqueia
+  navPop(()=>{renderHome();}); // volta para home via pop
+  // Firebase em background
   if(db&&tripId){
-    db.ref('viagens/'+tripId+'/status').set('finalizada').catch(()=>{});
-    db.ref('viagens/'+tripId+'/finalizadaEm').set(Date.now()).catch(()=>{});
+    const fin=Date.now();
+    db.ref('viagens/'+tripId).update({status:'finalizada',finalizadaEm:fin})
+      .then(()=>{setTimeout(()=>{if(_justEndedTripId===tripId)_justEndedTripId=null;},5000);})
+      .catch(()=>{});
     if(driverId)db.ref('posicoes/'+driverId).remove().catch(()=>{});
   }
 }
@@ -812,13 +816,21 @@ async function confirmFuelStop(){
 }
 function checkActiveTrip(){
   if(!currentDriver)return;
-  const active=Object.values(viagens).find(v=>v.motoristaId===currentDriver.id&&v.status==='em_viagem');
-  if(active){
+  const active=Object.values(viagens).find(v=>
+    v.motoristaId===currentDriver.id &&
+    v.status==='em_viagem' &&
+    v.id!==_justEndedTripId  // nunca restaurar viagem que acabamos de encerrar
+  );
+  if(active&&!currentTrip){
+    // Só define currentTrip se não temos um ativo já (evita sobrescrever)
     currentTrip=active;tripStartTs=active.iniciadaEm;
     const ri=routes.findIndex(r=>r.id===active.rotaId);
     if(ri>=0)currentRouteIdx=ri;
     updateActiveTripBanner();
     if(!tripTimerInterval)startTripTimer();
+  }else if(!active&&!_justEndedTripId){
+    // Firebase confirmou que não há viagem ativa — limpar se existir
+    if(currentTrip){currentTrip=null;tripStartTs=null;stopTripTimer();updateActiveTripBanner();}
   }
 }
 function updateActiveTripBanner(){
@@ -1061,7 +1073,7 @@ function renderStop(p){const ip=p.tipo==='parcial';let d='';if(p.litragem)d+=`<d
   return `<div class="stop"><div class="stop-node ${ip?'parcial':''}"><div class="stop-node-dot"></div></div><div class="stop-km ${ip?'parcial':''}">KM ${p.km}</div><div class="scard"><div class="scard-body"><div class="scard-brand-row"><div class="scard-brand-dot" style="background:${ip?'#e8a020':'#fe2627'}"></div><span class="scard-brand-name">${ip?p.ordem+'º Abast. · Parcial':p.ordem+'º Abastecimento'}</span></div><div class="scard-nome">${p.nome}</div><div class="scard-cidade">${p.cidade}</div>${d?`<div class="scard-details">${d}</div>`:''}${bt}<div class="badge-row">${cartaoBadge(p.cartao)}</div>${note}</div>${link}</div></div>`}
 function renderAlt(a){let d=a.litragem?`<div class="scard-details"><div class="scard-detail">⛽ <strong>${a.litragem}</strong></div></div>`:'';let n=a.nota?`<div class="scard-note"><strong>Estratégia:</strong> ${a.nota}</div>`:'';let l=a.link?`<a class="rota-link" href="${a.link}" target="_blank" style="margin:12px 14px 14px;border-radius:10px">📍 ABRIR LOCALIZAÇÃO NO MAPS</a>`:'';return `<div class="ou-div"><div class="ou-line"></div><div class="ou-pill">OU</div><div class="ou-line"></div></div><div class="stop"><div class="stop-node parcial"><div class="stop-node-dot"></div></div><div class="stop-km parcial">KM ${a.km}</div><div class="scard dashed"><div class="scard-body"><div class="scard-brand-row"><div class="scard-brand-dot" style="background:#e8a020"></div><span class="scard-brand-name">Opção B</span></div><div class="scard-nome">${a.nome}</div><div class="scard-cidade">${a.cidade}</div>${d}<div class="badge-row">${cartaoBadge(a.cartao)}</div>${n}</div>${l}</div></div>`}
 function renderRoute(r){const orig=r.paradas.find(p=>p.tipo==='origem'),dest=r.paradas.find(p=>p.tipo==='destino'),stops=r.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino');const oc=(orig?orig.nome:'').split('—')[0].trim(),dc=(dest?dest.nome:'').split('—')[0].trim();
-  let h=`<div class="roto-top"><button class="back-btn" onclick="showHome()">‹</button><div class="roto-header"><div class="roto-route-row"><div class="roto-chip"><div class="city">${oc}</div><div class="lbl">ORIGEM</div></div><span class="roto-arrow">→</span><div class="roto-chip"><div class="city">${dc}</div><div class="lbl">DESTINO</div></div></div><div class="roto-stats"><div class="roto-stat"><div class="val">${r.distancia||'—'}</div><div class="lbl">DISTÂNCIA</div></div><div class="roto-stat"><div class="val">${r.tempo||'—'}</div><div class="lbl">ESTIMADO</div></div><div class="roto-stat"><div class="val red">${stops.length}</div><div class="lbl">POSTOS</div></div></div>`;
+  let h=`<div class="roto-top"><button class="back-btn" onclick="navPop(renderHome)">‹</button><div class="roto-header"><div class="roto-route-row"><div class="roto-chip"><div class="city">${oc}</div><div class="lbl">ORIGEM</div></div><span class="roto-arrow">→</span><div class="roto-chip"><div class="city">${dc}</div><div class="lbl">DESTINO</div></div></div><div class="roto-stats"><div class="roto-stat"><div class="val">${r.distancia||'—'}</div><div class="lbl">DISTÂNCIA</div></div><div class="roto-stat"><div class="val">${r.tempo||'—'}</div><div class="lbl">ESTIMADO</div></div><div class="roto-stat"><div class="val red">${stops.length}</div><div class="lbl">POSTOS</div></div></div>`;
   if(r.linkRota)h+=`<a class="rota-link" href="${r.linkRota}" target="_blank">📍 VER ROTA COMPLETA NO MAPS</a>`;
   const appUrl=location.origin+location.pathname+'#rota='+encodeURIComponent(r.id);
   const shareText=encodeURIComponent(`🚛 Rotograma: ${r.nome}\n📍 ${r.estados}\n📏 ${r.distancia||''} · ${r.tempo||''}\n⛽ ${stops.length} postos de abastecimento\n\nAbra a rota: ${appUrl}`);
@@ -1294,7 +1306,7 @@ function editRoute(i){
   if(draft&&draft.index===i){editData=draft.data;document.getElementById('editorTitle').textContent=i>=0?'Editar Rota (rascunho)':'Nova Rota (rascunho)';}
   else if(i>=0){editData=JSON.parse(JSON.stringify(routes[i]));document.getElementById('editorTitle').textContent='Editar Rota';}
   else{editData={id:'',nome:'',estados:'',numero:String(routes.length+1).padStart(2,'0'),regiao:'Centro-Oeste',subtitulo:'',linkRota:'',distancia:'',tempo:'',paradas:[{ordem:0,tipo:'origem',nome:'',cidade:'',km:'0',detalhe:''},{ordem:1,tipo:'destino',nome:'',cidade:'',km:''}]};document.getElementById('editorTitle').textContent='Nova Rota';}
-  renderEditor();showScreen('screenEditor');
+  renderEditor();navPush('screenEditor');
   if(window._draftInterval)clearInterval(window._draftInterval);
   window._draftInterval=setInterval(saveDraft,3000);
 }
@@ -1349,11 +1361,11 @@ function saveRoute(){captureEditorFields();
   let ord=1;editData.paradas.forEach(p=>{if(p.tipo!=='origem'&&p.tipo!=='destino')p.ordem=ord++});
   if(editingIndex>=0)routes[editingIndex]=editData;else routes.push(editData);
   clearDraft();isEditing=false;if(window._draftInterval)clearInterval(window._draftInterval);
-  saveToFirebase();showAdmin();}
+  saveToFirebase();navPop(()=>renderAdmin());}
 function cancelEdit(){
   saveDraft();
   const ov=document.createElement('div');ov.className='confirm-overlay';
-  ov.innerHTML=`<div class="confirm-box"><h3>Sair da edição?</h3><p>Seu rascunho foi salvo automaticamente.</p><div class="btns"><button style="background:#eae8e3;color:#1c1c1c" onclick="clearDraft();this.closest('.confirm-overlay').remove();showAdmin()">Descartar</button><button style="background:#fe2627;color:#fff" onclick="this.closest('.confirm-overlay').remove();showAdmin()">Manter rascunho</button></div></div>`;
+  ov.innerHTML=`<div class="confirm-box"><h3>Sair da edição?</h3><p>Seu rascunho foi salvo automaticamente.</p><div class="btns"><button style="background:#eae8e3;color:#1c1c1c" onclick="clearDraft();this.closest('.confirm-overlay').remove();navPop(()=>renderAdmin())">Descartar</button><button style="background:#fe2627;color:#fff" onclick="this.closest('.confirm-overlay').remove();navPop(()=>renderAdmin())">Manter rascunho</button></div></div>`;
   document.body.appendChild(ov);}
 
 // ═══ TOAST & SUCCESS ═══
@@ -1373,76 +1385,161 @@ function showSuccessMessage(nome){
     <div style="font-family:Barlow,sans-serif;font-size:15px;color:rgba(255,255,255,.8);margin-top:8px">Bem-vindo, ${nome.split(' ')[0]}!</div>
     <div style="font-family:Barlow,sans-serif;font-size:13px;color:rgba(255,255,255,.6);margin-top:24px">Entrando no app...</div>`;
   document.body.appendChild(ov);
-  setTimeout(()=>{ov.remove();showHome();},2000);
+  setTimeout(()=>{ov.remove();navReset('screenHome',()=>renderHome());},2000);
 }
 
 // ═══ NAV ═══
-function showScreen(id){
-  // Blur any focused input (prevents mobile keyboard from scrolling)
-  if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
+// ═══ NAVIGATION ENGINE ═══
+let _navStack=[];
+const NAV_DUR=260; // ms
+
+function _blur(){if(document.activeElement?.blur)document.activeElement.blur();}
+
+function navPush(id,setupFn){
+  _blur();
+  const prevId=_navStack.length>0?_navStack[_navStack.length-1]:null;
+  _navStack.push(id);
+  const newEl=document.getElementById(id);
+  const prevEl=prevId?document.getElementById(prevId):null;
+  if(newEl){newEl.scrollTop=0;}
+  if(setupFn)setupFn();
+  // Animate prev → behind
+  if(prevEl){
+    prevEl.style.transition=`transform ${NAV_DUR}ms cubic-bezier(.4,0,.2,1)`;
+    prevEl.classList.add('behind');
+    prevEl.classList.remove('active');
+    setTimeout(()=>{if(!prevEl.classList.contains('active'))prevEl.style.transition='';},NAV_DUR+20);
+  }
+  // Animate new → active (slide from right)
+  if(newEl){
+    newEl.style.transition='none';
+    newEl.style.transform='translateX(100%)';
+    newEl.style.visibility='visible';
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      newEl.style.transition=`transform ${NAV_DUR}ms cubic-bezier(.4,0,.2,1)`;
+      newEl.style.transform='translateX(0)';
+      newEl.classList.add('active');
+      setTimeout(()=>{newEl.style.transition='';newEl.style.transform='';},NAV_DUR+20);
+    }));
+  }
+}
+
+function navPop(setupFn){
+  _blur();
+  if(_navStack.length<=1)return;
+  const oldId=_navStack.pop();
+  const newId=_navStack[_navStack.length-1];
+  const oldEl=document.getElementById(oldId);
+  const newEl=document.getElementById(newId);
+  if(setupFn)setupFn();
+  // Animate old → right (out)
+  if(oldEl){
+    oldEl.style.transition=`transform ${NAV_DUR}ms cubic-bezier(.4,0,.2,1)`;
+    oldEl.style.transform='translateX(100%)';
+    oldEl.classList.remove('active');
+    setTimeout(()=>{
+      oldEl.style.transition='';oldEl.style.transform='';
+      oldEl.style.visibility='hidden';oldEl.scrollTop=0;
+    },NAV_DUR+20);
+  }
+  // Animate prev from behind → center
+  if(newEl){
+    newEl.style.transition=`transform ${NAV_DUR}ms cubic-bezier(.4,0,.2,1)`;
+    newEl.classList.add('active');
+    newEl.classList.remove('behind');
+    newEl.style.transform='translateX(0)';
+    setTimeout(()=>{newEl.style.transition='';newEl.style.transform='';},NAV_DUR+20);
+  }
+}
+
+function navReset(id,setupFn){
+  // Clear all, show one screen (no animation — used for login→home)
+  _blur();
   document.querySelectorAll('.screen').forEach(s=>{
-    s.classList.remove('active');
-    s.scrollTop=0; // reset inner scroll of every screen
+    s.classList.remove('active','behind');
+    s.style.cssText='';
+    s.style.visibility='hidden';
+    s.scrollTop=0;
   });
+  _navStack=[id];
   const el=document.getElementById(id);
   if(el){
-    el.classList.add('active');
     el.scrollTop=0;
-    // Force all scrollable children to top
-    el.querySelectorAll('[class*="scroll"],[class*="panel"],[class*="-list"]').forEach(c=>c.scrollTop=0);
+    el.style.visibility='visible';
+    el.classList.add('active');
+    el.style.transform='translateX(0)';
   }
-  // Reset window scroll via multiple methods (mobile compatibility)
-  requestAnimationFrame(()=>{
-    window.scrollTo(0,0);
-    document.body.scrollTop=0;
-    document.documentElement.scrollTop=0;
-  });
+  if(setupFn)setupFn();
 }
-function showDriverLogin(){showScreen('screenDriverLogin');}
+
+// Legacy alias used in some places
+function showScreen(id){navReset(id);}
+function showDriverLogin(){navReset('screenDriverLogin');}
+
 function showHome(){
   if(!currentDriver&&!adminMode){showDriverLogin();return;}
   isEditing=false;if(window._draftInterval)clearInterval(window._draftInterval);
-  history.replaceState(null,'',location.pathname);renderHome();showScreen('screenHome');
+  // Se home já está na pilha, faz pop até chegar nela
+  const homeIdx=_navStack.indexOf('screenHome');
+  if(homeIdx>=0){
+    // Limpa a pilha até home
+    const extra=_navStack.splice(homeIdx+1);
+    extra.forEach(id=>{const el=document.getElementById(id);if(el){el.classList.remove('active','behind');el.style.cssText='';el.style.visibility='hidden';}});
+    const homeEl=document.getElementById('screenHome');
+    if(homeEl){homeEl.classList.add('active');homeEl.classList.remove('behind');homeEl.style.transform='translateX(0)';}
+  }else{
+    navReset('screenHome');
+  }
+  renderHome();
 }
+
 function showRoute(i){
   const r=routes[i];currentRouteIdx=i;
-  history.replaceState(null,'',location.pathname+'#rota='+encodeURIComponent(r.id));
-  document.getElementById('routeContent').innerHTML=renderRoute(r);
-  // Show trip bar only for logged-in drivers
-  const bar=document.getElementById('driverTripBar');
-  const btn=document.getElementById('btnStartTrip');
-  if(bar&&currentDriver){
-    bar.classList.add('show');
-    if(currentTrip&&currentTrip.rotaId===r.id){
-      btn.textContent='🗺️ Ver Mapa ao Vivo';btn.style.background='#1a6fb5';btn.onclick=showMapLive;btn.disabled=false;
-    }else if(currentTrip){
-      btn.textContent='🚛 Em outra viagem';btn.style.background='#9a9894';btn.disabled=true;
-    }else{
-      btn.textContent='🚛 Iniciar Viagem';btn.style.background='#1a7a3c';btn.onclick=startTrip;btn.disabled=false;
-    }
-  }else if(bar){bar.classList.remove('show');}
-  showScreen('screenRoute');
+  navPush('screenRoute',()=>{
+    document.getElementById('routeContent').innerHTML=renderRoute(r);
+    const bar=document.getElementById('driverTripBar');
+    const btn=document.getElementById('btnStartTrip');
+    if(bar&&currentDriver){
+      bar.classList.add('show');
+      if(currentTrip&&currentTrip.rotaId===r.id){
+        btn.textContent='🗺️ Ver Mapa ao Vivo';btn.style.background='#1a6fb5';btn.onclick=showMapLive;btn.disabled=false;
+      }else if(currentTrip){
+        btn.textContent='🚛 Em outra viagem';btn.style.background='#9a9894';btn.disabled=true;
+      }else{
+        btn.textContent='🚛 Iniciar Viagem';btn.style.background='#1a7a3c';btn.onclick=startTrip;btn.disabled=false;
+      }
+    }else if(bar){bar.classList.remove('show');}
+  });
 }
+
 function showMapLive(){
   if(!currentTrip){showToast('Nenhuma viagem ativa — inicie uma viagem primeiro');return;}
   const route=currentRouteIdx>=0?routes[currentRouteIdx]:null;
-  const nameEl=document.getElementById('mapLiveRouteName');
-  const statesEl=document.getElementById('mapLiveStates');
-  if(nameEl&&route)nameEl.textContent=route.nome;
-  if(statesEl&&route)statesEl.textContent=route.estados||'';
-  showScreen('screenMapLive');
-  // Reset stats
-  const ep=document.getElementById('tsPerc');if(ep)ep.textContent='—';
-  const er=document.getElementById('tsRest');if(er)er.textContent=route?route.distancia||'—':'—';
-  const et=document.getElementById('tsElapsed');if(et)et.textContent=route?route.tempo||'—':'—';
-  updateNextStopUI();
-  setTimeout(()=>{
-    initDriverMap();
-    startTracking();
-    if(!tripTimerInterval&&tripStartTs)startTripTimer();
-  },200);
+  // Se mapa já está na pilha, não empilha de novo
+  if(_navStack.includes('screenMapLive')){
+    // Só atualiza
+    const mapEl=document.getElementById('screenMapLive');
+    if(mapEl){mapEl.classList.add('active');mapEl.classList.remove('behind');}
+    return;
+  }
+  navPush('screenMapLive',()=>{
+    const nameEl=document.getElementById('mapLiveRouteName');
+    const statesEl=document.getElementById('mapLiveStates');
+    if(nameEl&&route)nameEl.textContent=route.nome;
+    if(statesEl&&route)statesEl.textContent=route.estados||'';
+    const ep=document.getElementById('tsPerc');if(ep)ep.textContent='—';
+    const er=document.getElementById('tsRest');if(er)er.textContent=route?route.distancia||'—':'—';
+    const et=document.getElementById('tsElapsed');if(et)et.textContent=route?route.tempo||'—':'—';
+    updateNextStopUI();
+    setTimeout(()=>{initDriverMap();startTracking();if(!tripTimerInterval&&tripStartTs)startTripTimer();},250);
+  });
 }
-function showAdmin(){isEditing=false;if(window._draftInterval)clearInterval(window._draftInterval);renderAdmin();showScreen('screenAdmin');}
+
+function showAdmin(){
+  isEditing=false;if(window._draftInterval)clearInterval(window._draftInterval);
+  renderAdmin();
+  navPush('screenAdmin');
+}
 
 // ═══ ADMIN LOGIN ═══
 function showAdminLogin(){
@@ -1454,29 +1551,23 @@ function showAdminLogin(){
 }
 function doAdminLogin(){
   const u=(document.getElementById('loginUser')?.value||'').trim(),p=(document.getElementById('loginPass')?.value||'').trim();
-  if(u===ADMIN_USER&&p===ADMIN_PASS){adminMode=true;document.querySelector('.login-overlay')?.remove();showAdmin();}
+  if(u===ADMIN_USER&&p===ADMIN_PASS){adminMode=true;document.querySelector('.login-overlay')?.remove();renderAdmin();navPush('screenAdmin');}
   else{const e=document.getElementById('loginError');if(e){e.style.display='block';setTimeout(()=>e.style.display='none',3000);}}
 }
 
 // ═══ DEEP LINK ═══
-function checkDeepLink(){
-  const hash=location.hash;
-  if(hash.startsWith('#rota=')){const rotaId=decodeURIComponent(hash.replace('#rota=',''));const idx=routes.findIndex(r=>r.id===rotaId);if(idx>=0){showRoute(idx);return true;}}
-  return false;
-}
-window.addEventListener('hashchange',()=>{if(!checkDeepLink())showHome()});
-const _origRenderHome=renderHome;
-renderHome=function(){_origRenderHome();checkDeepLink()};
+function checkDeepLink(){return false;} // deep links desativados com nova navegação
+window.addEventListener('hashchange',()=>{});
 
 // ═══ INIT ═══
 document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('searchInput')?.addEventListener('input',e=>filterRoutes(e.target.value));
   // Check for saved driver session
   if(loadDriverSession()){
-    // Show home and verify when Firebase loads
-    showScreen('screenHome');
+    navReset('screenHome',()=>renderHome());
+  }else{
+    navReset('screenDriverLogin');
   }
-  // If no session, screenDriverLogin is already active (default in HTML)
 });
 window.addEventListener('online',()=>{document.getElementById('offlineToast').classList.remove('show');setSyncStatus('on','Reconectado')});
 window.addEventListener('offline',()=>{const t=document.getElementById('offlineToast');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),4000);setSyncStatus('off','Sem conexão — modo offline')});
