@@ -9,10 +9,10 @@
 <title>Rotogramas — Confiança</title>
 <link rel="manifest" href="./manifest.json">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 ::-webkit-scrollbar{width:0;height:0}
@@ -248,14 +248,16 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .btn-view-static{flex:1;padding:15px;background:#eae8e3;color:#1c1c1c;border:none;border-radius:12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;cursor:pointer;min-height:52px}
 
 /* ═══ LIVE MAP SCREEN ═══ */
-.maplive-header{padding:12px 16px 10px;display:flex;align-items:center;gap:10px;flex-shrink:0;background:#1c1c1c}
-.maplive-route-name{flex:1;font-weight:700;font-size:14px;color:#fff;text-transform:uppercase;line-height:1.1}
-.live-pill{display:flex;align-items:center;gap:5px;background:rgba(31,138,61,.2);border:1px solid rgba(31,138,61,.4);border-radius:8px;padding:5px 10px;flex-shrink:0}
+#screenMapLive{background:#e8f0e8;overflow:hidden;display:block!important}
+.maplive-overlay{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;pointer-events:none}
+.maplive-header{padding:52px 14px 10px;display:flex;align-items:center;gap:10px;flex-shrink:0;background:linear-gradient(to bottom,rgba(0,0,0,.7) 0%,rgba(0,0,0,.0) 100%);pointer-events:auto}
+.maplive-route-name{font-weight:700;font-size:14px;color:#fff;text-transform:uppercase;line-height:1.1}
+.live-pill{display:flex;align-items:center;gap:5px;background:rgba(31,138,61,.25);border:1px solid rgba(31,138,61,.5);border-radius:8px;padding:5px 10px;flex-shrink:0;backdrop-filter:blur(4px)}
 .live-pill-dot{width:7px;height:7px;border-radius:50%;background:#1f8a3d;animation:livepulse 1.4s ease-in-out infinite}
 @keyframes livepulse{0%,100%{opacity:1}50%{opacity:.3}}
-.live-pill-txt{font-family:'Barlow',sans-serif;font-weight:700;font-size:10px;color:#1f8a3d;letter-spacing:.06em}
+.live-pill-txt{font-family:'Barlow',sans-serif;font-weight:700;font-size:10px;color:#4ddb7a;letter-spacing:.06em}
 .driver-map-container{flex:0 0 46vh;height:46vh;min-height:220px;background:#e8eef0;overflow:hidden}
-.maplive-panel{flex:1;overflow-y:auto;background:#fff;display:flex;flex-direction:column;min-height:0;max-height:56vh}
+.maplive-panel{flex:0 0 auto;overflow-y:auto;background:#fff;display:flex;flex-direction:column;max-height:58vh;pointer-events:auto;border-radius:16px 16px 0 0;box-shadow:0 -4px 20px rgba(0,0,0,.15)}
 .trip-stats-bar{display:flex;background:#1c1c1c;flex-shrink:0}
 .trip-stat-item{flex:1;padding:10px 8px;text-align:center;border-right:1px solid #2e2e2c}
 .trip-stat-item:last-child{border:none}
@@ -289,11 +291,12 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 /* Mapa real (Leaflet) */
 @keyframes truckpulse{0%,100%{box-shadow:0 3px 10px rgba(26,111,181,.6)}50%{box-shadow:0 3px 18px rgba(26,111,181,.9),0 0 0 6px rgba(26,111,181,.15)}}
 @keyframes nextpulse{0%,100%{box-shadow:0 3px 8px rgba(232,160,32,.5)}50%{box-shadow:0 3px 14px rgba(232,160,32,.8),0 0 0 5px rgba(232,160,32,.15)}}
-.leaflet-container{font-family:'Barlow',sans-serif}
-.leaflet-popup-content-wrapper{border-radius:12px!important;font-family:'Barlow',sans-serif;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.15)}
-.leaflet-popup-tip{background:#fff}
-.leaflet-control-zoom a{font-size:16px!important;font-weight:700!important;color:#1c1c1c!important;border-radius:8px!important}
-.leaflet-control-zoom{border:none!important;box-shadow:0 2px 8px rgba(0,0,0,.2)!important}
+.mapboxgl-popup-content{border-radius:12px!important;font-family:'Barlow',sans-serif;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.15);padding:12px 14px}
+.mapboxgl-popup-close-button{font-size:16px;color:#9a9894}
+.mapboxgl-ctrl-group{border:none!important;box-shadow:0 2px 8px rgba(0,0,0,.2)!important;border-radius:10px!important;overflow:hidden}
+.mapboxgl-ctrl-group button{border-radius:0!important;font-size:16px}
+.mapboxgl-ctrl-attrib{display:none}
+.mapboxgl-ctrl-logo{display:none!important}
 
 /* ═══ ADMIN TABS ═══ */
 .admin-tab-bar{display:flex;background:#f4f4f2;border-bottom:1px solid #e4e2dd;flex-shrink:0}
@@ -436,42 +439,55 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 </div>
 
 <!-- ═══ MAPA AO VIVO ═══ -->
-<div class="screen" id="screenMapLive" style="background:#1c1c1c;overflow:hidden">
-  <div class="maplive-header">
-    <button class="back-btn" style="background:rgba(255,255,255,.1);color:#fff" onclick="navPop()">‹</button>
-    <div>
-      <div class="maplive-route-name" id="mapLiveRouteName">Em Viagem</div>
-      <div style="font-family:'Barlow',sans-serif;font-size:10px;color:#6a6866;margin-top:1px" id="mapLiveStates"></div>
-    </div>
-    <div class="live-pill"><div class="live-pill-dot"></div><span class="live-pill-txt">AO VIVO</span></div>
-  </div>
-  <div id="driverMapEl" class="driver-map-container"></div>
-  <div class="maplive-panel">
-    <div class="trip-stats-bar">
-      <div class="trip-stat-item">
-        <div class="trip-stat-val green" id="tsPerc">—</div>
-        <div class="trip-stat-lbl">Percorrido</div>
+<div class="screen" id="screenMapLive">
+  <!-- Mapa ocupa 100% da tela (Leaflet precisa disso no iOS) -->
+  <div id="driverMapEl" style="position:absolute;inset:0;z-index:1;background:#e8f0e8"></div>
+
+  <!-- UI em overlay sobre o mapa -->
+  <div class="maplive-overlay">
+
+    <!-- Header topo -->
+    <div class="maplive-header">
+      <button class="back-btn" style="background:rgba(0,0,0,.45);color:#fff;backdrop-filter:blur(8px)" onclick="navPop()">‹</button>
+      <div style="flex:1;min-width:0">
+        <div class="maplive-route-name" id="mapLiveRouteName">Em Viagem</div>
+        <div style="font-family:'Barlow',sans-serif;font-size:10px;color:rgba(255,255,255,.6);margin-top:1px" id="mapLiveStates"></div>
       </div>
-      <div class="trip-stat-item">
-        <div class="trip-stat-val" id="tsRest">—</div>
-        <div class="trip-stat-lbl">Restante</div>
+      <div class="live-pill"><div class="live-pill-dot"></div><span class="live-pill-txt">AO VIVO</span></div>
+    </div>
+
+    <!-- Espaço transparente (mapa visível) -->
+    <div style="flex:1;min-height:0;pointer-events:none"></div>
+
+    <!-- Painel inferior -->
+    <div class="maplive-panel">
+      <div class="trip-stats-bar">
+        <div class="trip-stat-item">
+          <div class="trip-stat-val green" id="tsPerc">—</div>
+          <div class="trip-stat-lbl">Percorrido</div>
+        </div>
+        <div class="trip-stat-item">
+          <div class="trip-stat-val" id="tsRest">—</div>
+          <div class="trip-stat-lbl">Restante</div>
+        </div>
+        <div class="trip-stat-item">
+          <div class="trip-stat-val yellow" id="tsElapsed">00:00</div>
+          <div class="trip-stat-lbl">Estimado</div>
+        </div>
       </div>
-      <div class="trip-stat-item">
-        <div class="trip-stat-val yellow" id="tsElapsed">00:00</div>
-        <div class="trip-stat-lbl">Estimado</div>
+      <div id="nextStopCard" class="next-stop-card">
+        <div class="next-stop-card-label">⚡ PRÓXIMO ABASTECIMENTO</div>
+        <div class="next-stop-card-name" id="nextStopName">Calculando...</div>
+        <div class="next-stop-card-city" id="nextStopCity"></div>
+        <div class="next-stop-card-dist" id="nextStopDist"></div>
+      </div>
+      <div id="stopsList" class="maplive-stops-list"></div>
+      <div class="maplive-action-row">
+        <button class="btn-fuel-confirm" id="btnFuelConfirm" onclick="confirmFuelStop()">⛽ Confirmar Abastecimento</button>
+        <button class="btn-end-trip" onclick="promptEndTrip()">⛔ Encerrar</button>
       </div>
     </div>
-    <div id="nextStopCard" class="next-stop-card">
-      <div class="next-stop-card-label">⚡ PRÓXIMO ABASTECIMENTO</div>
-      <div class="next-stop-card-name" id="nextStopName">Calculando...</div>
-      <div class="next-stop-card-city" id="nextStopCity"></div>
-      <div class="next-stop-card-dist" id="nextStopDist"></div>
-    </div>
-    <div id="stopsList" class="maplive-stops-list"></div>
-    <div class="maplive-action-row">
-      <button class="btn-fuel-confirm" id="btnFuelConfirm" onclick="confirmFuelStop()">⛽ Confirmar Abastecimento</button>
-      <button class="btn-end-trip" onclick="promptEndTrip()">⛔ Encerrar</button>
-    </div>
+
   </div>
 </div>
 
@@ -520,6 +536,7 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 const FIREBASE_CONFIG={apiKey:"AIzaSyAbYd2RulYeBr-_IQ8G4ccmzxKf8gAjLPQ",authDomain:"rotogramas-confianca.firebaseapp.com",databaseURL:"https://rotogramas-confianca-default-rtdb.firebaseio.com",projectId:"rotogramas-confianca",storageBucket:"rotogramas-confianca.firebasestorage.app",messagingSenderId:"156398881281",appId:"1:156398881281:web:a67f3e2ee02b969ab78e00"};
 const ADMIN_USER='admin';
 const ADMIN_PASS='confianca2026';
+const MAPBOX_TOKEN='pk.eyJ1IjoibWFnbWF0cml4IiwiYSI6ImNtc2VzMnVmeDAzcG0yd3EzZ29sZ3B0bXAifQ.0GE2l_Phleota_jEOqnRMQ';
 // Coordenadas aproximadas dos pontos das rotas (lat, lng)
 // Coordenadas reais de cada ponto das rotas (lat, lng)
 // Origem/destino: centro das cidades | Postos: localização aproximada na rodovia
@@ -568,6 +585,8 @@ let currentDriver=null, currentTrip=null, currentRouteIdx=-1, _justEndedTripId=n
 let geoWatchId=null, tripTimerInterval=null, tripStartTs=null;
 let driverMap=null, driverMarker=null, stopMarkers=[];
 let monitorMap=null, monitorMarkers={}, monitorMapInit=false;
+// Mapbox specific
+let _mbTruckMarker=null, _mbStopMarkers=[], _mbMap=null;
 let db=null, firebaseReady=false, isEditing=false, editingIndex=-1, editData={};
 let adminMode=false, _cryptoKey=null;
 
@@ -986,217 +1005,195 @@ function updateTripStats(){
 }
 
 // ═══ LEAFLET — MAPA DO MOTORISTA ═══
-// ═══ MAPA REAL (Leaflet + OSRM + CartoDB) ═══
-let _routeGeometry=[];  // [[lat,lng],...] da rota real calculada pelo OSRM
-let _routeLayerDone=null, _routeLayerRest=null;
+// ═══ MAPA REAL (Mapbox GL JS + OSRM) ═══
+const ll=([lat,lng])=>[lng,lat]; // [lat,lng] → Mapbox [lng,lat]
 
 async function fetchOSRMRoute(points){
   // points: [[lat,lng],...] — OSRM espera lng,lat
   const coords=points.map(p=>p[1]+','+p[0]).join(';');
   const url='https://router.project-osrm.org/route/v1/driving/'+coords+'?overview=full&geometries=geojson&steps=false';
   try{
-    const r=await fetch(url);const d=await r.json();
+    const r=await fetch(url,{signal:AbortSignal.timeout(8000)});
+    const d=await r.json();
     if(d.code==='Ok'&&d.routes[0]){
-      // converte [lng,lat] → [lat,lng]
+      // OSRM retorna [lng,lat] — converte para [lat,lng] para uso interno
       return d.routes[0].geometry.coordinates.map(c=>[c[1],c[0]]);
     }
-  }catch(e){console.warn('OSRM error:',e);}
+  }catch(e){console.warn('OSRM:',e);}
   return null;
 }
 
-function makeIcon(html,w,h){
-  return L.divIcon({html,className:'',iconSize:[w,h],iconAnchor:[w/2,h/2]});
-}
-
-function stopIconHTML(isDone,isNext,num){
-  if(isDone)return '<div style="width:28px;height:28px;background:#1f8a3d;border:3px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 8px rgba(31,138,61,.5)">✓</div>';
-  if(isNext)return '<div style="position:relative"><div style="width:34px;height:34px;background:#e8a020;border:3px solid #fff;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 3px 10px rgba(232,160,32,.6)">⛽</div><div style="position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);background:#e8a020;color:#fff;font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:9px;padding:2px 6px;border-radius:4px;white-space:nowrap">PRÓXIMO</div></div>';
-  return '<div style="width:26px;height:26px;background:#fff;border:2.5px solid #b0aea9;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:12px;color:#9a9894;box-shadow:0 2px 5px rgba(0,0,0,.15)">'+num+'</div>';
+function makeStopEl(isDone,isNext,num){
+  const el=document.createElement('div');
+  if(isDone){
+    el.innerHTML='<div style="width:28px;height:28px;background:#1f8a3d;border:3px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 8px rgba(31,138,61,.5);cursor:pointer">✓</div>';
+  }else if(isNext){
+    el.innerHTML='<div style="position:relative"><div style="width:34px;height:34px;background:#e8a020;border:3px solid #fff;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 3px 10px rgba(232,160,32,.6);cursor:pointer">⛽</div><div style="position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);background:#e8a020;color:#fff;font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:9px;padding:2px 6px;border-radius:4px;white-space:nowrap">PRÓXIMO</div></div>';
+  }else{
+    el.innerHTML='<div style="width:26px;height:26px;background:#fff;border:2.5px solid #b0aea9;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:12px;color:#9a9894;box-shadow:0 2px 5px rgba(0,0,0,.15);cursor:pointer">'+num+'</div>';
+  }
+  return el;
 }
 
 async function initDriverMap(){
-  if(driverMap){try{driverMap.remove();}catch(e){}driverMap=null;driverMarker=null;stopMarkers=[];_routeGeometry=[];_routeLayerDone=null;_routeLayerRest=null;}
-
-  // Verifica se Leaflet carregou
-  if(typeof L==='undefined'){
-    setTimeout(initDriverMap,1500);
-    return;
-  }
+  // Limpa mapa anterior
+  if(_mbMap){try{_mbMap.remove();}catch(e){}_mbMap=null;_mbTruckMarker=null;_mbStopMarkers=[];}
+  _routeGeometry=[];_routeLayerDone=null;_routeLayerRest=null;
 
   const el=document.getElementById('driverMapEl');
   if(!el)return;
-
   const route=currentRouteIdx>=0?routes[currentRouteIdx]:null;
   if(!route)return;
   const coords=ROUTE_COORDS[route.id];if(!coords)return;
   const fuelStops=route.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino');
   const confirmed=currentTrip?.postosConfirmados||[];
 
-  // iOS Safari: precisa de altura em px explícita — vh e flex não funcionam com Leaflet
-  const ph=Math.round((window.innerHeight||screen.height)*0.44);
-  el.style.cssText=`width:100%;height:${Math.max(ph,220)}px;position:relative;background:#e8eef0;overflow:hidden;`;
+  if(typeof mapboxgl==='undefined'){setTimeout(initDriverMap,800);return;}
 
-  // Aguarda 1 frame para garantir que o container está no DOM com as dimensões corretas
-  await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+  mapboxgl.accessToken=MAPBOX_TOKEN;
+  mapboxgl.workerCount=1; // reduz uso de memória no iOS
 
-  // Inicializa o mapa
-  driverMap=L.map(el,{
-    zoomControl:false,
+  // Inicializa Mapbox GL — funciona nativamente no Safari iOS com WebGL
+  _mbMap=new mapboxgl.Map({
+    container:el,
+    style:'mapbox://styles/mapbox/streets-v12',
+    center:ll(coords.orig),
+    zoom:7,
     attributionControl:false,
-    preferCanvas:true,   // melhor performance no iOS
-    tap:true,            // suporte a toque no iOS
-    tapTolerance:15,
-  }).setView(coords.orig,7);
+    logoPosition:'bottom-left',
+  });
 
-  // OSM como tile principal (mais confiável, sem CORS issues)
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-    maxZoom:19,
-    subdomains:['a','b','c'],
-    detectRetina:true,
-  }).addTo(driverMap);
+  _mbMap.addControl(new mapboxgl.NavigationControl({showCompass:false}),'top-right');
 
-  L.control.zoom({position:'topright'}).addTo(driverMap);
-
-  // Força recálculo de tamanho após adicionar tiles
-  driverMap.invalidateSize({animate:false});
-
-  // Loading indicator
-  const loadEl=document.createElement('div');
-  loadEl.id='mapLoader';
-  loadEl.style.cssText='position:absolute;bottom:70px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.72);color:#fff;padding:9px 16px;border-radius:10px;font-family:Barlow,sans-serif;font-size:12px;z-index:500;pointer-events:none;white-space:nowrap';
-  loadEl.innerHTML='🗺️ Calculando rota nas estradas...';
-  el.style.position='relative';
-  el.appendChild(loadEl);
-
-  // Waypoints: origem → postos → destino
-  const waypoints=[coords.orig,...coords.stops,coords.dest];
-
-  // Busca rota real pelo OSRM (gratuito, sem chave de API)
-  let geometry=await fetchOSRMRoute(waypoints);
-  document.getElementById('mapLoader')?.remove();
-
-  if(!geometry||geometry.length<2){
-    // Fallback: linha reta entre os pontos se OSRM falhar
-    geometry=waypoints;
-    const fallback=document.createElement('div');
-    fallback.style.cssText='position:absolute;bottom:70px;left:50%;transform:translateX(-50%);background:rgba(232,160,32,.9);color:#fff;padding:8px 14px;border-radius:9px;font-family:Barlow,sans-serif;font-size:11px;z-index:500;pointer-events:none';
-    fallback.textContent='⚠️ Sem conexão — mostrando rota estimada';
-    el.appendChild(fallback);setTimeout(()=>fallback.remove(),4000);
-  }
-  _routeGeometry=geometry;
-
-  // Calcula posição atual do caminhão na geometria
-  const progress=calcGPSProgress();
-  const truckIdx=Math.min(Math.floor(progress*(_routeGeometry.length-1)),_routeGeometry.length-2);
-  const truckPt=_routeGeometry[truckIdx]||coords.orig;
-
-  // Linha verde = trecho percorrido
-  _routeLayerDone=L.polyline(_routeGeometry.slice(0,truckIdx+1),
-    {color:'#1f8a3d',weight:5,opacity:.92,lineCap:'round',lineJoin:'round'}).addTo(driverMap);
-  // Linha azul tracejada = trecho restante
-  _routeLayerRest=L.polyline(_routeGeometry.slice(truckIdx),
-    {color:'#1a6fb5',weight:5,opacity:.82,lineCap:'round',lineJoin:'round',dashArray:'12,7'}).addTo(driverMap);
-
-  // Markers de postos
+  // Marcadores de postos (podem ser adicionados antes do map.load)
   coords.stops.forEach((c,i)=>{
     const s=fuelStops[i];
     const isDone=confirmed.includes(i),isNext=i===confirmed.length;
-    const sz=isNext?[34,52]:[28,28];
-    const mk=L.marker(c,{icon:makeIcon(stopIconHTML(isDone,isNext,i+1),sz[0],sz[1]),zIndexOffset:isNext?100:0}).addTo(driverMap);
-    if(s)mk.bindPopup('<b>'+s.nome+'</b><br>'+s.cidade+'<br><small>'+( s.litragem||'')+(s.cartao?' · '+s.cartao:'')+'</small>');
-    stopMarkers.push(mk);
+    const markerEl=makeStopEl(isDone,isNext,i+1);
+    const mk=new mapboxgl.Marker(markerEl).setLngLat(ll(c)).addTo(_mbMap);
+    if(s)mk.setPopup(new mapboxgl.Popup({offset:20}).setHTML('<b>'+s.nome+'</b><br>'+s.cidade+'<br><small>'+(s.litragem||'')+'</small>'));
+    _mbStopMarkers.push(mk);
   });
 
-  // Origem e destino
-  L.marker(coords.orig,{icon:makeIcon('<div style="width:26px;height:26px;background:#262625;border:2.5px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 2px 6px rgba(0,0,0,.4)">🏠</div>',26,26),zIndexOffset:50}).addTo(driverMap);
-  L.marker(coords.dest,{icon:makeIcon('<div style="width:26px;height:26px;background:#262625;border:2.5px solid #fff;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 2px 6px rgba(0,0,0,.4)">🏁</div>',26,26),zIndexOffset:50}).addTo(driverMap);
+  // Origem
+  const origEl=document.createElement('div');
+  origEl.innerHTML='<div style="width:26px;height:26px;background:#262625;border:2.5px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 2px 6px rgba(0,0,0,.4)">🏠</div>';
+  new mapboxgl.Marker(origEl).setLngLat(ll(coords.orig)).addTo(_mbMap);
+
+  // Destino
+  const destEl=document.createElement('div');
+  destEl.innerHTML='<div style="width:26px;height:26px;background:#262625;border:2.5px solid #fff;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 2px 6px rgba(0,0,0,.4)">🏁</div>';
+  new mapboxgl.Marker(destEl).setLngLat(ll(coords.dest)).addTo(_mbMap);
 
   // Caminhão
-  const truckIcon=L.divIcon({html:'<div style="width:36px;height:36px;background:#1a6fb5;border:3px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 3px 14px rgba(26,111,181,.65)">🚛</div><div style="position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);background:#1a6fb5;color:#fff;font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:9px;padding:2px 6px;border-radius:4px;white-space:nowrap">Você</div>',className:'',iconSize:[36,58],iconAnchor:[18,18]});
-  driverMarker=L.marker(truckPt,{icon:truckIcon,zIndexOffset:1000}).addTo(driverMap);
+  const truckEl=document.createElement('div');
+  truckEl.innerHTML='<div style="width:36px;height:36px;background:#1a6fb5;border:3px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 3px 14px rgba(26,111,181,.65)">🚛</div><div style="position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);background:#1a6fb5;color:#fff;font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:9px;padding:2px 6px;border-radius:4px;white-space:nowrap">Você</div>';
+  _mbTruckMarker=new mapboxgl.Marker(truckEl).setLngLat(ll(coords.orig)).addTo(_mbMap);
 
-  // Ajusta zoom para mostrar a rota toda
-  try{driverMap.fitBounds(L.latLngBounds(_routeGeometry),{padding:[40,40],maxZoom:12});}catch(e){}
+  // Quando o mapa carregar: adiciona rota
+  _mbMap.on('load',async()=>{
+    const loadEl=document.createElement('div');
+    loadEl.id='mapLoader';
+    loadEl.style.cssText='position:fixed;bottom:42%;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.75);color:#fff;padding:10px 18px;border-radius:10px;font-family:Barlow,sans-serif;font-size:13px;z-index:9999;pointer-events:none;white-space:nowrap';
+    loadEl.textContent='🗺️ Calculando rota nas estradas...';
+    document.body.appendChild(loadEl);
 
-  // Força recálculo de tamanho múltiplas vezes (iOS precisa disso)
-  [200,600,1200].forEach(ms=>setTimeout(()=>{
-    if(driverMap){
-      driverMap.invalidateSize({animate:false});
-      if(ms===600&&_routeGeometry.length>1){
-        try{driverMap.fitBounds(L.latLngBounds(_routeGeometry),{padding:[40,40],maxZoom:12});}catch(e){}
-      }
+    const waypoints=[coords.orig,...coords.stops,coords.dest];
+    let geom=await fetchOSRMRoute(waypoints);
+    document.getElementById('mapLoader')?.remove();
+
+    if(!geom||geom.length<2){
+      geom=waypoints; // fallback: pontos diretos
+      showToast('⚠️ Sem acesso ao OSRM — rota estimada','#e8a020');
     }
-  },ms));
+    _routeGeometry=geom;
 
-  // Pega posição GPS real do dispositivo
+    const progress=calcGPSProgress();
+    const splitIdx=Math.min(Math.floor(progress*(geom.length-1)),geom.length-2)||0;
+    const mbDone=geom.slice(0,splitIdx+1).map(p=>ll(p));
+    const mbRest=geom.slice(splitIdx).map(p=>ll(p));
+
+    // Linha percorrida (verde)
+    _mbMap.addSource('route-done',{type:'geojson',data:{type:'Feature',geometry:{type:'LineString',coordinates:mbDone.length>1?mbDone:[mbDone[0],mbDone[0]]}}});
+    _mbMap.addLayer({id:'route-done',type:'line',source:'route-done',paint:{'line-color':'#1f8a3d','line-width':5,'line-opacity':.92,'line-cap':'round','line-join':'round'}});
+
+    // Linha restante (azul tracejada)
+    _mbMap.addSource('route-rest',{type:'geojson',data:{type:'Feature',geometry:{type:'LineString',coordinates:mbRest.length>1?mbRest:[mbRest[0],mbRest[0]]}}});
+    _mbMap.addLayer({id:'route-rest',type:'line',source:'route-rest',paint:{'line-color':'#1a6fb5','line-width':5,'line-opacity':.85,'line-dasharray':[3,2],'line-cap':'round','line-join':'round'}});
+
+    // Ajusta câmera para mostrar rota toda
+    const bounds=new mapboxgl.LngLatBounds();
+    geom.forEach(p=>bounds.extend(ll(p)));
+    _mbMap.fitBounds(bounds,{padding:60,maxZoom:11,duration:800});
+
+    // Posiciona caminhão corretamente
+    if(splitIdx>0&&geom[splitIdx])_mbTruckMarker.setLngLat(ll(geom[splitIdx]));
+  });
+
+  // GPS real do dispositivo
   if(navigator.geolocation){
     navigator.geolocation.getCurrentPosition(pos=>{
       updateDriverMarkerPos(pos.coords.latitude,pos.coords.longitude);
-    },()=>{},{enableHighAccuracy:true,timeout:8000});
+    },()=>{},{enableHighAccuracy:true,timeout:10000});
   }
 }
 
-function calcGPSProgress(){
-  if(!currentTrip||currentRouteIdx<0)return 0;
-  const route=routes[currentRouteIdx];if(!route)return 0;
-  const totalKm=parseInt((route.distancia||'0').replace(/[^0-9]/g,''));
-  const traveled=currentTrip.distanciaPercorrida||0;
-  if(totalKm>0&&traveled>0)return Math.min(traveled/totalKm,0.97);
-  const fs=route.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino');
-  const conf=currentTrip?.postosConfirmados||[];
-  if(!fs.length)return 0;
-  return Math.min(conf.length/(fs.length+1),0.95);
-}
-
 function updateDriverMarkerPos(lat,lng){
-  if(!driverMap)return;
-  const pos=[lat,lng];
-  if(!driverMarker){
-    const icon=L.divIcon({html:'<div style="width:36px;height:36px;background:#1a6fb5;border:3px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 3px 14px rgba(26,111,181,.65)">🚛</div><div style="position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);background:#1a6fb5;color:#fff;font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:9px;padding:2px 6px;border-radius:4px;white-space:nowrap">Você</div>',className:'',iconSize:[36,58],iconAnchor:[18,18]});
-    driverMarker=L.marker(pos,{icon,zIndexOffset:1000}).addTo(driverMap);
-  }else{driverMarker.setLatLng(pos);}
-  driverMap.panTo(pos,{animate:true,duration:0.8});
+  if(!_mbMap||!_mbTruckMarker)return;
+  _mbTruckMarker.setLngLat([lng,lat]);
+  _mbMap.easeTo({center:[lng,lat],duration:800});
   _updateRouteColors(lat,lng);
 }
 
 function _updateRouteColors(lat,lng){
-  if(!_routeGeometry.length||!_routeLayerDone||!_routeLayerRest)return;
-  // Encontra o ponto mais próximo na geometria da rota
+  if(!_routeGeometry.length||!_mbMap||!_mbMap.getSource('route-done'))return;
   let minD=Infinity,closeIdx=0;
   _routeGeometry.forEach((p,i)=>{const d=calcDistance(lat,lng,p[0],p[1]);if(d<minD){minD=d;closeIdx=i;}});
-  _routeLayerDone.setLatLngs(_routeGeometry.slice(0,closeIdx+1));
-  _routeLayerRest.setLatLngs(_routeGeometry.slice(closeIdx));
+  const mbDone=_routeGeometry.slice(0,closeIdx+1).map(p=>ll(p));
+  const mbRest=_routeGeometry.slice(closeIdx).map(p=>ll(p));
+  try{
+    _mbMap.getSource('route-done')?.setData({type:'Feature',geometry:{type:'LineString',coordinates:mbDone.length>1?mbDone:[mbDone[0],mbDone[0]]}});
+    _mbMap.getSource('route-rest')?.setData({type:'Feature',geometry:{type:'LineString',coordinates:mbRest.length>1?mbRest:[mbRest[0],mbRest[0]]}});
+  }catch(e){}
 }
 
 function updateSVGProgress(){
-  // Chamado após atualizar distanciaPercorrida — atualiza cores da rota
-  if(driverMarker&&driverMap){
-    const p=driverMarker.getLatLng();
+  if(_mbTruckMarker&&_mbMap){
+    const p=_mbTruckMarker.getLngLat();
     if(p)_updateRouteColors(p.lat,p.lng);
   }
 }
-function svgZoomIn(){if(driverMap)driverMap.zoomIn();}
-function svgZoomOut(){if(driverMap)driverMap.zoomOut();}
+function svgZoomIn(){if(_mbMap)_mbMap.zoomIn();}
+function svgZoomOut(){if(_mbMap)_mbMap.zoomOut();}
 
-// ═══ LEAFLET — MAPA MONITOR ═══
+// ═══ MAPA MONITOR (Mapbox GL JS) ═══
 function initMonitorMap(){
   if(monitorMapInit)return;
-  const el=document.getElementById('monitorMapEl');if(!el||el.offsetHeight===0)return;
-  monitorMap=L.map('monitorMapEl',{zoomControl:true,attributionControl:false}).setView([-15.77,-47.93],5);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(monitorMap);
+  const el=document.getElementById('monitorMapEl');if(!el)return;
+  if(typeof mapboxgl==='undefined'){setTimeout(initMonitorMap,800);return;}
+  mapboxgl.accessToken=MAPBOX_TOKEN;
+  monitorMap=new mapboxgl.Map({
+    container:el,
+    style:'mapbox://styles/mapbox/streets-v12',
+    center:[-47.93,-15.77],
+    zoom:4,
+    attributionControl:false,
+  });
+  monitorMap.addControl(new mapboxgl.NavigationControl({showCompass:false}),'top-right');
   monitorMapInit=true;
-  updateMonitorMap();
+  monitorMap.on('load',()=>updateMonitorMap());
 }
 function updateMonitorMap(){
-  if(!monitorMap)return;
+  if(!monitorMap||!monitorMapInit)return;
   // Remove old markers
   Object.values(monitorMarkers).forEach(m=>m.remove());
   monitorMarkers={};
   Object.values(posicoes).forEach(p=>{
     if(!p.lat||!p.lng)return;
-    const icon=L.divIcon({html:'<div style="background:#1a6fb5;color:#fff;font-size:10px;font-weight:700;padding:4px 6px;border-radius:8px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.3)">🚛 '+p.motoristaNome.split(' ')[0]+'</div>',className:'',iconAnchor:[0,0]});
-    const mk=L.marker([p.lat,p.lng],{icon}).addTo(monitorMap);
-    mk.bindPopup('<b>'+p.motoristaNome+'</b><br>'+p.rotaNome+'<br><small>'+new Date(p.timestamp).toLocaleTimeString('pt-BR')+'</small>');
+    const el=document.createElement('div');
+    el.innerHTML='<div style="background:#1a6fb5;color:#fff;font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;padding:5px 8px;border-radius:9px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.3)">🚛 '+p.motoristaNome.split(' ')[0]+'</div>';
+    const mk=new mapboxgl.Marker(el).setLngLat([p.lng,p.lat]).addTo(monitorMap);
+    mk.setPopup(new mapboxgl.Popup({offset:20}).setHTML('<b>'+p.motoristaNome+'</b><br>'+p.rotaNome+'<br><small>'+new Date(p.timestamp).toLocaleTimeString('pt-BR')+'</small>'));
     monitorMarkers[p.motoristaId]=mk;
   });
 }
@@ -1632,6 +1629,9 @@ function navReset(id,setupFn){
     s.style.visibility='hidden';
     s.scrollTop=0;
   });
+  // Restore driverMapEl inline styles after navReset clears them
+  const dme=document.getElementById('driverMapEl');
+  if(dme)dme.style.cssText='position:absolute;inset:0;z-index:1;background:#e8f0e8';
   _navStack=[id];
   const el=document.getElementById(id);
   if(el){
@@ -1702,16 +1702,12 @@ function showMapLive(){
     const er=document.getElementById('tsRest');if(er)er.textContent=route?route.distancia||'—':'—';
     const et=document.getElementById('tsElapsed');if(et)et.textContent=route?route.tempo||'—':'—';
     updateNextStopUI();
-    // iOS Safari: aguarda a transição de tela completar antes de iniciar o mapa
+    // Aguarda transição de tela (navPush 260ms) + tempo para o container ter dimensões
     setTimeout(async()=>{
       await initDriverMap();
-      // Segundo invalidateSize após tudo renderizado
-      if(driverMap){
-        setTimeout(()=>driverMap?.invalidateSize({animate:false}),300);
-      }
       startTracking();
       if(!tripTimerInterval&&tripStartTs)startTripTimer();
-    },500);
+    },400);
   });
 }
 
