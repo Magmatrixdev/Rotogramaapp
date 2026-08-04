@@ -238,8 +238,8 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 /* ═══ DRIVER TRIP BAR (bottom of route screen) ═══ */
 .driver-trip-bar{display:none;padding:14px 20px;background:#f4f4f2;border-top:1px solid #e4e2dd;gap:10px}
 .driver-trip-bar.show{display:flex}
-.btn-start-trip{flex:1;padding:15px;background:#fe2627;color:#fff;border:none;border-radius:12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;cursor:pointer;min-height:52px}
-.btn-start-trip:active{background:#e01f20}
+.btn-start-trip{flex:1;padding:15px;background:#1a7a3c;color:#fff;border:none;border-radius:12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;cursor:pointer;min-height:52px}
+.btn-start-trip:active{background:#145f2e}
 .btn-view-static{flex:1;padding:15px;background:#eae8e3;color:#1c1c1c;border:none;border-radius:12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;cursor:pointer;min-height:52px}
 
 /* ═══ LIVE MAP SCREEN ═══ */
@@ -319,6 +319,8 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .monitor-driver-route{font-family:'Barlow',sans-serif;font-size:11px;color:#9a9894;margin-top:2px}
 .monitor-driver-time{font-family:'Barlow',sans-serif;font-size:10px;color:#b0aea9;margin-top:2px}
 .monitor-no-trips{text-align:center;padding:40px 20px;color:#9a9894;font-family:'Barlow',sans-serif}
+
+@keyframes fadeInSuccess{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
 
 /* ═══ BI / ANÁLISE ═══ */
 .bi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px 20px 0}
@@ -623,7 +625,7 @@ async function doDriverRegister(){
     currentDriver=driver;
     localStorage.setItem('drv_session',JSON.stringify({id,nome,pinHash}));
     if(db){db.ref('motoristas/'+id).set(driver).catch(e=>console.warn('Firebase sync pending:',e));}
-    showHome();
+    showSuccessMessage(nome);
   }catch(err){
     console.error('Erro no cadastro:',err);
     showErr('Erro ao criar conta: '+(err.message||'tente novamente'));
@@ -675,7 +677,14 @@ function loadDriverSession(){
 function verifyDriverSession(){
   if(!currentDriver||!currentDriver._fromSession)return;
   const d=drivers[currentDriver.id];
-  if(!d||d.bloqueado||d.pinHash!==currentDriver.pinHash){currentDriver=null;localStorage.removeItem('drv_session');showDriverLogin();return;}
+  // Se Firebase ainda não carregou (drivers vazio), aguarda — não apaga a sessão
+  if(!d&&Object.keys(drivers).length===0){
+    setTimeout(verifyDriverSession,1500); // tenta novamente após Firebase carregar
+    return;
+  }
+  if(!d||d.bloqueado||d.pinHash!==currentDriver.pinHash){
+    currentDriver=null;localStorage.removeItem('drv_session');showDriverLogin();return;
+  }
   currentDriver=d;
 }
 function logoutDriver(){currentDriver=null;localStorage.removeItem('drv_session');showDriverLogin();}
@@ -689,17 +698,19 @@ function switchAuthTab(tab){
 
 // ═══ TRIP MANAGEMENT ═══
 async function startTrip(){
-  if(!currentDriver||currentRouteIdx<0)return;
+  if(!currentDriver){showToast('Faça login como motorista primeiro');return;}
+  if(currentRouteIdx<0){showToast('Selecione uma rota primeiro');return;}
   const route=routes[currentRouteIdx];
   const id='vgm_'+Date.now();
-  const trip={id,motoristaId:currentDriver.id,motoristaNome:currentDriver.nome,rotaId:route.id,rotaNome:route.nome,status:'em_viagem',iniciadaEm:Date.now(),finalizadaEm:null,postosConfirmados:[]};
-  if(db){await db.ref('viagens/'+id).set(trip);}
+  const trip={id,motoristaId:currentDriver.id,motoristaNome:currentDriver.nome,rotaId:route.id,rotaNome:route.nome,status:'em_viagem',iniciadaEm:Date.now(),finalizadaEm:null,postosConfirmados:[],distanciaPercorrida:0};
+  // Inicia localmente imediato — não bloqueia em Firebase
   currentTrip=trip;
   tripStartTs=trip.iniciadaEm;
-  startTracking();
-  startTripTimer();
   updateActiveTripBanner();
   showMapLive();
+  // Salva no Firebase em background
+  if(db){db.ref('viagens/'+id).set(trip).catch(e=>console.warn('Trip save pending:',e));}
+  startTripTimer();
 }
 async function promptEndTrip(){
   const ov=document.createElement('div');ov.className='confirm-overlay';
@@ -709,25 +720,31 @@ async function promptEndTrip(){
 async function endTrip(){
   if(!currentTrip)return;
   stopTracking();stopTripTimer();
-  if(db){await db.ref('viagens/'+currentTrip.id+'/status').set('finalizada');await db.ref('viagens/'+currentTrip.id+'/finalizadaEm').set(Date.now());await db.ref('posicoes/'+currentDriver.id).remove();}
+  const tripId=currentTrip.id;
+  const driverId=currentDriver?.id;
   currentTrip=null;tripStartTs=null;
   updateActiveTripBanner();
   showHome();
+  // Firebase em background — não bloqueia
+  if(db&&tripId){
+    db.ref('viagens/'+tripId+'/status').set('finalizada').catch(()=>{});
+    db.ref('viagens/'+tripId+'/finalizadaEm').set(Date.now()).catch(()=>{});
+    if(driverId)db.ref('posicoes/'+driverId).remove().catch(()=>{});
+  }
 }
 async function confirmFuelStop(){
   if(!currentTrip||!currentDriver)return;
-  const route=routes[currentRouteIdx];
-  if(!route)return;
+  const route=routes[currentRouteIdx];if(!route)return;
   const stops=route.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino');
   const confirmed=currentTrip.postosConfirmados||[];
   const nextIdx=confirmed.length;
   if(nextIdx>=stops.length)return;
   const newConfirmed=[...confirmed,nextIdx];
-  if(db)await db.ref('viagens/'+currentTrip.id+'/postosConfirmados').set(newConfirmed);
-  currentTrip.postosConfirmados=newConfirmed;
+  currentTrip.postosConfirmados=newConfirmed; // local first
   updateNextStopUI();
-  document.getElementById('btnFuelConfirm').classList.remove('show');
-  showToast('✅ Abastecimento confirmado!');
+  document.getElementById('btnFuelConfirm')?.classList.remove('show');
+  showToast('✅ Abastecimento confirmado!','#1a7a3c');
+  if(db)db.ref('viagens/'+currentTrip.id+'/postosConfirmados').set(newConfirmed).catch(()=>{});
 }
 function checkActiveTrip(){
   if(!currentDriver)return;
@@ -816,8 +833,13 @@ function updateTripStats(){
 
 // ═══ LEAFLET — MAPA DO MOTORISTA ═══
 function initDriverMap(){
-  if(driverMap){driverMap.remove();driverMap=null;driverMarker=null;stopMarkers=[];}
+  if(driverMap){try{driverMap.remove();}catch(e){}driverMap=null;driverMarker=null;stopMarkers=[];}
   const el=document.getElementById('driverMapEl');if(!el)return;
+  if(typeof L==='undefined'){
+    el.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;background:#1a2a1a;flex-direction:column;gap:12px"><div style="font-size:36px">🗺️</div><div style="color:#fff;font-family:Barlow,sans-serif;font-size:14px;text-align:center">Carregando mapa...<br><small style="opacity:.6">Verifique sua conexão</small></div></div>';
+    setTimeout(initDriverMap,2000);return;
+  }
+  try{
   driverMap=L.map('driverMapEl',{zoomControl:true,attributionControl:false}).setView([-15.77,-47.93],6);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(driverMap);
   // Add stop markers for current route
@@ -840,8 +862,9 @@ function initDriverMap(){
       const {latitude:lat,longitude:lng}=pos.coords;
       updateDriverMarkerPos(lat,lng);
       driverMap.setView([lat,lng],12);
-    });
+    },()=>{});
   }
+  }catch(e){console.error('Leaflet init error:',e);const el=document.getElementById('driverMapEl');if(el)el.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;background:#1a2a1a;color:#fff;font-family:Barlow,sans-serif;font-size:13px;text-align:center;padding:20px">Erro ao carregar mapa.<br>Verifique sua conexão e reabra a viagem.</div>';}
 }
 function updateDriverMarkerPos(lat,lng){
   if(!driverMap)return;
@@ -1202,11 +1225,34 @@ function cancelEdit(){
   ov.innerHTML=`<div class="confirm-box"><h3>Sair da edição?</h3><p>Seu rascunho foi salvo automaticamente.</p><div class="btns"><button style="background:#eae8e3;color:#1c1c1c" onclick="clearDraft();this.closest('.confirm-overlay').remove();showAdmin()">Descartar</button><button style="background:#fe2627;color:#fff" onclick="this.closest('.confirm-overlay').remove();showAdmin()">Manter rascunho</button></div></div>`;
   document.body.appendChild(ov);}
 
-// ═══ TOAST ═══
-function showToast(msg){const t=document.createElement('div');t.className='offline-toast';t.textContent=msg;t.style.display='block';document.body.appendChild(t);setTimeout(()=>t.remove(),3000);}
+// ═══ TOAST & SUCCESS ═══
+function showToast(msg,color){
+  const t=document.createElement('div');t.className='offline-toast';
+  if(color)t.style.background=color;
+  t.textContent=msg;t.style.display='block';document.body.appendChild(t);
+  setTimeout(()=>t.remove(),3500);
+}
+function showSuccessMessage(nome){
+  // Mostra overlay de sucesso por 1.8s antes de entrar no app
+  const ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;background:#1a7a3c;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;animation:fadeInSuccess .3s ease';
+  ov.innerHTML=`
+    <div style="font-size:64px;margin-bottom:16px">✅</div>
+    <div style="font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:26px;color:#fff;text-transform:uppercase">Cadastro realizado!</div>
+    <div style="font-family:Barlow,sans-serif;font-size:15px;color:rgba(255,255,255,.8);margin-top:8px">Bem-vindo, ${nome.split(' ')[0]}!</div>
+    <div style="font-family:Barlow,sans-serif;font-size:13px;color:rgba(255,255,255,.6);margin-top:24px">Entrando no app...</div>`;
+  document.body.appendChild(ov);
+  setTimeout(()=>{ov.remove();showHome();},2000);
+}
 
 // ═══ NAV ═══
-function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0);}
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>{s.classList.remove('active');});
+  const el=document.getElementById(id);
+  if(el){el.classList.add('active');el.scrollTop=0;}
+  window.scrollTo({top:0,left:0,behavior:'instant'});
+  document.body.scrollTop=0;document.documentElement.scrollTop=0;
+}
 function showDriverLogin(){showScreen('screenDriverLogin');}
 function showHome(){
   if(!currentDriver&&!adminMode){showDriverLogin();return;}
@@ -1222,25 +1268,32 @@ function showRoute(i){
   const btn=document.getElementById('btnStartTrip');
   if(bar&&currentDriver){
     bar.classList.add('show');
-    // If already in a trip for this route, change button
-    if(currentTrip&&currentTrip.rotaId===r.id){btn.textContent='🗺️ Ver Mapa ao Vivo';btn.onclick=showMapLive;}
-    else if(currentTrip){btn.textContent='🚛 Em outra viagem';btn.disabled=true;}
-    else{btn.textContent='🚛 Iniciar Viagem';btn.onclick=startTrip;btn.disabled=false;}
+    if(currentTrip&&currentTrip.rotaId===r.id){
+      btn.textContent='🗺️ Ver Mapa ao Vivo';btn.style.background='#1a6fb5';btn.onclick=showMapLive;btn.disabled=false;
+    }else if(currentTrip){
+      btn.textContent='🚛 Em outra viagem';btn.style.background='#9a9894';btn.disabled=true;
+    }else{
+      btn.textContent='🚛 Iniciar Viagem';btn.style.background='#1a7a3c';btn.onclick=startTrip;btn.disabled=false;
+    }
   }else if(bar){bar.classList.remove('show');}
   showScreen('screenRoute');
 }
 function showMapLive(){
-  if(!currentTrip){showToast('Nenhuma viagem ativa');return;}
+  if(!currentTrip){showToast('Nenhuma viagem ativa — inicie uma viagem primeiro');return;}
   const route=currentRouteIdx>=0?routes[currentRouteIdx]:null;
   const nameEl=document.getElementById('mapLiveRouteName');
   if(nameEl&&route)nameEl.textContent=route.nome;
   showScreen('screenMapLive');
+  // Reset trip stats display
+  const el=document.getElementById('tsElapsed');if(el)el.textContent='00:00';
+  const ep=document.getElementById('tsPerc');if(ep)ep.textContent='—';
+  const er=document.getElementById('tsRest');if(er)er.textContent=route?route.distancia||'—':'—';
   setTimeout(()=>{
     initDriverMap();
     startTracking();
     updateNextStopUI();
     if(!tripTimerInterval&&tripStartTs)startTripTimer();
-  },100);
+  },150);
 }
 function showAdmin(){isEditing=false;if(window._draftInterval)clearInterval(window._draftInterval);renderAdmin();showScreen('screenAdmin');}
 
