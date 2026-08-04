@@ -1030,14 +1030,75 @@ async function fetchOSRMRoute(points){
   const coords=points.map(p=>p[1]+','+p[0]).join(';');
   const url='https://router.project-osrm.org/route/v1/driving/'+coords+'?overview=full&geometries=geojson&steps=false';
   try{
-    const r=await fetch(url,{signal:AbortSignal.timeout(8000)});
+    // AbortController manual — compatível com iOS 13+
+    const ctrl=new AbortController();
+    const tid=setTimeout(()=>ctrl.abort(),12000);
+    const r=await fetch(url,{signal:ctrl.signal});
+    clearTimeout(tid);
     const d=await r.json();
     if(d.code==='Ok'&&d.routes[0]){
-      // OSRM retorna [lng,lat] — converte para [lat,lng] para uso interno
       return d.routes[0].geometry.coordinates.map(c=>[c[1],c[0]]);
     }
-  }catch(e){console.warn('OSRM:',e);}
+    console.warn('OSRM code:',d.code);
+  }catch(e){console.warn('OSRM erro:',e.message);}
   return null;
+}
+
+// Cache de geocodificação (localStorage para persistir entre sessões)
+function _geoCache(){try{return JSON.parse(localStorage.getItem('_geocache')||'{}');}catch(e){return {};}}
+function _saveGeoCache(k,v){try{const c=_geoCache();c[k]=v;localStorage.setItem('_geocache',JSON.stringify(c));}catch(e){}}
+
+async function geocodeCity(nome){
+  const key=nome.toLowerCase().replace(/[\s\-—]+/g,'_').replace(/[^a-z0-9_]/g,'').slice(0,40);
+  const cache=_geoCache();
+  if(cache[key])return cache[key];
+  try{
+    const q=encodeURIComponent(nome.split('—')[0].split('–')[0].trim()+', Brasil');
+    const url='https://nominatim.openstreetmap.org/search?q='+q+'&format=json&limit=1&countrycodes=br';
+    const ctrl=new AbortController();const tid=setTimeout(()=>ctrl.abort(),8000);
+    const r=await fetch(url,{signal:ctrl.signal,headers:{'Accept':'application/json'}});
+    clearTimeout(tid);
+    const d=await r.json();
+    if(d[0]){const c=[parseFloat(d[0].lat),parseFloat(d[0].lon)];_saveGeoCache(key,c);return c;}
+  }catch(e){console.warn('Geocode:',e.message);}
+  return null;
+}
+
+async function getCoordsForRoute(route){
+  // 1. Verifica cache estático ROUTE_COORDS
+  if(ROUTE_COORDS[route.id]){
+    // Completa stops faltando via geocode
+    const rc=ROUTE_COORDS[route.id];
+    const fuelStops=route.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino');
+    if(rc.stops.length<fuelStops.length){
+      // Geocodifica postos que faltam
+      const newStops=[...rc.stops];
+      for(let i=rc.stops.length;i<fuelStops.length;i++){
+        const c=await geocodeCity(fuelStops[i].cidade||fuelStops[i].nome);
+        newStops.push(c||rc.orig);
+        if(i<fuelStops.length-1)await new Promise(r=>setTimeout(r,600));
+      }
+      return{orig:rc.orig,stops:newStops,dest:rc.dest};
+    }
+    return rc;
+  }
+  // 2. Geocodifica dinamicamente para rotas criadas no admin
+  const orig=route.paradas.find(p=>p.tipo==='origem');
+  const dest=route.paradas.find(p=>p.tipo==='destino');
+  const fuelStops=route.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino');
+  const origC=orig?await geocodeCity(orig.nome):null;
+  if(!origC)return null;
+  await new Promise(r=>setTimeout(r,600));
+  const destC=dest?await geocodeCity(dest.nome):null;
+  if(!destC)return null;
+  const stopCoords=[];
+  for(const s of fuelStops){
+    await new Promise(r=>setTimeout(r,600));
+    const c=await geocodeCity(s.cidade||s.nome);
+    stopCoords.push(c||origC);
+  }
+  const result={orig:origC,stops:stopCoords,dest:destC};
+  return result;
 }
 
 function makeStopEl(isDone,isNext,num){
@@ -1070,36 +1131,44 @@ async function initDriverMap(){
   }
   showMapStatus('Iniciando mapa...');
 
-  // 1. Verificar se Mapbox GL carregou
+  try{
+
+  // 1. Verificar Mapbox
   if(typeof mapboxgl==='undefined'){
-    showMapStatus('⚠️ Mapbox não carregou.<br>Tentando novamente...','#e8a020');
+    showMapStatus('⏳ Mapbox ainda carregando... (tentando novamente)','#e8a020');
     setTimeout(initDriverMap,1000);return;
   }
 
   // 2. Verificar WebGL
-  if(!mapboxgl.supported()){
-    showMapStatus('❌ WebGL não suportado neste dispositivo.','#fe2627');
-    return;
-  }
+  let supported=false;
+  try{supported=mapboxgl.supported();}catch(e){showMapStatus('❌ mapboxgl.supported() erro: '+e.message,'#fe2627');return;}
+  if(!supported){showMapStatus('❌ WebGL não suportado neste dispositivo','#fe2627');return;}
 
+  // 3. Rota e coordenadas
   const route=currentRouteIdx>=0?routes[currentRouteIdx]:null;
-  if(!route)return;
-  const coords=ROUTE_COORDS[route.id];if(!coords)return;
+  if(!route){showMapStatus('❌ Rota não encontrada. idx='+currentRouteIdx,'#fe2627');return;}
+
+  showMapStatus('🔍 Localizando coordenadas da rota...');
+  const coords=await getCoordsForRoute(route);
+  if(!coords){showMapStatus('❌ Não foi possível obter coordenadas para: '+route.nome+'<br>Verifique sua conexão.','#fe2627');return;}
   const fuelStops=route.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino');
   const confirmed=currentTrip?.postosConfirmados||[];
-
-  showMapStatus('Conectando ao Mapbox...');
 
   mapboxgl.accessToken=MAPBOX_TOKEN;
 
   // Inicializa Mapbox GL — funciona nativamente no Safari iOS com WebGL
   let _mapInitErr=null;
   try{
-    _mbMap=new mapboxgl.Map({
+    // Fit bounds on ALL route waypoints so the route is visible immediately
+  const _allWpts=[coords.orig,...(coords.stops||[]).filter(Boolean),coords.dest];
+  const _initBounds=new mapboxgl.LngLatBounds();
+  _allWpts.forEach(p=>_initBounds.extend(ll(p)));
+
+  _mbMap=new mapboxgl.Map({
       container:el,
       style:'mapbox://styles/mapbox/streets-v12',
-      center:ll(coords.orig),
-      zoom:7,
+      bounds:_initBounds,
+      fitBoundsOptions:{padding:60,maxZoom:11,duration:0},
       attributionControl:false,
       logoPosition:'bottom-left',
       failIfMajorPerformanceCaveat:false,
@@ -1146,13 +1215,22 @@ async function initDriverMap(){
 
   // Quando o mapa carregar: adiciona rota
   _mbMap.on('load',async()=>{
+    const waypoints=[coords.orig,...coords.stops.filter(Boolean),coords.dest];
+
+    // Linha provisória imediata — aparece enquanto OSRM calcula a rota real
+    const provisCoords=waypoints.map(p=>ll(p));
+    _mbMap.addSource('route-done',{type:'geojson',data:{type:'Feature',geometry:{type:'LineString',coordinates:provisCoords.slice(0,1).concat([provisCoords[0]])}}});
+    _mbMap.addLayer({id:'route-done',type:'line',source:'route-done',paint:{'line-color':'#1f8a3d','line-width':5,'line-opacity':.92,'line-cap':'round','line-join':'round'}});
+    _mbMap.addSource('route-rest',{type:'geojson',data:{type:'Feature',geometry:{type:'LineString',coordinates:provisCoords}}});
+    _mbMap.addLayer({id:'route-rest',type:'line',source:'route-rest',paint:{'line-color':'#1a6fb5','line-width':5,'line-opacity':.85,'line-dasharray':[3,2],'line-cap':'round','line-join':'round'}});
+
+    // Loading indicator sutil
     const loadEl=document.createElement('div');
     loadEl.id='mapLoader';
-    loadEl.style.cssText='position:fixed;bottom:42%;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.75);color:#fff;padding:10px 18px;border-radius:10px;font-family:Barlow,sans-serif;font-size:13px;z-index:9999;pointer-events:none;white-space:nowrap';
-    loadEl.textContent='🗺️ Calculando rota nas estradas...';
+    loadEl.style.cssText='position:fixed;bottom:38%;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.65);color:#fff;padding:8px 14px;border-radius:9px;font-family:Barlow,sans-serif;font-size:12px;z-index:9999;pointer-events:none;white-space:nowrap';
+    loadEl.textContent='🛣️ Ajustando rota nas estradas...';
     document.body.appendChild(loadEl);
 
-    const waypoints=[coords.orig,...coords.stops,coords.dest];
     let geom=await fetchOSRMRoute(waypoints);
     document.getElementById('mapLoader')?.remove();
 
@@ -1168,12 +1246,9 @@ async function initDriverMap(){
     const mbRest=geom.slice(splitIdx).map(p=>ll(p));
 
     // Linha percorrida (verde)
-    _mbMap.addSource('route-done',{type:'geojson',data:{type:'Feature',geometry:{type:'LineString',coordinates:mbDone.length>1?mbDone:[mbDone[0],mbDone[0]]}}});
-    _mbMap.addLayer({id:'route-done',type:'line',source:'route-done',paint:{'line-color':'#1f8a3d','line-width':5,'line-opacity':.92,'line-cap':'round','line-join':'round'}});
-
-    // Linha restante (azul tracejada)
-    _mbMap.addSource('route-rest',{type:'geojson',data:{type:'Feature',geometry:{type:'LineString',coordinates:mbRest.length>1?mbRest:[mbRest[0],mbRest[0]]}}});
-    _mbMap.addLayer({id:'route-rest',type:'line',source:'route-rest',paint:{'line-color':'#1a6fb5','line-width':5,'line-opacity':.85,'line-dasharray':[3,2],'line-cap':'round','line-join':'round'}});
+    // Atualiza as fontes com a rota real do OSRM (layers já foram criados acima)
+    _mbMap.getSource('route-done')?.setData({type:'Feature',geometry:{type:'LineString',coordinates:mbDone.length>1?mbDone:[mbDone[0],mbDone[0]]}});
+    _mbMap.getSource('route-rest')?.setData({type:'Feature',geometry:{type:'LineString',coordinates:mbRest.length>1?mbRest:[mbRest[0],mbRest[0]]}});
 
     // Ajusta câmera para mostrar rota toda
     const bounds=new mapboxgl.LngLatBounds();
@@ -1189,6 +1264,11 @@ async function initDriverMap(){
     navigator.geolocation.getCurrentPosition(pos=>{
       updateDriverMarkerPos(pos.coords.latitude,pos.coords.longitude);
     },()=>{},{enableHighAccuracy:true,timeout:10000});
+  }
+
+  }catch(err){
+    showMapStatus('❌ ERRO: '+err.message+'<br><small>'+err.stack?.split('\n')[0]+'</small>','#fe2627');
+    console.error('initDriverMap error:',err);
   }
 }
 
