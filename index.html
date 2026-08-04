@@ -254,7 +254,7 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .live-pill-dot{width:7px;height:7px;border-radius:50%;background:#1f8a3d;animation:livepulse 1.4s ease-in-out infinite}
 @keyframes livepulse{0%,100%{opacity:1}50%{opacity:.3}}
 .live-pill-txt{font-family:'Barlow',sans-serif;font-weight:700;font-size:10px;color:#1f8a3d;letter-spacing:.06em}
-.driver-map-container{flex:0 0 46vh;min-height:180px;background:#d8e8d0;position:relative}
+.driver-map-container{flex:0 0 46vh;min-height:200px;background:#e8eef0;position:relative;overflow:hidden}
 .maplive-panel{flex:1;overflow-y:auto;background:#fff;display:flex;flex-direction:column;min-height:0}
 .trip-stats-bar{display:flex;background:#1c1c1c;flex-shrink:0}
 .trip-stat-item{flex:1;padding:10px 8px;text-align:center;border-right:1px solid #2e2e2c}
@@ -286,10 +286,14 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .btn-fuel-confirm:active{background:#177030}
 .btn-end-trip{flex:1;padding:14px;background:#1c1c1c;color:#fff;border:none;border-radius:12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;cursor:pointer;min-height:50px}
 .btn-end-trip:active{background:#333}
-/* SVG Map */
+/* Mapa real (Leaflet) */
 @keyframes truckpulse{0%,100%{box-shadow:0 3px 10px rgba(26,111,181,.6)}50%{box-shadow:0 3px 18px rgba(26,111,181,.9),0 0 0 6px rgba(26,111,181,.15)}}
 @keyframes nextpulse{0%,100%{box-shadow:0 3px 8px rgba(232,160,32,.5)}50%{box-shadow:0 3px 14px rgba(232,160,32,.8),0 0 0 5px rgba(232,160,32,.15)}}
-.svg-map-inner{width:100%;height:100%;position:relative;transition:transform .25s ease;transform-origin:center center}
+.leaflet-container{font-family:'Barlow',sans-serif}
+.leaflet-popup-content-wrapper{border-radius:12px!important;font-family:'Barlow',sans-serif;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.15)}
+.leaflet-popup-tip{background:#fff}
+.leaflet-control-zoom a{font-size:16px!important;font-weight:700!important;color:#1c1c1c!important;border-radius:8px!important}
+.leaflet-control-zoom{border:none!important;box-shadow:0 2px 8px rgba(0,0,0,.2)!important}
 
 /* ═══ ADMIN TABS ═══ */
 .admin-tab-bar{display:flex;background:#f4f4f2;border-bottom:1px solid #e4e2dd;flex-shrink:0}
@@ -517,31 +521,44 @@ const FIREBASE_CONFIG={apiKey:"AIzaSyAbYd2RulYeBr-_IQ8G4ccmzxKf8gAjLPQ",authDoma
 const ADMIN_USER='admin';
 const ADMIN_PASS='confianca2026';
 // Coordenadas aproximadas dos pontos das rotas (lat, lng)
+// Coordenadas reais de cada ponto das rotas (lat, lng)
+// Origem/destino: centro das cidades | Postos: localização aproximada na rodovia
 const ROUTE_COORDS={
   'lucas-goiania':{
-    orig:[-13.0513,-55.9129],
-    stops:[[-13.05,-55.91],[-15.5542,-54.2883]],
-    dest:[-16.6869,-49.2648]
+    orig:[-13.0512,-55.9128],  // Lucas do Rio Verde MT
+    stops:[
+      [-13.0510,-55.9100],     // Rede São Roque — Sabiá (Lucas do Rio Verde)
+      [-13.8251,-56.0835],     // Rede São Roque — 29 (Nova Mutum) — alt
+      [-15.5569,-54.2783],     // Rede São Roque — Alvorada (Primavera do Leste)
+    ],
+    dest:[-16.6869,-49.2648],  // Goiânia GO
   },
   'goiania-cabedelo':{
-    orig:[-16.6869,-49.2648],
-    stops:[[-12.0957,-45.7882],[-12.5267,-40.3075],[-11.3441,-37.4625],[-7.8353,-34.9007]],
-    dest:[-6.9811,-34.8341]
+    orig:[-16.6869,-49.2648],  // Goiânia GO
+    stops:[
+      [-12.0963,-45.7897],     // Posto Cerradão (Luís Eduardo Magalhães BA — BR-242)
+      [-12.5217,-40.3093],     // Posto Irmão Caminhoneiro II (Itaberaba BA — BR-116)
+      [-11.3628,-37.4773],     // Posto Azul — Atalaia (Santa Luzia do Itanhi SE — BR-101)
+      [-7.8353,-34.9087],      // Posto CJCM (Igarassu PE — BR-101)
+    ],
+    dest:[-6.9811,-34.8341],   // Cabedelo PB
   },
   'cabedelo-suape':{
-    orig:[-6.9811,-34.8341],
-    stops:[[-7.2604,-34.8993]],
-    dest:[-8.3890,-35.0320]
+    orig:[-6.9811,-34.8341],   // Cabedelo PB
+    stops:[
+      [-7.2601,-34.9013],      // Posto Petroconde (Conde PB — BR-101)
+    ],
+    dest:[-8.3936,-34.9787],   // Suape PE (Porto)
   },
   'goiania-sjcampos':{
-    orig:[-16.6869,-49.2648],
+    orig:[-16.6869,-49.2648],  // Goiânia GO
     stops:[],
-    dest:[-23.1794,-45.8869]
+    dest:[-23.1794,-45.8869],  // São José dos Campos SP
   },
   'goiania-smateus':{
-    orig:[-16.6869,-49.2648],
+    orig:[-16.6869,-49.2648],  // Goiânia GO
     stops:[],
-    dest:[-25.8766,-50.3828]
+    dest:[-25.8766,-50.3828],  // São Mateus do Sul PR
   }
 };
 
@@ -910,11 +927,14 @@ function updateNextStopUI(lat,lng){
     if(lat&&lng&&stopCoord){
       const dist=calcDistance(lat,lng,stopCoord[0],stopCoord[1]);
       const distTxt=dist<1?Math.round(dist*1000)+'m':'≅ '+Math.round(dist)+'km';
-      // Rough time: avg 80km/h
       const hrs=dist/80;const hh=Math.floor(hrs);const mm=Math.round((hrs-hh)*60);
       const timeTxt=hh>0?`~${hh}h${String(mm).padStart(2,'0')}m`:`~${mm}min`;
       if(distEl)distEl.innerHTML='⏱ '+distTxt+' · '+timeTxt+' de distância';
       if(confirmBtn){if(dist<0.5)confirmBtn.classList.add('show');else confirmBtn.classList.remove('show');}
+      // Atualiza cores da rota no mapa com base na posição GPS real
+      _updateRouteColors(lat,lng);
+    }else if(lat&&lng){
+      if(distEl)distEl.innerHTML='⏱ KM '+next.km+' da rota';
     }else{
       if(distEl)distEl.innerHTML='⏱ KM '+next.km+' da rota';
     }
@@ -966,129 +986,157 @@ function updateTripStats(){
 }
 
 // ═══ LEAFLET — MAPA DO MOTORISTA ═══
-// ═══ SVG MAP (mapa simbólico estilo mockup) ═══
-const SVG_W=360,SVG_H=240;
-const SVG_ORIG={x:30,y:215};
-const SVG_DEST={x:334,y:27};
-const SVG_CP1={x:88,y:192};
-const SVG_CP2={x:272,y:52};
-let svgZoomLevel=1;
+// ═══ MAPA REAL (Leaflet + OSRM + CartoDB) ═══
+let _routeGeometry=[];  // [[lat,lng],...] da rota real calculada pelo OSRM
+let _routeLayerDone=null, _routeLayerRest=null;
 
-function bpt(t){
-  const p0=SVG_ORIG,p1=SVG_CP1,p2=SVG_CP2,p3=SVG_DEST,u=1-t;
-  return{x:u*u*u*p0.x+3*u*u*t*p1.x+3*u*t*t*p2.x+t*t*t*p3.x,y:u*u*u*p0.y+3*u*u*t*p1.y+3*u*t*t*p2.y+t*t*t*p3.y};
+async function fetchOSRMRoute(points){
+  // points: [[lat,lng],...] — OSRM espera lng,lat
+  const coords=points.map(p=>p[1]+','+p[0]).join(';');
+  const url='https://router.project-osrm.org/route/v1/driving/'+coords+'?overview=full&geometries=geojson&steps=false';
+  try{
+    const r=await fetch(url);const d=await r.json();
+    if(d.code==='Ok'&&d.routes[0]){
+      // converte [lng,lat] → [lat,lng]
+      return d.routes[0].geometry.coordinates.map(c=>[c[1],c[0]]);
+    }
+  }catch(e){console.warn('OSRM error:',e);}
+  return null;
 }
-function bpts(n){return Array.from({length:n+1},(_,i)=>bpt(i/n));}
 
-function calcTruckProgress(){
-  if(!currentTrip||currentRouteIdx<0)return 0.05;
-  const route=routes[currentRouteIdx];if(!route)return 0.05;
-  const totalKm=parseInt((route.distancia||'0').replace(/[^0-9]/g,''));
-  const traveled=currentTrip.distanciaPercorrida||0;
-  if(totalKm>0&&traveled>0)return Math.min(0.05+traveled/totalKm*0.9,0.95);
+function makeIcon(html,w,h){
+  return L.divIcon({html,className:'',iconSize:[w,h],iconAnchor:[w/2,h/2]});
+}
+
+function stopIconHTML(isDone,isNext,num){
+  if(isDone)return '<div style="width:28px;height:28px;background:#1f8a3d;border:3px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 8px rgba(31,138,61,.5)">✓</div>';
+  if(isNext)return '<div style="position:relative"><div style="width:34px;height:34px;background:#e8a020;border:3px solid #fff;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 3px 10px rgba(232,160,32,.6)">⛽</div><div style="position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);background:#e8a020;color:#fff;font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:9px;padding:2px 6px;border-radius:4px;white-space:nowrap">PRÓXIMO</div></div>';
+  return '<div style="width:26px;height:26px;background:#fff;border:2.5px solid #b0aea9;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:12px;color:#9a9894;box-shadow:0 2px 5px rgba(0,0,0,.15)">'+num+'</div>';
+}
+
+async function initDriverMap(){
+  if(driverMap){try{driverMap.remove();}catch(e){}driverMap=null;driverMarker=null;stopMarkers=[];_routeGeometry=[];_routeLayerDone=null;_routeLayerRest=null;}
+  const el=document.getElementById('driverMapEl');if(!el)return;
+  const route=currentRouteIdx>=0?routes[currentRouteIdx]:null;
+  if(!route)return;
+  const coords=ROUTE_COORDS[route.id];if(!coords)return;
   const fuelStops=route.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino');
   const confirmed=currentTrip?.postosConfirmados||[];
-  if(!fuelStops.length)return 0.05;
-  if(confirmed.length>=fuelStops.length)return 0.93;
-  return 0.05+(confirmed.length/(fuelStops.length+1))*0.88;
+
+  // Inicializa mapa Leaflet com tiles CartoDB (visual limpo como o mockup)
+  driverMap=L.map('driverMapEl',{zoomControl:false,attributionControl:false})
+    .setView(coords.orig,7);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+    {maxZoom:19,subdomains:'abcd'}).addTo(driverMap);
+  L.control.zoom({position:'topright'}).addTo(driverMap);
+
+  // Loading indicator
+  const loadEl=document.createElement('div');
+  loadEl.id='mapLoader';
+  loadEl.style.cssText='position:absolute;bottom:70px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.72);color:#fff;padding:9px 16px;border-radius:10px;font-family:Barlow,sans-serif;font-size:12px;z-index:500;pointer-events:none;white-space:nowrap';
+  loadEl.innerHTML='🗺️ Calculando rota nas estradas...';
+  el.style.position='relative';
+  el.appendChild(loadEl);
+
+  // Waypoints: origem → postos → destino
+  const waypoints=[coords.orig,...coords.stops,coords.dest];
+
+  // Busca rota real pelo OSRM (gratuito, sem chave de API)
+  let geometry=await fetchOSRMRoute(waypoints);
+  document.getElementById('mapLoader')?.remove();
+
+  if(!geometry||geometry.length<2){
+    // Fallback: linha reta entre os pontos se OSRM falhar
+    geometry=waypoints;
+    const fallback=document.createElement('div');
+    fallback.style.cssText='position:absolute;bottom:70px;left:50%;transform:translateX(-50%);background:rgba(232,160,32,.9);color:#fff;padding:8px 14px;border-radius:9px;font-family:Barlow,sans-serif;font-size:11px;z-index:500;pointer-events:none';
+    fallback.textContent='⚠️ Sem conexão — mostrando rota estimada';
+    el.appendChild(fallback);setTimeout(()=>fallback.remove(),4000);
+  }
+  _routeGeometry=geometry;
+
+  // Calcula posição atual do caminhão na geometria
+  const progress=calcGPSProgress();
+  const truckIdx=Math.min(Math.floor(progress*(_routeGeometry.length-1)),_routeGeometry.length-2);
+  const truckPt=_routeGeometry[truckIdx]||coords.orig;
+
+  // Linha verde = trecho percorrido
+  _routeLayerDone=L.polyline(_routeGeometry.slice(0,truckIdx+1),
+    {color:'#1f8a3d',weight:5,opacity:.92,lineCap:'round',lineJoin:'round'}).addTo(driverMap);
+  // Linha azul tracejada = trecho restante
+  _routeLayerRest=L.polyline(_routeGeometry.slice(truckIdx),
+    {color:'#1a6fb5',weight:5,opacity:.82,lineCap:'round',lineJoin:'round',dashArray:'12,7'}).addTo(driverMap);
+
+  // Markers de postos
+  coords.stops.forEach((c,i)=>{
+    const s=fuelStops[i];
+    const isDone=confirmed.includes(i),isNext=i===confirmed.length;
+    const sz=isNext?[34,52]:[28,28];
+    const mk=L.marker(c,{icon:makeIcon(stopIconHTML(isDone,isNext,i+1),sz[0],sz[1]),zIndexOffset:isNext?100:0}).addTo(driverMap);
+    if(s)mk.bindPopup('<b>'+s.nome+'</b><br>'+s.cidade+'<br><small>'+( s.litragem||'')+(s.cartao?' · '+s.cartao:'')+'</small>');
+    stopMarkers.push(mk);
+  });
+
+  // Origem e destino
+  L.marker(coords.orig,{icon:makeIcon('<div style="width:26px;height:26px;background:#262625;border:2.5px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 2px 6px rgba(0,0,0,.4)">🏠</div>',26,26),zIndexOffset:50}).addTo(driverMap);
+  L.marker(coords.dest,{icon:makeIcon('<div style="width:26px;height:26px;background:#262625;border:2.5px solid #fff;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 2px 6px rgba(0,0,0,.4)">🏁</div>',26,26),zIndexOffset:50}).addTo(driverMap);
+
+  // Caminhão
+  const truckIcon=L.divIcon({html:'<div style="width:36px;height:36px;background:#1a6fb5;border:3px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 3px 14px rgba(26,111,181,.65)">🚛</div><div style="position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);background:#1a6fb5;color:#fff;font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:9px;padding:2px 6px;border-radius:4px;white-space:nowrap">Você</div>',className:'',iconSize:[36,58],iconAnchor:[18,18]});
+  driverMarker=L.marker(truckPt,{icon:truckIcon,zIndexOffset:1000}).addTo(driverMap);
+
+  // Ajusta zoom para mostrar a rota toda
+  try{driverMap.fitBounds(L.latLngBounds(_routeGeometry),{padding:[40,40],maxZoom:12});}catch(e){}
+
+  // Pega posição GPS real do dispositivo
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(pos=>{
+      updateDriverMarkerPos(pos.coords.latitude,pos.coords.longitude);
+    },()=>{},{enableHighAccuracy:true,timeout:8000});
+  }
 }
 
-function pct(pt){return{l:(pt.x/SVG_W*100).toFixed(2)+'%',t:(pt.y/SVG_H*100).toFixed(2)+'%'};}
-
-function initDriverMap(){
-  const el=document.getElementById('driverMapEl');if(!el)return;
-  el.innerHTML='';
-  const route=currentRouteIdx>=0?routes[currentRouteIdx]:null;
-  const fuelStops=route?route.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino'):[];
-  const confirmed=currentTrip?.postosConfirmados||[];
-  const progress=calcTruckProgress();
-  const n=fuelStops.length;
-  const stopPts=fuelStops.map((_,i)=>bpt((i+1)/(n+1)));
-  const truckPt=bpt(progress);
-  const allPts=bpts(120);
-  const progIdx=Math.min(Math.round(progress*120),119);
-  const donePts=allPts.slice(0,progIdx+1).map(p=>p.x.toFixed(1)+','+p.y.toFixed(1)).join(' ');
-  const restPts=allPts.slice(progIdx).map(p=>p.x.toFixed(1)+','+p.y.toFixed(1)).join(' ');
-  const tp=pct(truckPt);
-  const op=pct(SVG_ORIG);const dp=pct(SVG_DEST);
-
-  // Build pins HTML
-  let pins='';
-  pins+=`<div style="position:absolute;left:${op.l};top:${op.t};transform:translate(-50%,-50%);z-index:2"><div style="width:26px;height:26px;background:#262625;border:2.5px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;box-shadow:0 2px 6px rgba(0,0,0,.35)">🏠</div></div>`;
-  pins+=`<div style="position:absolute;left:${dp.l};top:${dp.t};transform:translate(-50%,-50%);z-index:2"><div style="width:26px;height:26px;background:#262625;border:2.5px solid #fff;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;box-shadow:0 2px 6px rgba(0,0,0,.35)">🏁</div></div>`;
-  fuelStops.forEach((s,i)=>{
-    const pt=stopPts[i];const pp=pct(pt);
-    const isDone=confirmed.includes(i);const isNext=i===confirmed.length;
-    if(isDone){
-      pins+=`<div style="position:absolute;left:${pp.l};top:${pp.t};transform:translate(-50%,-50%);z-index:3"><div style="width:28px;height:28px;background:#1f8a3d;border:2.5px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 6px rgba(31,138,61,.5)">✓</div></div>`;
-    }else if(isNext){
-      pins+=`<div style="position:absolute;left:${pp.l};top:${pp.t};transform:translate(-50%,-65%);z-index:5"><div style="width:34px;height:34px;background:#e8a020;border:3px solid #fff;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 3px 10px rgba(232,160,32,.55);animation:nextpulse 2s ease-in-out infinite">⛽</div><div style="position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);background:#e8a020;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:9px;padding:2px 6px;border-radius:4px;white-space:nowrap">PRÓXIMO</div></div>`;
-    }else{
-      pins+=`<div style="position:absolute;left:${pp.l};top:${pp.t};transform:translate(-50%,-50%);z-index:2"><div style="width:26px;height:26px;background:#fff;border:2.5px solid #b0aea9;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;color:#9a9894;box-shadow:0 2px 5px rgba(0,0,0,.15)">${i+1}</div></div>`;
-    }
-  });
-  pins+=`<div id="svgTruckPin" style="position:absolute;left:${tp.l};top:${tp.t};transform:translate(-50%,-50%);z-index:10;transition:left .9s cubic-bezier(.4,0,.2,1),top .9s cubic-bezier(.4,0,.2,1)"><div style="width:36px;height:36px;background:#1a6fb5;border:3px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;animation:truckpulse 2.2s ease-in-out infinite">🚛</div><div style="position:absolute;bottom:-19px;left:50%;transform:translateX(-50%);background:#1a6fb5;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:9px;padding:2px 6px;border-radius:4px;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.2)">Você</div></div>`;
-
-  el.innerHTML=`<div class="svg-map-inner" id="svgMapInner">
-    <svg width="100%" height="100%" viewBox="0 0 ${SVG_W} ${SVG_H}" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;pointer-events:none">
-      <rect width="${SVG_W}" height="${SVG_H}" fill="#d4e8cc"/>
-      <rect x="0" y="0" width="130" height="95" fill="#c6dfc0"/>
-      <rect x="165" y="68" width="125" height="92" fill="#cbe0c4"/>
-      <rect x="48" y="142" width="105" height="98" fill="#c4dbbe"/>
-      <rect x="268" y="0" width="92" height="75" fill="#c8e0c2"/>
-      <rect x="135" y="8" width="28" height="58" fill="#bdd6b8" opacity=".45" rx="1"/>
-      <rect x="202" y="88" width="62" height="38" fill="#b8d2b3" opacity=".4" rx="1"/>
-      <rect x="18" y="102" width="44" height="33" fill="#bdd6b8" opacity=".4" rx="1"/>
-      <rect x="305" y="100" width="50" height="42" fill="#c0d8ba" opacity=".38" rx="1"/>
-      <line x1="0" y1="72" x2="${SVG_W}" y2="72" stroke="#fff" stroke-width="5" opacity=".62"/>
-      <line x1="0" y1="150" x2="${SVG_W}" y2="150" stroke="#fff" stroke-width="4" opacity=".52"/>
-      <line x1="72" y1="0" x2="72" y2="${SVG_H}" stroke="#fff" stroke-width="4" opacity=".52"/>
-      <line x1="192" y1="0" x2="192" y2="${SVG_H}" stroke="#fff" stroke-width="4" opacity=".48"/>
-      <line x1="292" y1="0" x2="292" y2="${SVG_H}" stroke="#fff" stroke-width="3" opacity=".38"/>
-      <line x1="0" y1="18" x2="205" y2="${SVG_H}" stroke="#dedad2" stroke-width="3" opacity=".55"/>
-      <line x1="105" y1="0" x2="${SVG_W}" y2="186" stroke="#dedad2" stroke-width="3" opacity=".48"/>
-      <line x1="0" y1="110" x2="${SVG_W}" y2="110" stroke="#fff" stroke-width="1.5" opacity=".28"/>
-      <line x1="138" y1="0" x2="138" y2="${SVG_H}" stroke="#fff" stroke-width="1.5" opacity=".28"/>
-      <line x1="238" y1="0" x2="238" y2="${SVG_H}" stroke="#fff" stroke-width="1.5" opacity=".28"/>
-      <polyline id="svgRouteRest" points="${restPts}" fill="none" stroke="#1a6fb5" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="10,6" opacity=".85"/>
-      <polyline id="svgRouteDone" points="${donePts}" fill="none" stroke="#1f8a3d" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-    <div style="position:absolute;inset:0;pointer-events:none">${pins}</div>
-    <div style="position:absolute;top:10px;right:10px;display:flex;flex-direction:column;gap:4px;z-index:10;pointer-events:auto">
-      <button onclick="svgZoomIn()" style="width:32px;height:32px;border-radius:8px;border:none;background:#fff;font-size:18px;font-weight:700;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.2);color:#1c1c1c;line-height:1">+</button>
-      <button onclick="svgZoomOut()" style="width:32px;height:32px;border-radius:8px;border:none;background:#fff;font-size:18px;font-weight:700;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.2);color:#1c1c1c;line-height:1">−</button>
-    </div>
-  </div>`;
+function calcGPSProgress(){
+  if(!currentTrip||currentRouteIdx<0)return 0;
+  const route=routes[currentRouteIdx];if(!route)return 0;
+  const totalKm=parseInt((route.distancia||'0').replace(/[^0-9]/g,''));
+  const traveled=currentTrip.distanciaPercorrida||0;
+  if(totalKm>0&&traveled>0)return Math.min(traveled/totalKm,0.97);
+  const fs=route.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino');
+  const conf=currentTrip?.postosConfirmados||[];
+  if(!fs.length)return 0;
+  return Math.min(conf.length/(fs.length+1),0.95);
 }
 
 function updateDriverMarkerPos(lat,lng){
-  // Update progress based on GPS distance traveled
-  updateSVGProgress();
+  if(!driverMap)return;
+  const pos=[lat,lng];
+  if(!driverMarker){
+    const icon=L.divIcon({html:'<div style="width:36px;height:36px;background:#1a6fb5;border:3px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 3px 14px rgba(26,111,181,.65)">🚛</div><div style="position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);background:#1a6fb5;color:#fff;font-family:Barlow Condensed,sans-serif;font-weight:700;font-size:9px;padding:2px 6px;border-radius:4px;white-space:nowrap">Você</div>',className:'',iconSize:[36,58],iconAnchor:[18,18]});
+    driverMarker=L.marker(pos,{icon,zIndexOffset:1000}).addTo(driverMap);
+  }else{driverMarker.setLatLng(pos);}
+  driverMap.panTo(pos,{animate:true,duration:0.8});
+  _updateRouteColors(lat,lng);
+}
+
+function _updateRouteColors(lat,lng){
+  if(!_routeGeometry.length||!_routeLayerDone||!_routeLayerRest)return;
+  // Encontra o ponto mais próximo na geometria da rota
+  let minD=Infinity,closeIdx=0;
+  _routeGeometry.forEach((p,i)=>{const d=calcDistance(lat,lng,p[0],p[1]);if(d<minD){minD=d;closeIdx=i;}});
+  _routeLayerDone.setLatLngs(_routeGeometry.slice(0,closeIdx+1));
+  _routeLayerRest.setLatLngs(_routeGeometry.slice(closeIdx));
 }
 
 function updateSVGProgress(){
-  const progress=calcTruckProgress();
-  const pt=bpt(progress);const tp=pct(pt);
-  // Move truck
-  const truckEl=document.getElementById('svgTruckPin');
-  if(truckEl){truckEl.style.left=tp.l;truckEl.style.top=tp.t;}
-  // Update route split lines
-  const allPts=bpts(120);
-  const progIdx=Math.min(Math.round(progress*120),119);
-  const donePts=allPts.slice(0,progIdx+1).map(p=>p.x.toFixed(1)+','+p.y.toFixed(1)).join(' ');
-  const restPts=allPts.slice(progIdx).map(p=>p.x.toFixed(1)+','+p.y.toFixed(1)).join(' ');
-  const dEl=document.getElementById('svgRouteDone');if(dEl)dEl.setAttribute('points',donePts);
-  const rEl=document.getElementById('svgRouteRest');if(rEl)rEl.setAttribute('points',restPts);
+  // Chamado após atualizar distanciaPercorrida — atualiza cores da rota
+  if(driverMarker&&driverMap){
+    const p=driverMarker.getLatLng();
+    if(p)_updateRouteColors(p.lat,p.lng);
+  }
 }
-
-function svgZoomIn(){
-  svgZoomLevel=Math.min(svgZoomLevel*1.4,4);
-  const el=document.getElementById('svgMapInner');if(el)el.style.transform=`scale(${svgZoomLevel})`;
-}
-function svgZoomOut(){
-  svgZoomLevel=Math.max(svgZoomLevel/1.4,0.5);
-  const el=document.getElementById('svgMapInner');if(el)el.style.transform=`scale(${svgZoomLevel})`;
-}
+function svgZoomIn(){if(driverMap)driverMap.zoomIn();}
+function svgZoomOut(){if(driverMap)driverMap.zoomOut();}
 
 // ═══ LEAFLET — MAPA MONITOR ═══
 function initMonitorMap(){
