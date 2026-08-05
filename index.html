@@ -720,6 +720,7 @@ function loadMapboxGL(){
 }
 
 function initFirebase(){
+  _loadNotifsFromLocal();renderNotifBadge();
   try{
     firebase.initializeApp(FIREBASE_CONFIG);
     db=firebase.database();
@@ -765,13 +766,13 @@ function initFirebase(){
     db.ref('viagens').on('value',snap=>{const d=snap.val();viagens=d||{};checkActiveTrip();renderMonitoring();renderBI();});
     db.ref('posicoes').on('value',snap=>{const d=snap.val();posicoes=d||{};updateMonitorMap();renderMonitoring();});
     // ═══ NOTIFICATIONS LISTENER ═══
-    db.ref('notifications').orderByChild('ts').limitToLast(30).on('value',snap=>{
+    db.ref('notifications').limitToLast(30).on('value',snap=>{
       const d=snap.val();
-      if(!d){notifications=[];renderNotifBadge();return;}
+      if(!d){notifications=[];_syncNotifsToLocal();renderNotifBadge();return;}
       notifications=Object.entries(d).map(([k,v])=>({id:k,...v})).sort((a,b)=>(b.ts||0)-(a.ts||0));
-      renderNotifBadge();
+      _syncNotifsToLocal();renderNotifBadge();
       if(notifPanelOpen)renderNotifList();
-    });
+    },err=>{console.warn('Notif listener error:',err);_loadNotifsFromLocal();renderNotifBadge();});
   }catch(e){setSyncStatus('err','Erro Firebase');loadLocal();}
 }
 function saveToFirebase(){if(db&&firebaseReady){db.ref('rotogramas').set(routes).then(()=>setSyncStatus('on','Salvo e sincronizado')).catch(()=>setSyncStatus('err','Erro ao salvar'))}else{localStorage.setItem('rotogramas_data',JSON.stringify(routes))}}
@@ -1866,6 +1867,8 @@ function cancelEdit(){
 // ═══ NOTIFICATION SYSTEM ═══
 function _getReadIds(){try{return JSON.parse(localStorage.getItem('notif_read')||'[]')}catch(e){return[]}}
 function _saveReadIds(ids){localStorage.setItem('notif_read',JSON.stringify(ids))}
+function _syncNotifsToLocal(){try{localStorage.setItem('notif_cache',JSON.stringify(notifications))}catch(e){}}
+function _loadNotifsFromLocal(){try{notifications=JSON.parse(localStorage.getItem('notif_cache')||'[]')}catch(e){notifications=[];}}
 function _unreadCount(){const read=_getReadIds();return notifications.filter(n=>!read.includes(n.id)).length}
 
 function renderNotifBadge(){
@@ -1920,21 +1923,33 @@ function _timeAgo(ts){
   return'Há '+Math.floor(diff/86400)+' dias';
 }
 function pushNotification(type,routeName,msg){
-  if(!db||!firebaseReady)return;
   const notif={type:type,route:routeName,msg:msg,ts:Date.now()};
-  db.ref('notifications').push(notif);
-  // Limpar notificações antigas (manter últimas 50)
-  db.ref('notifications').orderByChild('ts').once('value',snap=>{
-    const all=snap.val();if(!all)return;
-    const keys=Object.keys(all);
-    if(keys.length>50){
-      const sorted=Object.entries(all).sort((a,b)=>(a[1].ts||0)-(b[1].ts||0));
-      const toRemove=sorted.slice(0,keys.length-50);
-      const updates={};toRemove.forEach(([k])=>updates[k]=null);
-      db.ref('notifications').update(updates);
-    }
-  });
-  // Push notification via SW
+  const localId='local_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
+  // 1) Atualizar imediatamente o array local e o badge
+  notif.id=localId;
+  notifications.unshift(notif);
+  _syncNotifsToLocal();
+  renderNotifBadge();
+  if(notifPanelOpen)renderNotifList();
+  // 2) Tentar salvar no Firebase (se falhar, o local já está ok)
+  if(db&&firebaseReady){
+    db.ref('notifications').push({type:type,route:routeName,msg:msg,ts:notif.ts})
+      .then(()=>{
+        // Limpar notificações antigas (manter últimas 50)
+        db.ref('notifications').once('value',snap=>{
+          const all=snap.val();if(!all)return;
+          const keys=Object.keys(all);
+          if(keys.length>50){
+            const sorted=Object.entries(all).sort((a,b)=>(a[1].ts||0)-(b[1].ts||0));
+            const toRemove=sorted.slice(0,keys.length-50);
+            const updates={};toRemove.forEach(([k])=>updates[k]=null);
+            db.ref('notifications').update(updates);
+          }
+        });
+      })
+      .catch(err=>console.warn('Falha ao salvar notificação no Firebase:',err));
+  }
+  // 3) Push notification nativa via SW
   if('serviceWorker' in navigator&&Notification.permission==='granted'){
     navigator.serviceWorker.ready.then(reg=>{
       reg.showNotification('Rotogramas Confiança',{body:routeName+' — '+msg,icon:'./icon-192.png',badge:'./icon-192.png',tag:'rotograma-'+Date.now(),data:{type:type}});
