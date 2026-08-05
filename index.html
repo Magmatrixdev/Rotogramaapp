@@ -768,11 +768,13 @@ function initFirebase(){
     // ═══ NOTIFICATIONS LISTENER ═══
     db.ref('notifications').limitToLast(30).on('value',snap=>{
       const d=snap.val();
-      if(!d){notifications=[];_syncNotifsToLocal();renderNotifBadge();return;}
-      notifications=Object.entries(d).map(([k,v])=>({id:k,...v})).sort((a,b)=>(b.ts||0)-(a.ts||0));
+      const fbNotifs=d?Object.entries(d).map(([k,v])=>({id:k,...v})).sort((a,b)=>(b.ts||0)-(a.ts||0)):[];
+      // Preservar notificações locais recentes não confirmadas pelo Firebase ainda
+      const localOnly=notifications.filter(n=>n._local&&!fbNotifs.some(fb=>Math.abs((fb.ts||0)-(n.ts||0))<5000));
+      notifications=[...localOnly,...fbNotifs].sort((a,b)=>(b.ts||0)-(a.ts||0));
       _syncNotifsToLocal();renderNotifBadge();
       if(notifPanelOpen)renderNotifList();
-    },err=>{console.warn('Notif listener error:',err);_loadNotifsFromLocal();renderNotifBadge();});
+    },err=>{console.warn('Notif listener err:',err);});
   }catch(e){setSyncStatus('err','Erro Firebase');loadLocal();}
 }
 function saveToFirebase(){if(db&&firebaseReady){db.ref('rotogramas').set(routes).then(()=>setSyncStatus('on','Salvo e sincronizado')).catch(()=>setSyncStatus('err','Erro ao salvar'))}else{localStorage.setItem('rotogramas_data',JSON.stringify(routes))}}
@@ -1847,16 +1849,35 @@ function addMarca(si){const s=getFuelStops()[si];if(!s.marcas)s.marcas=[];s.marc
 function removeMarca(si,mi){getFuelStops()[si].marcas.splice(mi,1);renderEditor()}
 function addStop(){const fs=getFuelStops();const o=fs.length?Math.max(...fs.map(s=>s.ordem))+1:1;editData.paradas.splice(editData.paradas.length-1,0,{ordem:o,tipo:'completa',nome:'',cidade:'',litragem:'Completa o tanque',cartao:'truckpag',km:'',link:''});renderEditor()}
 function removeStop(si){const s=getFuelStops()[si];editData.paradas.splice(editData.paradas.indexOf(s),1);renderEditor()}
+function _diffRoute(oldR,newR){
+  const msgs=[];
+  const oldStops=(oldR.paradas||[]).filter(p=>p.tipo!=='origem'&&p.tipo!=='destino');
+  const newStops=(newR.paradas||[]).filter(p=>p.tipo!=='origem'&&p.tipo!=='destino');
+  const key=p=>(p.nome||'').trim()+'|'+(p.cidade||'').trim();
+  oldStops.forEach(os=>{if(!newStops.some(ns=>key(ns)===key(os)))msgs.push({type:'alert',msg:'Posto removido: '+(os.nome||os.cidade||'#'+os.ordem)});});
+  newStops.forEach(ns=>{if(!oldStops.some(os=>key(os)===key(ns)))msgs.push({type:'new',msg:'Posto adicionado: '+(ns.nome||ns.cidade||'#'+ns.ordem)});});
+  oldStops.forEach(os=>{
+    const ns=newStops.find(s=>key(s)===key(os));if(!ns)return;
+    if(['litragem','cartao','km','nota','link'].some(f=>os[f]!==ns[f]))msgs.push({type:'edit',msg:'Posto alterado: '+(os.nome||os.cidade)});
+  });
+  if(['nome','distancia','tempo','estados','observacao'].some(f=>oldR[f]!==newR[f]))msgs.push({type:'edit',msg:'Dados gerais da rota atualizados'});
+  return msgs;
+}
 function saveRoute(){captureEditorFields();
   editData.subtitulo='Rota '+editData.numero;editData.id=editData.nome.toLowerCase().replace(/[^a-z0-9]/g,'-').replace(/-+/g,'-');
   let ord=1;editData.paradas.forEach(p=>{if(p.tipo!=='origem'&&p.tipo!=='destino')p.ordem=ord++});
   const isNew=editingIndex<0;
+  const oldRoute=(!isNew&&editingIndex>=0)?JSON.parse(JSON.stringify(routes[editingIndex])):null;
   if(editingIndex>=0)routes[editingIndex]=editData;else routes.push(editData);
   clearDraft();isEditing=false;if(window._draftInterval)clearInterval(window._draftInterval);
   saveToFirebase();
-  // Disparar notificação
-  if(isNew){pushNotification('new',editData.nome,'Nova rota adicionada');}
-  else{pushNotification('edit',editData.nome,'Rota atualizada');}
+  if(isNew){
+    pushNotification('new',editData.nome,'Nova rota adicionada');
+  }else if(oldRoute){
+    const diffs=_diffRoute(oldRoute,editData);
+    if(diffs.length>0){diffs.forEach(d=>pushNotification(d.type,editData.nome,d.msg));}
+    else{pushNotification('edit',editData.nome,'Rota atualizada');}
+  }
   navPop(()=>renderAdmin());}
 function cancelEdit(){
   saveDraft();
@@ -1923,36 +1944,35 @@ function _timeAgo(ts){
   return'Há '+Math.floor(diff/86400)+' dias';
 }
 function pushNotification(type,routeName,msg){
-  const notif={type:type,route:routeName,msg:msg,ts:Date.now()};
-  const localId='local_'+Date.now()+'_'+Math.random().toString(36).slice(2,8);
-  // 1) Atualizar imediatamente o array local e o badge
-  notif.id=localId;
+  const ts=Date.now();
+  const localId='local_'+ts+'_'+Math.random().toString(36).slice(2,8);
+  const notif={id:localId,_local:true,type:type,route:routeName,msg:msg,ts:ts};
+  // 1) Atualizar imediatamente o array local (independente do Firebase)
   notifications.unshift(notif);
   _syncNotifsToLocal();
   renderNotifBadge();
   if(notifPanelOpen)renderNotifList();
-  // 2) Tentar salvar no Firebase (se falhar, o local já está ok)
+  // 2) Salvar no Firebase em paralelo
   if(db&&firebaseReady){
-    db.ref('notifications').push({type:type,route:routeName,msg:msg,ts:notif.ts})
-      .then(()=>{
+    db.ref('notifications').push({type:type,route:routeName,msg:msg,ts:ts})
+      .then(ref=>{
+        // Substituir o local pelo ID real do Firebase
+        const idx=notifications.findIndex(n=>n.id===localId);
+        if(idx>=0){notifications[idx]={...notifications[idx],id:ref.key,_local:false};}
+        _syncNotifsToLocal();
         // Limpar notificações antigas (manter últimas 50)
         db.ref('notifications').once('value',snap=>{
           const all=snap.val();if(!all)return;
-          const keys=Object.keys(all);
-          if(keys.length>50){
-            const sorted=Object.entries(all).sort((a,b)=>(a[1].ts||0)-(b[1].ts||0));
-            const toRemove=sorted.slice(0,keys.length-50);
-            const updates={};toRemove.forEach(([k])=>updates[k]=null);
-            db.ref('notifications').update(updates);
-          }
+          const entries=Object.entries(all).sort((a,b)=>(a[1].ts||0)-(b[1].ts||0));
+          if(entries.length>50){const upd={};entries.slice(0,entries.length-50).forEach(([k])=>upd[k]=null);db.ref('notifications').update(upd);}
         });
       })
-      .catch(err=>console.warn('Falha ao salvar notificação no Firebase:',err));
+      .catch(()=>{/* mantém o local como fallback */});
   }
   // 3) Push notification nativa via SW
   if('serviceWorker' in navigator&&Notification.permission==='granted'){
     navigator.serviceWorker.ready.then(reg=>{
-      reg.showNotification('Rotogramas Confiança',{body:routeName+' — '+msg,icon:'./icon-192.png',badge:'./icon-192.png',tag:'rotograma-'+Date.now(),data:{type:type}});
+      reg.showNotification('Rotogramas — Confiança',{body:routeName+': '+msg,icon:'./icon-192.png',badge:'./icon-192.png',tag:'rot-'+ts,data:{type}});
     }).catch(()=>{});
   }
 }
