@@ -1498,7 +1498,7 @@ function renderRoute(r){const orig=r.paradas.find(p=>p.tipo==='origem'),dest=r.p
   let h=`<div class="roto-top"><button class="back-btn" onclick="navPop(renderHome)">‹</button><div class="roto-header"><div class="roto-route-row"><div class="roto-chip"><div class="city">${oc}</div><div class="lbl">ORIGEM</div></div><span class="roto-arrow">→</span><div class="roto-chip"><div class="city">${dc}</div><div class="lbl">DESTINO</div></div></div><div class="roto-stats"><div class="roto-stat"><div class="val">${r.distancia||'—'}</div><div class="lbl">DISTÂNCIA</div></div><div class="roto-stat"><div class="val">${r.tempo||'—'}</div><div class="lbl">ESTIMADO</div></div><div class="roto-stat"><div class="val red">${stops.length}</div><div class="lbl">POSTOS</div></div></div>`;
   if(r.linkRota)h+=`<a class="rota-link" href="${r.linkRota}" target="_blank">📍 VER ROTA COMPLETA NO MAPS</a>`;
   const appUrl=location.origin+location.pathname+'#rota='+encodeURIComponent(r.id);
-  const _stopsList=stops.map((p,i)=>{const c=p.cartao?` [${p.cartao.toUpperCase()}]`:'';return `${i+1}. ${p.nome} — ${p.cidade}${p.km?' ('+p.km+')':''}${c}`;}).join('\n');
+  const _stopsList=stops.map((p,i)=>{const c=p.cartao?` [${p.cartao.toUpperCase()}]`:'';return `${i+1}. ${p.nome} — ${p.cidade}${p.km?' (KM '+p.km+')':''}${c}`;}).join('\n');
   window._lastShareRaw=`🚛 Rotograma: ${r.nome}\n📍 ${r.estados}\n📏 ${r.distancia||''} · ${r.tempo||''}\n⛽ ${stops.length} postos de abastecimento\n\n${_stopsList}\n\nAbra a rota: ${appUrl}`;
   const shareRaw=window._lastShareRaw;
   const shareText=encodeURIComponent(shareRaw);
