@@ -1,4 +1,4 @@
-const CACHE = 'rotograma-v6';
+const CACHE = 'rotograma-v7';
 const STATIC = [
   './manifest.json',
   './icon-192.png',
@@ -59,5 +59,18 @@ self.addEventListener('fetch', e => {
         });
       })
       .catch(() => caches.match('./index.html'))
+  );
+});
+
+// ═══ NOTIFICATION CLICK — abre o app ao tocar na notificação ═══
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {
+      if (clients.length > 0) {
+        return clients[0].focus();
+      }
+      return self.clients.openWindow('./');
+    })
   );
 });

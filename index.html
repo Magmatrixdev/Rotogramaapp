@@ -32,6 +32,32 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .logout-btn{position:absolute;top:calc(env(safe-area-inset-top, 20px) + 52px);right:22px;height:32px;border-radius:9px;background:rgba(254,38,39,.08);border:1.5px solid rgba(254,38,39,.18);display:none;align-items:center;gap:6px;padding:0 11px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;color:#fe2627}
 .logout-btn:active{background:rgba(254,38,39,.15)}
 .logout-btn.show{display:flex}
+.notif-bell{position:absolute;top:calc(env(safe-area-inset-top, 20px) + 8px);right:70px;width:42px;height:42px;border-radius:12px;background:#eae8e3;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px}
+.notif-bell:active{background:#e4e2dd}
+.notif-badge{position:absolute;top:4px;right:4px;background:#fe2627;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;min-width:18px;height:18px;border-radius:9px;display:none;align-items:center;justify-content:center;padding:0 5px;border:2px solid #f4f4f2;line-height:1}
+.notif-badge.show{display:flex}
+.notif-panel{display:none;position:absolute;top:calc(env(safe-area-inset-top, 20px) + 56px);right:14px;left:14px;background:#fff;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.16);z-index:50;overflow:hidden;animation:notifSlide .22s ease-out}
+.notif-panel.open{display:block}
+@keyframes notifSlide{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.notif-panel-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px;border-bottom:1px solid #eae8e3}
+.notif-panel-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;color:#1c1c1c;text-transform:uppercase;letter-spacing:.3px}
+.notif-panel-clear{font-size:12px;color:#9a9894;background:none;border:none;cursor:pointer;font-family:'Barlow',sans-serif}
+.notif-panel-clear:active{color:#fe2627}
+.notif-item{display:flex;gap:10px;padding:12px 16px;border-bottom:1px solid #f4f4f2;cursor:pointer;transition:background .15s}
+.notif-item:last-child{border-bottom:none}
+.notif-item.unread{background:#fef8f0}
+.notif-item:active{background:#f4f4f2}
+.notif-dot{width:8px;height:8px;border-radius:50%;background:#fe2627;flex-shrink:0;margin-top:5px}
+.notif-dot.read{background:transparent}
+.notif-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px}
+.notif-icon-edit{background:rgba(38,38,37,.08)}
+.notif-icon-new{background:rgba(46,160,67,.1)}
+.notif-icon-alert{background:rgba(254,38,39,.1)}
+.notif-text{font-size:13px;color:#1c1c1c;line-height:1.4;flex:1;min-width:0}
+.notif-text strong{font-weight:600}
+.notif-time{font-size:11px;color:#9a9894;margin-top:3px}
+.notif-empty{text-align:center;padding:28px 20px;color:#9a9894;font-family:'Barlow',sans-serif;font-size:13px}
+.notif-panel-body{max-height:320px;overflow-y:auto}
 .driver-greeting{font-family:'Barlow',sans-serif;font-size:12px;color:#9a9894;margin-top:4px}
 .search-wrap{margin-top:18px;position:relative}
 .search-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);width:15px;height:15px;border:2px solid #b0aea9;border-radius:50%}
@@ -427,7 +453,12 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 <div class="screen" id="screenHome">
   <div class="home-top" style="position:relative">
     <button class="admin-toggle" onclick="showAdminLogin()">⚙️</button>
+    <button class="notif-bell" id="notifBell" onclick="toggleNotifPanel()">🔔<div class="notif-badge" id="notifBadge">0</div></button>
     <button class="logout-btn" id="logoutBtn" onclick="promptLogout()">↩ Sair</button>
+    <div class="notif-panel" id="notifPanel">
+      <div class="notif-panel-head"><span class="notif-panel-title">Notificações</span><button class="notif-panel-clear" onclick="markAllNotifRead()">Marcar tudo como lido</button></div>
+      <div class="notif-panel-body" id="notifList"></div>
+    </div>
     <div class="logo-row"><div class="logo-box"><span>C</span></div><div><div class="logo-title">CONFIANÇA</div><div class="logo-sub">SEGURANÇA QUE MOVE</div></div></div>
     <div class="home-heading">Rotogramas</div>
     <div id="driverGreeting" class="driver-greeting"></div>
@@ -603,6 +634,7 @@ let monitorMap=null, monitorMarkers={}, monitorMapInit=false;
 // Mapbox specific
 let _mbTruckMarker=null, _mbStopMarkers=[], _mbMap=null;
 let db=null, firebaseReady=false, isEditing=false, editingIndex=-1, editData={};
+let notifications=[], notifPanelOpen=false;
 let adminMode=false, _cryptoKey=null;
 
 // ═══ CRYPTO ═══
@@ -732,6 +764,14 @@ function initFirebase(){
     });
     db.ref('viagens').on('value',snap=>{const d=snap.val();viagens=d||{};checkActiveTrip();renderMonitoring();renderBI();});
     db.ref('posicoes').on('value',snap=>{const d=snap.val();posicoes=d||{};updateMonitorMap();renderMonitoring();});
+    // ═══ NOTIFICATIONS LISTENER ═══
+    db.ref('notifications').orderByChild('ts').limitToLast(30).on('value',snap=>{
+      const d=snap.val();
+      if(!d){notifications=[];renderNotifBadge();return;}
+      notifications=Object.entries(d).map(([k,v])=>({id:k,...v})).sort((a,b)=>(b.ts||0)-(a.ts||0));
+      renderNotifBadge();
+      if(notifPanelOpen)renderNotifList();
+    });
   }catch(e){setSyncStatus('err','Erro Firebase');loadLocal();}
 }
 function saveToFirebase(){if(db&&firebaseReady){db.ref('rotogramas').set(routes).then(()=>setSyncStatus('on','Salvo e sincronizado')).catch(()=>setSyncStatus('err','Erro ao salvar'))}else{localStorage.setItem('rotogramas_data',JSON.stringify(routes))}}
@@ -1809,14 +1849,115 @@ function removeStop(si){const s=getFuelStops()[si];editData.paradas.splice(editD
 function saveRoute(){captureEditorFields();
   editData.subtitulo='Rota '+editData.numero;editData.id=editData.nome.toLowerCase().replace(/[^a-z0-9]/g,'-').replace(/-+/g,'-');
   let ord=1;editData.paradas.forEach(p=>{if(p.tipo!=='origem'&&p.tipo!=='destino')p.ordem=ord++});
+  const isNew=editingIndex<0;
   if(editingIndex>=0)routes[editingIndex]=editData;else routes.push(editData);
   clearDraft();isEditing=false;if(window._draftInterval)clearInterval(window._draftInterval);
-  saveToFirebase();navPop(()=>renderAdmin());}
+  saveToFirebase();
+  // Disparar notificação
+  if(isNew){pushNotification('new',editData.nome,'Nova rota adicionada');}
+  else{pushNotification('edit',editData.nome,'Rota atualizada');}
+  navPop(()=>renderAdmin());}
 function cancelEdit(){
   saveDraft();
   const ov=document.createElement('div');ov.className='confirm-overlay';
   ov.innerHTML=`<div class="confirm-box"><h3>Sair da edição?</h3><p>Seu rascunho foi salvo automaticamente.</p><div class="btns"><button style="background:#eae8e3;color:#1c1c1c" onclick="clearDraft();this.closest('.confirm-overlay').remove();navPop(()=>renderAdmin())">Descartar</button><button style="background:#fe2627;color:#fff" onclick="this.closest('.confirm-overlay').remove();navPop(()=>renderAdmin())">Manter rascunho</button></div></div>`;
   document.body.appendChild(ov);}
+
+// ═══ NOTIFICATION SYSTEM ═══
+function _getReadIds(){try{return JSON.parse(localStorage.getItem('notif_read')||'[]')}catch(e){return[]}}
+function _saveReadIds(ids){localStorage.setItem('notif_read',JSON.stringify(ids))}
+function _unreadCount(){const read=_getReadIds();return notifications.filter(n=>!read.includes(n.id)).length}
+
+function renderNotifBadge(){
+  const badge=document.getElementById('notifBadge');if(!badge)return;
+  const c=_unreadCount();
+  badge.textContent=c>99?'99+':c;
+  badge.className='notif-badge'+(c>0?' show':'');
+}
+function toggleNotifPanel(){
+  notifPanelOpen=!notifPanelOpen;
+  const panel=document.getElementById('notifPanel');
+  if(!panel)return;
+  panel.className='notif-panel'+(notifPanelOpen?' open':'');
+  if(notifPanelOpen)renderNotifList();
+}
+function renderNotifList(){
+  const el=document.getElementById('notifList');if(!el)return;
+  if(notifications.length===0){el.innerHTML='<div class="notif-empty">🔔<br>Nenhuma notificação ainda</div>';return;}
+  const read=_getReadIds();
+  let h='';
+  notifications.forEach(n=>{
+    const isRead=read.includes(n.id);
+    const icon=n.type==='new'?'📍':n.type==='edit'?'✏️':'⛽';
+    const iconCls=n.type==='new'?'notif-icon-new':n.type==='edit'?'notif-icon-edit':'notif-icon-alert';
+    const ago=_timeAgo(n.ts);
+    h+=`<div class="notif-item${isRead?'':' unread'}" onclick="markNotifRead('${n.id}')">
+      <div class="notif-dot${isRead?' read':''}"></div>
+      <div class="notif-icon ${iconCls}">${icon}</div>
+      <div style="flex:1;min-width:0">
+        <div class="notif-text"><strong>${esc(n.route||'')}</strong> — ${esc(n.msg||'')}</div>
+        <div class="notif-time">${ago}</div>
+      </div></div>`;
+  });
+  el.innerHTML=h;
+}
+function markNotifRead(id){
+  const read=_getReadIds();
+  if(!read.includes(id)){read.push(id);_saveReadIds(read);}
+  renderNotifBadge();renderNotifList();
+}
+function markAllNotifRead(){
+  const ids=notifications.map(n=>n.id);_saveReadIds(ids);
+  renderNotifBadge();renderNotifList();
+}
+function _timeAgo(ts){
+  if(!ts)return'';
+  const diff=Math.floor((Date.now()-ts)/1000);
+  if(diff<60)return'Agora';
+  if(diff<3600)return'Há '+Math.floor(diff/60)+' min';
+  if(diff<86400)return'Há '+Math.floor(diff/3600)+'h';
+  if(diff<172800)return'Ontem';
+  return'Há '+Math.floor(diff/86400)+' dias';
+}
+function pushNotification(type,routeName,msg){
+  if(!db||!firebaseReady)return;
+  const notif={type:type,route:routeName,msg:msg,ts:Date.now()};
+  db.ref('notifications').push(notif);
+  // Limpar notificações antigas (manter últimas 50)
+  db.ref('notifications').orderByChild('ts').once('value',snap=>{
+    const all=snap.val();if(!all)return;
+    const keys=Object.keys(all);
+    if(keys.length>50){
+      const sorted=Object.entries(all).sort((a,b)=>(a[1].ts||0)-(b[1].ts||0));
+      const toRemove=sorted.slice(0,keys.length-50);
+      const updates={};toRemove.forEach(([k])=>updates[k]=null);
+      db.ref('notifications').update(updates);
+    }
+  });
+  // Push notification via SW
+  if('serviceWorker' in navigator&&Notification.permission==='granted'){
+    navigator.serviceWorker.ready.then(reg=>{
+      reg.showNotification('Rotogramas Confiança',{body:routeName+' — '+msg,icon:'./icon-192.png',badge:'./icon-192.png',tag:'rotograma-'+Date.now(),data:{type:type}});
+    }).catch(()=>{});
+  }
+}
+function requestNotifPermission(){
+  if(!('Notification' in window))return;
+  if(Notification.permission==='default'){
+    Notification.requestPermission().then(p=>{
+      if(p==='granted')showToast('Notificações ativadas!','#1a7f37');
+    });
+  }
+}
+// Close panel on outside click
+document.addEventListener('click',e=>{
+  if(!notifPanelOpen)return;
+  const panel=document.getElementById('notifPanel');
+  const bell=document.getElementById('notifBell');
+  if(panel&&bell&&!panel.contains(e.target)&&!bell.contains(e.target)){
+    notifPanelOpen=false;panel.className='notif-panel';
+  }
+});
 
 // ═══ TOAST & SUCCESS ═══
 function showToast(msg,color){
@@ -1932,6 +2073,7 @@ function showDriverLogin(){navReset('screenDriverLogin');}
 function showHome(){
   if(!currentDriver&&!adminMode){showDriverLogin();return;}
   isEditing=false;if(window._draftInterval)clearInterval(window._draftInterval);
+  requestNotifPermission();
   // Se home já está na pilha, faz pop até chegar nela
   const homeIdx=_navStack.indexOf('screenHome');
   if(homeIdx>=0){
