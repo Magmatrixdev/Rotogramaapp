@@ -406,6 +406,120 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .bi-row-name{font-weight:700;font-size:13px;color:#1c1c1c}
 .bi-row-detail{font-family:'Barlow',sans-serif;font-size:11px;color:#9a9894;margin-top:3px}
 .bi-empty{font-family:'Barlow',sans-serif;font-size:13px;color:#9a9894;text-align:center;padding:20px}
+/* ══════════════════════════════════════════════
+   DESKTOP SHELL — oculto no mobile por padrão
+   ══════════════════════════════════════════════ */
+#dTopbar,#dSidebar,#dDetailPane{display:none}
+
+/* ══════════════════════════════════════════════
+   DESKTOP MEDIA QUERY ≥ 1024px
+   ══════════════════════════════════════════════ */
+@media(min-width:1024px){
+  /* ── Reset body ── */
+  body{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+
+  /* ── TOP BAR ── */
+  #dTopbar{display:flex;align-items:center;height:52px;background:#262625;padding:0 20px;gap:14px;flex-shrink:0;z-index:200;position:relative}
+  .dtb-left{display:flex;align-items:center;gap:12px}
+  .dtb-logo{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;color:#fff;letter-spacing:.5px;white-space:nowrap}
+  .dtb-logo span{color:#fe2627}
+  .dtb-div{width:1px;height:22px;background:rgba(255,255,255,.15)}
+  .dtb-subtitle{font-size:12px;color:rgba(255,255,255,.5);white-space:nowrap}
+  .dtb-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+  .dtb-sync{font-size:11px;color:rgba(255,255,255,.5);margin-right:4px;white-space:nowrap}
+  .dtb-notif{position:relative;cursor:pointer;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:rgba(255,255,255,.1);border:none;font-size:15px;transition:background .15s}
+  .dtb-notif:hover{background:rgba(255,255,255,.18)}
+  .dtb-driver{font-size:13px;color:rgba(255,255,255,.8);display:flex;align-items:center;gap:7px;padding:0 4px}
+  .dtb-driver-avatar{width:26px;height:26px;border-radius:7px;background:#fe2627;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:10px;color:#fff;font-family:'Barlow Condensed',sans-serif;flex-shrink:0}
+  .dtb-btn{padding:6px 13px;border-radius:8px;background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.8);font-size:12px;font-family:'Barlow',sans-serif;cursor:pointer;transition:background .15s;font-weight:500;white-space:nowrap}
+  .dtb-btn:hover{background:rgba(255,255,255,.18)}
+  .dtb-btn-red{background:#fe2627;color:#fff}
+  .dtb-btn-red:hover{background:#d41f20}
+  #dtbBadge{border-color:#262625}
+
+  /* ── DESKTOP BODY ROW ── */
+  .d-body-row{display:flex;flex:1;overflow:hidden;min-height:0}
+
+  /* ── SIDEBAR ── */
+  #dSidebar{display:flex;flex-direction:column;width:210px;flex-shrink:0;background:#fff;border-right:1.5px solid #e4e2dd;overflow-y:auto}
+  .dsb-section{padding:14px 12px 6px;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#9a9894}
+  .dsb-item{display:flex;align-items:center;gap:9px;padding:9px 12px;cursor:pointer;border-radius:10px;margin:1px 8px;transition:background .15s;font-size:13px;font-weight:500;color:#6b6967;user-select:none}
+  .dsb-item:hover{background:#f4f4f2}
+  .dsb-item.active{background:#fff0f0;color:#fe2627;font-weight:600}
+  .dsb-count{margin-left:auto;background:#eae8e3;color:#9a9894;font-size:10px;font-weight:700;padding:2px 6px;border-radius:9px;font-family:'Barlow Condensed',sans-serif;min-width:20px;text-align:center}
+  .dsb-item.active .dsb-count{background:rgba(254,38,39,.12);color:#fe2627}
+  .dsb-footer{margin-top:auto;padding:13px 14px;border-top:1.5px solid #e4e2dd;font-size:11px;color:#1a7f37;display:flex;align-items:center;gap:6px}
+  .dsb-footer::before{content:'';width:7px;height:7px;border-radius:50%;background:#1a7f37;flex-shrink:0}
+  .dsb-footer.err{color:#fe2627}
+  .dsb-footer.err::before{background:#fe2627}
+
+  /* ── CONTENT AREA ── */
+  .d-content{display:flex;flex:1;overflow:hidden;min-height:0;position:relative}
+
+  /* ── SCREENS on desktop: position within content area ── */
+  .screen{position:absolute;inset:0;top:0;left:0;right:0;bottom:0}
+
+  /* ── HOME SCREEN on desktop: two columns ── */
+  #screenHome{display:flex!important;visibility:visible!important;transform:none!important;flex-direction:row;background:#f4f4f2}
+  #screenHome .home-top .admin-toggle,
+  #screenHome .home-top .notif-bell,
+  #screenHome .home-top .logout-btn,
+  #screenHome .home-top .logo-row,
+  #screenHome .home-top .home-heading,
+  #screenHome .home-top .driver-greeting,
+  #screenHome .home-top .home-subtext,
+  #screenHome .sync-bar,
+  #screenHome .emergency-bar{display:none!important}
+  /* Notif panel repositioned for desktop (now in topbar) */
+  #notifPanel{display:none!important}
+  #screenHome .home-top{padding:12px 14px 10px;background:#fff;border-bottom:1.5px solid #e4e2dd;border-right:none}
+  #screenHome .search-wrap{margin:0}
+  #screenHome .search-input{font-size:13px}
+
+  /* Left list column */
+  .d-list-col{width:320px;flex-shrink:0;border-right:1.5px solid #e4e2dd;display:flex;flex-direction:column;background:#f4f4f2;overflow:hidden}
+  .d-list-header{padding:12px 14px 10px;background:#fff;border-bottom:1.5px solid #e4e2dd;flex-shrink:0}
+  .d-list-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:.3px;color:#1c1c1c;margin-bottom:8px}
+  .home-scroll{flex:1;overflow-y:auto}
+
+  /* Active trip banner in desktop — smaller */
+  #activeTripBanner{margin:8px 10px 0;border-radius:10px;padding:10px 14px}
+
+  /* ── DETAIL PANE ── */
+  #dDetailPane{display:flex;flex:1;overflow:hidden;flex-direction:column;background:#f4f4f2;min-width:0}
+  .ddp-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#9a9894}
+  #ddpContent{display:flex}
+  #ddpRouteContent{padding-bottom:0}
+  .ddp-trip-bar{display:none;padding:12px 16px;background:#fff;border-top:1.5px solid #e4e2dd}
+  .ddp-trip-bar.show{display:block}
+  #ddpRouteContent .back-btn{display:none!important}
+  /* route cards selected state */
+  #routeList .rcard.d-selected{border-color:#fe2627;background:#fff8f8}
+
+  /* ── SCREENS that slide in on mobile → on desktop they go over content area ── */
+  #screenRoute,#screenAdmin,#screenEditor,#screenMapLive,#screenDriverLogin,#screenDriverReg{
+    top:0;left:0;right:0;bottom:0;
+  }
+  /* Admin screen full content area */
+  #screenAdmin{flex-direction:row!important;overflow:hidden}
+  #screenAdmin .admin-top .back-btn{display:none}
+  #screenAdmin .admin-top{padding-left:20px;border-bottom:1.5px solid #e4e2dd}
+  .admin-tab-bar{flex-direction:column!important;width:160px!important;flex-shrink:0!important;height:100%!important;border-bottom:none!important;border-right:1.5px solid #e4e2dd!important;padding:12px 8px!important;background:#fff!important;gap:3px!important}
+  .admin-tab-btn{border-radius:10px!important;text-align:left!important;justify-content:flex-start!important;padding:10px 12px!important;font-size:13px!important;font-weight:500!important}
+  .admin-tab-btn.active{background:#fff0f0!important;color:#fe2627!important}
+  .admin-tab-content{flex:1!important;overflow:hidden!important;display:flex!important;flex-direction:column!important}
+  .admin-tab-pane.active{overflow-y:auto!important;padding:16px 18px!important}
+  .admin-scroll{padding:0!important}
+  /* Admin route cards in a grid */
+  .admin-rcard{margin-bottom:10px}
+
+  /* Notif panel reposition for desktop topbar */
+  .notif-panel{position:fixed!important;top:56px!important;right:12px!important;left:auto!important;width:320px!important;max-height:400px!important}
+}
+
+/* ── Helper wrapper injected by JS ── */
+.d-body-row{display:none}
+@media(min-width:1024px){.d-body-row{display:flex}}
 </style>
 </head>
 <body>
@@ -450,7 +564,36 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 </div>
 
 <!-- ═══ HOME ═══ -->
+<!-- ═══ DESKTOP SHELL (oculto no mobile por padrão) ═══ -->
+<div id="dTopbar">
+  <div class="dtb-left">
+    <div class="dtb-logo">🚛 <span>ROTO</span>GRAMAS</div>
+    <div class="dtb-div"></div>
+    <div class="dtb-subtitle" id="dtbSubtitle">Confiança Transportes</div>
+  </div>
+  <div class="dtb-right">
+    <div class="dtb-sync" id="dtbSync">⏳ Conectando...</div>
+    <button class="dtb-notif" id="dtbNotifBtn" onclick="toggleNotifPanel()">🔔<div class="notif-badge" id="dtbBadge">0</div></button>
+    <div class="dtb-driver" id="dtbDriver"></div>
+    <button class="dtb-btn" id="dtbAdminBtn" onclick="showAdminLogin()">⚙️ Admin</button>
+    <button class="dtb-btn dtb-btn-red" id="dtbLogoutBtn" onclick="promptLogout()" style="display:none">↩ Sair</button>
+  </div>
+</div>
+<div class="d-body-row">
+<div id="dSidebar">
+  <div class="dsb-section">Regiões</div>
+  <div class="dsb-item active" data-region="all" onclick="dSidebarFilter(this,'all')"><span>🗺️</span> Todas as rotas<span class="dsb-count" id="dsbCountAll">—</span></div>
+  <div class="dsb-item" data-region="Centro-Oeste" onclick="dSidebarFilter(this,'Centro-Oeste')"><span>📍</span> Centro-Oeste<span class="dsb-count" id="dsbCountCO">—</span></div>
+  <div class="dsb-item" data-region="Nordeste" onclick="dSidebarFilter(this,'Nordeste')"><span>📍</span> Nordeste<span class="dsb-count" id="dsbCountNE">—</span></div>
+  <div class="dsb-item" data-region="Sudeste" onclick="dSidebarFilter(this,'Sudeste')"><span>📍</span> Sudeste<span class="dsb-count" id="dsbCountSE">—</span></div>
+  <div class="dsb-item" data-region="Sul" onclick="dSidebarFilter(this,'Sul')"><span>📍</span> Sul<span class="dsb-count" id="dsbCountSU">—</span></div>
+  <div class="dsb-item" data-region="Norte" onclick="dSidebarFilter(this,'Norte')"><span>📍</span> Norte<span class="dsb-count" id="dsbCountNO">—</span></div>
+  <div class="dsb-item" data-region="Centro-Norte" onclick="dSidebarFilter(this,'Centro-Norte')"><span>📍</span> Centro-Norte<span class="dsb-count" id="dsbCountCN">—</span></div>
+  <div class="dsb-footer" id="dsbFooter">⏳ Sincronizando...</div>
+</div>
+<div class="d-content">
 <div class="screen" id="screenHome">
+<div class="d-list-col">
   <div class="home-top" style="position:relative">
     <button class="admin-toggle" onclick="showAdminLogin()">⚙️</button>
     <button class="notif-bell" id="notifBell" onclick="toggleNotifPanel()">🔔<div class="notif-badge" id="notifBadge">0</div></button>
@@ -473,7 +616,22 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
   </div>
   <div class="emergency-bar emergency-compact" style="margin:10px 22px 0"><div class="emergency-title">Contato de emergência — Abastecimento</div><div class="emergency-btns"><a class="emergency-btn whatsapp" href="https://wa.me/5562998780792" target="_blank">💬<div class="emergency-btn-info"><span class="emergency-btn-name">Pedro</span><span class="emergency-btn-sub">Seg a Sex</span></div></a><a class="emergency-btn whatsapp" href="https://wa.me/5562999943443" target="_blank">💬<div class="emergency-btn-info"><span class="emergency-btn-name">Maria</span><span class="emergency-btn-sub">Sáb e Dom</span></div></a></div></div>
   <div class="home-scroll" id="routeList"></div>
+</div><!-- /.d-list-col -->
+<!-- ═══ PAINEL DETALHE DESKTOP ═══ -->
+<div id="dDetailPane">
+  <div class="ddp-empty" id="ddpEmpty">
+    <div style="font-size:48px;margin-bottom:12px">🗺️</div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;text-transform:uppercase;letter-spacing:.3px;color:#9a9894">Selecione uma rota</div>
+    <div style="font-size:12px;color:#b5b3af;margin-top:4px">O detalhe aparecerá aqui</div>
+  </div>
+  <div id="ddpContent" style="display:none;flex-direction:column;height:100%;overflow:hidden">
+    <div id="ddpRouteContent" style="flex:1;overflow-y:auto"></div>
+    <div class="ddp-trip-bar" id="ddpTripBar">
+      <button class="btn-start-trip" id="ddpStartTrip">🚛 Iniciar Viagem</button>
+    </div>
+  </div>
 </div>
+</div><!-- /#screenHome -->
 
 <!-- ═══ ROTA (estático) ═══ -->
 <div class="screen" id="screenRoute">
@@ -575,6 +733,8 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
   <div class="editor-scroll" id="editorContent"></div>
   <div class="editor-save"><button class="cancel" onclick="cancelEdit()">Cancelar</button><button class="save" onclick="saveRoute()">Salvar Rota</button></div>
 </div>
+</div><!-- /.d-content -->
+</div><!-- /.d-body-row -->
 
 <script>
 // ═══ FIREBASE CONFIG ═══
@@ -1897,6 +2057,8 @@ function renderNotifBadge(){
   const c=_unreadCount();
   badge.textContent=c>99?'99+':c;
   badge.className='notif-badge'+(c>0?' show':'');
+  const db2=document.getElementById('dtbBadge');
+  if(db2){db2.textContent=badge.textContent;db2.className=badge.className;}
 }
 function toggleNotifPanel(){
   notifPanelOpen=!notifPanelOpen;
@@ -1993,6 +2155,148 @@ document.addEventListener('click',e=>{
     notifPanelOpen=false;panel.className='notif-panel';
   }
 });
+
+// ═══ DESKTOP INTERFACE ═══
+const IS_DESKTOP=()=>window.innerWidth>=1024;
+let _dActiveRegion='all';
+
+function dUpdateTopbar(){
+  if(!IS_DESKTOP())return;
+  // sync status
+  const syncEl=document.getElementById('dtbSync');
+  const dsbFoot=document.getElementById('dsbFooter');
+  const syncBar=document.getElementById('syncBar');
+  if(syncEl&&syncBar){syncEl.textContent=syncBar.textContent||'';if(syncBar.className.includes('on')){if(dsbFoot){dsbFoot.textContent='Sincronizado';dsbFoot.className='dsb-footer';}syncEl.style.color='rgba(255,255,255,.4)';}else if(syncBar.className.includes('err')){if(dsbFoot){dsbFoot.textContent='Erro de conexão';dsbFoot.className='dsb-footer err';}}else{if(dsbFoot){dsbFoot.textContent='Sincronizando...';dsbFoot.className='dsb-footer';}}}
+  // driver info
+  const driverEl=document.getElementById('dtbDriver');
+  const logoutBtn=document.getElementById('dtbLogoutBtn');
+  const adminBtn=document.getElementById('dtbAdminBtn');
+  if(driverEl){
+    if(currentDriver){
+      const initials=currentDriver.nome.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+      driverEl.innerHTML=`<div class="dtb-driver-avatar">${initials}</div><span>${currentDriver.nome.split(' ')[0]}</span>`;
+      if(logoutBtn)logoutBtn.style.display='flex';
+      if(adminBtn)adminBtn.style.display='none';
+    }else if(adminMode){
+      driverEl.innerHTML='<span style="color:rgba(255,255,255,.6);font-size:12px">Modo Admin</span>';
+      if(logoutBtn)logoutBtn.style.display='flex';
+      if(adminBtn)adminBtn.style.display='none';
+    }else{
+      driverEl.innerHTML='';
+      if(logoutBtn)logoutBtn.style.display='none';
+      if(adminBtn)adminBtn.style.display='flex';
+    }
+  }
+  // subtitle
+  const sub=document.getElementById('dtbSubtitle');
+  if(sub){
+    if(adminMode)sub.textContent='Painel Administrativo';
+    else if(currentDriver)sub.textContent='Olá, '+currentDriver.nome.split(' ')[0]+'!';
+    else sub.textContent='Confiança Transportes';
+  }
+  // badge sync (desktop topbar badge mirrors mobile badge)
+  const mb=document.getElementById('notifBadge');
+  const db=document.getElementById('dtbBadge');
+  if(mb&&db){db.textContent=mb.textContent;db.className=mb.className.replace('notif-badge','notif-badge');}
+}
+
+function dUpdateSidebar(){
+  if(!IS_DESKTOP())return;
+  const counts={all:0};
+  routes.forEach(r=>{
+    const reg=r.regiao||'Outras';
+    counts.all=(counts.all||0)+1;
+    counts[reg]=(counts[reg]||0)+1;
+  });
+  const map={'all':'All','Centro-Oeste':'CO','Nordeste':'NE','Sudeste':'SE','Sul':'SU','Norte':'NO','Centro-Norte':'CN'};
+  Object.entries(map).forEach(([reg,suffix])=>{
+    const el=document.getElementById('dsbCount'+suffix);
+    if(el)el.textContent=counts[reg]||0;
+  });
+}
+
+function dSidebarFilter(el,region){
+  document.querySelectorAll('.dsb-item').forEach(i=>i.classList.remove('active'));
+  el.classList.add('active');
+  _dActiveRegion=region;
+  // Filter route cards in the home list
+  const cards=document.querySelectorAll('#routeList .rcard');
+  const regs=document.querySelectorAll('#routeList .region');
+  cards.forEach(c=>{
+    if(region==='all'){c.style.display='';}
+    else{const rcard=c.dataset.region||'';c.style.display=rcard===region?'':'none';}
+  });
+  regs.forEach(r=>{
+    if(region==='all'){r.style.display='';}
+    else{const vis=[...r.querySelectorAll('.rcard')].some(c=>c.style.display!=='none');r.style.display=vis?'':'none';}
+  });
+}
+
+// Two-panel: show route detail in right pane instead of navigating
+function dShowRouteDetail(i){
+  const r=routes[i];currentRouteIdx=i;
+  const pane=document.getElementById('ddpContent');
+  const empty=document.getElementById('ddpEmpty');
+  const content=document.getElementById('ddpRouteContent');
+  if(!pane||!content)return;
+  content.innerHTML=renderRoute(r);
+  empty.style.display='none';
+  pane.style.display='flex';
+  // Trip bar
+  const tripBar=document.getElementById('ddpTripBar');
+  const tripBtn=document.getElementById('ddpStartTrip');
+  if(tripBar&&tripBtn&&currentDriver){
+    tripBar.classList.add('show');
+    if(currentTrip&&currentTrip.rotaId===r.id){
+      tripBtn.textContent='🗺️ Ver Mapa ao Vivo';tripBtn.style.background='#1a6fb5';tripBtn.onclick=showMapLive;tripBtn.disabled=false;
+    }else if(currentTrip){
+      tripBtn.textContent='🚛 Em outra viagem';tripBtn.style.background='#9a9894';tripBtn.disabled=true;
+    }else{
+      tripBtn.textContent='🚛 Iniciar Viagem';tripBtn.style.background='#1a7a3c';tripBtn.onclick=startTrip;tripBtn.disabled=false;
+    }
+  }else if(tripBar){tripBar.classList.remove('show');}
+  // Highlight selected card
+  document.querySelectorAll('#routeList .rcard').forEach((c,idx)=>c.classList.toggle('d-selected',idx===i||(c.dataset.routeIdx&&parseInt(c.dataset.routeIdx)===i)));
+}
+
+// Override showRoute for desktop
+const _origShowRoute=window.showRoute;
+function showRoute(i){
+  if(IS_DESKTOP()&&_navStack.length<=1||IS_DESKTOP()&&_navStack[_navStack.length-1]==='screenHome'){
+    dShowRouteDetail(i);return;
+  }
+  if(typeof _origShowRoute==='function')_origShowRoute(i);
+}
+
+// Hook into renderHome to add desktop data attributes and update sidebar
+const _origRenderHome=window.renderHome;
+function renderHome(){
+  if(typeof _origRenderHome==='function')_origRenderHome();
+  dUpdateSidebar();dUpdateTopbar();
+  // Add region data-attr to route cards for sidebar filtering
+  if(IS_DESKTOP()){
+    document.querySelectorAll('#routeList .rcard').forEach((card,i)=>{
+      card.dataset.routeIdx=i;
+      const route=routes[i];
+      if(route)card.dataset.region=route.regiao||'Outras';
+    });
+    // Re-apply current region filter
+    if(_dActiveRegion&&_dActiveRegion!=='all'){
+      const activeItem=document.querySelector(`.dsb-item[data-region="${_dActiveRegion}"]`);
+      if(activeItem)dSidebarFilter(activeItem,_dActiveRegion);
+    }
+  }
+}
+
+// Also hook setSyncStatus to keep topbar updated
+const _origSetSyncStatus=window.setSyncStatus;
+function setSyncStatus(state,msg){
+  if(typeof _origSetSyncStatus==='function')_origSetSyncStatus(state,msg);
+  if(IS_DESKTOP())setTimeout(dUpdateTopbar,50);
+}
+
+// Init desktop on load
+window.addEventListener('resize',()=>{if(IS_DESKTOP())dUpdateTopbar();});
 
 // ═══ TOAST & SUCCESS ═══
 function showToast(msg,color){
@@ -2109,6 +2413,7 @@ function showHome(){
   if(!currentDriver&&!adminMode){showDriverLogin();return;}
   isEditing=false;if(window._draftInterval)clearInterval(window._draftInterval);
   requestNotifPermission();
+  dUpdateTopbar();
   // Se home já está na pilha, faz pop até chegar nela
   const homeIdx=_navStack.indexOf('screenHome');
   if(homeIdx>=0){
