@@ -759,6 +759,9 @@ body.desktop-mode .admin-scroll{padding:0!important}
 </div><!-- /.d-body-row -->
 
 <script>
+// ═══ DESKTOP MODE FLAG (deve ser o primeiro, antes de qualquer função que use) ═══
+var IS_DESKTOP = function(){ return document.body.classList.contains('desktop-mode'); };
+
 // ═══ FIREBASE CONFIG ═══
 const APP_VERSION = 6; // Incrementar a cada deploy para forçar update em todos os devices
 const FIREBASE_CONFIG={apiKey:"AIzaSyAbYd2RulYeBr-_IQ8G4ccmzxKf8gAjLPQ",authDomain:"rotogramas-confianca.firebaseapp.com",databaseURL:"https://rotogramas-confianca-default-rtdb.firebaseio.com",projectId:"rotogramas-confianca",storageBucket:"rotogramas-confianca.firebasestorage.app",messagingSenderId:"156398881281",appId:"1:156398881281:web:a67f3e2ee02b969ab78e00"};
@@ -2149,7 +2152,7 @@ document.addEventListener('click',e=>{
 });
 
 // ═══ DESKTOP INTERFACE ═══
-const IS_DESKTOP=()=>document.body.classList.contains('desktop-mode');
+// IS_DESKTOP já definido no topo do script com var
 let _dActiveRegion='all';
 
 /* ── Toggle entre versão mobile e desktop ── */
@@ -2183,97 +2186,6 @@ function _dActivateHomeLayout(){
   if(home){home.style.visibility='visible';home.style.transform='none';home.classList.add('active');home.classList.remove('behind');}
   _navStack=['screenHome'];
   renderHome();
-}
-
-/* ── Patches nas funções de navegação para respeitar desktop ── */
-// Guarda as originais
-const _nav_origReset=navReset;
-const _nav_origPush=navPush;
-const _nav_origPop=navPop;
-
-function navReset(id,setupFn){
-  if(IS_DESKTOP()&&id==='screenHome'){
-    // No desktop, navReset para home não esconde as screens via cssText normal
-    _blur();
-    const overlays=['screenAdmin','screenEditor','screenRoute','screenMapLive','screenDriverLogin','screenDriverReg'];
-    overlays.forEach(sid=>{
-      const el=document.getElementById(sid);
-      if(el){el.style.cssText='';el.style.visibility='hidden';el.style.transform='translateX(100%)';el.classList.remove('active','behind');}
-    });
-    const dme=document.getElementById('driverMapEl');
-    if(dme)dme.style.cssText='position:absolute;inset:0;z-index:1;background:#e8f0e8';
-    _navStack=['screenHome'];
-    const home=document.getElementById('screenHome');
-    if(home){home.style.visibility='visible';home.style.transform='none';home.classList.add('active');home.classList.remove('behind');}
-    if(setupFn)setupFn();
-    return;
-  }
-  _nav_origReset(id,setupFn);
-}
-
-function navPush(id,setupFn){
-  if(IS_DESKTOP()){
-    const prevId=_navStack.length>0?_navStack[_navStack.length-1]:null;
-    _navStack.push(id);
-    const newEl=document.getElementById(id);
-    const prevEl=prevId?document.getElementById(prevId):null;
-    if(newEl)newEl.scrollTop=0;
-    if(setupFn)setupFn();
-    // No desktop: screen que vai "atrás" NÃO se move (só escurece levemente se for screenHome)
-    if(prevEl&&prevId!=='screenHome'){
-      prevEl.style.transition=`transform ${NAV_DUR}ms cubic-bezier(.4,0,.2,1)`;
-      prevEl.classList.add('behind');prevEl.classList.remove('active');
-      setTimeout(()=>{if(!prevEl.classList.contains('active'))prevEl.style.transition='';},NAV_DUR+20);
-    }
-    // Nova screen: slide da direita como overlay
-    if(newEl){
-      newEl.style.transition='none';
-      newEl.style.transform='translateX(100%)';
-      newEl.style.visibility='visible';
-      requestAnimationFrame(()=>requestAnimationFrame(()=>{
-        newEl.style.transition=`transform ${NAV_DUR}ms cubic-bezier(.4,0,.2,1)`;
-        newEl.style.transform='translateX(0)';
-        newEl.classList.add('active');
-        setTimeout(()=>{newEl.style.transition='';newEl.style.transform='';},NAV_DUR+20);
-      }));
-    }
-    dUpdateTopbar();
-    return;
-  }
-  _nav_origPush(id,setupFn);
-}
-
-function navPop(setupFn){
-  if(IS_DESKTOP()){
-    if(_navStack.length<=1)return;
-    const oldId=_navStack.pop();
-    const newId=_navStack[_navStack.length-1];
-    const oldEl=document.getElementById(oldId);
-    const newEl=document.getElementById(newId);
-    if(setupFn)setupFn();
-    // Animar overlay saindo para a direita
-    if(oldEl){
-      oldEl.style.transition=`transform ${NAV_DUR}ms cubic-bezier(.4,0,.2,1)`;
-      oldEl.style.transform='translateX(100%)';
-      oldEl.classList.remove('active');
-      setTimeout(()=>{oldEl.style.transition='';oldEl.style.transform='';oldEl.style.visibility='hidden';oldEl.scrollTop=0;},NAV_DUR+20);
-    }
-    // Se voltando para screenHome, apenas garantir que está visível (não animar)
-    if(newEl){
-      if(newId==='screenHome'){
-        newEl.style.visibility='visible';newEl.style.transform='none';
-        newEl.classList.add('active');newEl.classList.remove('behind');
-      }else{
-        newEl.style.transition=`transform ${NAV_DUR}ms cubic-bezier(.4,0,.2,1)`;
-        newEl.classList.add('active');newEl.classList.remove('behind');
-        newEl.style.transform='translateX(0)';
-        setTimeout(()=>{newEl.style.transition='';newEl.style.transform='';},NAV_DUR+20);
-      }
-    }
-    dUpdateTopbar();
-    return;
-  }
-  _nav_origPop(setupFn);
 }
 
 /* ── Topbar desktop ── */
@@ -2442,7 +2354,7 @@ const NAV_DUR=260; // ms
 
 function _blur(){if(document.activeElement?.blur)document.activeElement.blur();}
 
-function navPush(id,setupFn){
+function _navPushOrig(id,setupFn){
   _blur();
   const prevId=_navStack.length>0?_navStack[_navStack.length-1]:null;
   _navStack.push(id);
@@ -2450,14 +2362,12 @@ function navPush(id,setupFn){
   const prevEl=prevId?document.getElementById(prevId):null;
   if(newEl){newEl.scrollTop=0;}
   if(setupFn)setupFn();
-  // Animate prev → behind
   if(prevEl){
     prevEl.style.transition=`transform ${NAV_DUR}ms cubic-bezier(.4,0,.2,1)`;
     prevEl.classList.add('behind');
     prevEl.classList.remove('active');
     setTimeout(()=>{if(!prevEl.classList.contains('active'))prevEl.style.transition='';},NAV_DUR+20);
   }
-  // Animate new → active (slide from right)
   if(newEl){
     newEl.style.transition='none';
     newEl.style.transform='translateX(100%)';
@@ -2471,7 +2381,7 @@ function navPush(id,setupFn){
   }
 }
 
-function navPop(setupFn){
+function _navPopOrig(setupFn){
   _blur();
   if(_navStack.length<=1)return;
   const oldId=_navStack.pop();
@@ -2479,7 +2389,6 @@ function navPop(setupFn){
   const oldEl=document.getElementById(oldId);
   const newEl=document.getElementById(newId);
   if(setupFn)setupFn();
-  // Animate old → right (out)
   if(oldEl){
     oldEl.style.transition=`transform ${NAV_DUR}ms cubic-bezier(.4,0,.2,1)`;
     oldEl.style.transform='translateX(100%)';
@@ -2489,7 +2398,6 @@ function navPop(setupFn){
       oldEl.style.visibility='hidden';oldEl.scrollTop=0;
     },NAV_DUR+20);
   }
-  // Animate prev from behind → center
   if(newEl){
     newEl.style.transition=`transform ${NAV_DUR}ms cubic-bezier(.4,0,.2,1)`;
     newEl.classList.add('active');
@@ -2499,8 +2407,7 @@ function navPop(setupFn){
   }
 }
 
-function navReset(id,setupFn){
-  // Clear all, show one screen (no animation — used for login→home)
+function _navResetOrig(id,setupFn){
   _blur();
   document.querySelectorAll('.screen').forEach(s=>{
     s.classList.remove('active','behind');
@@ -2508,7 +2415,6 @@ function navReset(id,setupFn){
     s.style.visibility='hidden';
     s.scrollTop=0;
   });
-  // Restore driverMapEl inline styles after navReset clears them
   const dme=document.getElementById('driverMapEl');
   if(dme)dme.style.cssText='position:absolute;inset:0;z-index:1;background:#e8f0e8';
   _navStack=[id];
@@ -2520,6 +2426,87 @@ function navReset(id,setupFn){
     el.style.transform='translateX(0)';
   }
   if(setupFn)setupFn();
+}
+
+// ─── Wrappers desktop-aware (únicos navPush/navPop/navReset do app) ───
+function navPush(id,setupFn){
+  if(IS_DESKTOP()){
+    const prevId=_navStack.length>0?_navStack[_navStack.length-1]:null;
+    _navStack.push(id);
+    const newEl=document.getElementById(id);
+    const prevEl=prevId?document.getElementById(prevId):null;
+    if(newEl)newEl.scrollTop=0;
+    if(setupFn)setupFn();
+    if(prevEl&&prevId!=='screenHome'){
+      prevEl.style.transition=`transform ${NAV_DUR}ms cubic-bezier(.4,0,.2,1)`;
+      prevEl.classList.add('behind');prevEl.classList.remove('active');
+      setTimeout(()=>{if(!prevEl.classList.contains('active'))prevEl.style.transition='';},NAV_DUR+20);
+    }
+    if(newEl){
+      newEl.style.transition='none';
+      newEl.style.transform='translateX(100%)';
+      newEl.style.visibility='visible';
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        newEl.style.transition=`transform ${NAV_DUR}ms cubic-bezier(.4,0,.2,1)`;
+        newEl.style.transform='translateX(0)';
+        newEl.classList.add('active');
+        setTimeout(()=>{newEl.style.transition='';newEl.style.transform='';},NAV_DUR+20);
+      }));
+    }
+    dUpdateTopbar();
+    return;
+  }
+  _navPushOrig(id,setupFn);
+}
+
+function navPop(setupFn){
+  if(IS_DESKTOP()){
+    if(_navStack.length<=1)return;
+    const oldId=_navStack.pop();
+    const newId=_navStack[_navStack.length-1];
+    const oldEl=document.getElementById(oldId);
+    const newEl=document.getElementById(newId);
+    if(setupFn)setupFn();
+    if(oldEl){
+      oldEl.style.transition=`transform ${NAV_DUR}ms cubic-bezier(.4,0,.2,1)`;
+      oldEl.style.transform='translateX(100%)';
+      oldEl.classList.remove('active');
+      setTimeout(()=>{oldEl.style.transition='';oldEl.style.transform='';oldEl.style.visibility='hidden';oldEl.scrollTop=0;},NAV_DUR+20);
+    }
+    if(newEl){
+      if(newId==='screenHome'){
+        newEl.style.visibility='visible';newEl.style.transform='none';
+        newEl.classList.add('active');newEl.classList.remove('behind');
+      }else{
+        newEl.style.transition=`transform ${NAV_DUR}ms cubic-bezier(.4,0,.2,1)`;
+        newEl.classList.add('active');newEl.classList.remove('behind');
+        newEl.style.transform='translateX(0)';
+        setTimeout(()=>{newEl.style.transition='';newEl.style.transform='';},NAV_DUR+20);
+      }
+    }
+    dUpdateTopbar();
+    return;
+  }
+  _navPopOrig(setupFn);
+}
+
+function navReset(id,setupFn){
+  if(IS_DESKTOP()&&id==='screenHome'){
+    _blur();
+    const overlays=['screenAdmin','screenEditor','screenRoute','screenMapLive','screenDriverLogin','screenDriverReg'];
+    overlays.forEach(sid=>{
+      const el=document.getElementById(sid);
+      if(el){el.style.cssText='';el.style.visibility='hidden';el.style.transform='translateX(100%)';el.classList.remove('active','behind');}
+    });
+    const dme=document.getElementById('driverMapEl');
+    if(dme)dme.style.cssText='position:absolute;inset:0;z-index:1;background:#e8f0e8';
+    _navStack=['screenHome'];
+    const home=document.getElementById('screenHome');
+    if(home){home.style.visibility='visible';home.style.transform='none';home.classList.add('active');home.classList.remove('behind');}
+    if(setupFn)setupFn();
+    return;
+  }
+  _navResetOrig(id,setupFn);
 }
 
 // Legacy alias used in some places
