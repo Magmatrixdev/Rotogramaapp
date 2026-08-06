@@ -1,4 +1,4 @@
-const CACHE = 'rotograma-v8';
+const CACHE = 'rotograma-v9';
 const STATIC = [
   './manifest.json',
   './icon-192.png',
@@ -23,7 +23,6 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('message', e => {
   if (e.data?.type === 'SKIP_WAITING') self.skipWaiting();
-  // Suporte a limpeza forçada de cache
   if (e.data?.type === 'CLEAR_CACHE') {
     caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))));
   }
@@ -32,44 +31,39 @@ self.addEventListener('message', e => {
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
 
-  // Tudo externo (Mapbox, Firebase, CDNs) passa direto
+  // Requisições externas (Firebase, Mapbox, CDNs): passam direto
   if (url.origin !== self.location.origin) return;
 
-  // index.html e sw.js — network-first (garante updates)
-  if (url.pathname.endsWith('.html') || url.pathname.endsWith('sw.js') || url.pathname === '/' || url.pathname.endsWith('/')) {
-    e.respondWith(
-      fetch(e.request, { cache: 'no-store' })
-        .then(res => {
-          caches.open(CACHE).then(c => c.put(e.request, res.clone()));
-          return res;
-        })
-        .catch(() => caches.match('./index.html'))
-    );
-    return;
+  // HTML, raiz, sw.js: NÃO interceptar — browser busca direto do servidor
+  // Isso garante que atualizações do index.html chegam sempre
+  const p = url.pathname;
+  if (
+    p.endsWith('.html') ||
+    p.includes('sw.js') ||
+    p === '/' ||
+    p.endsWith('/')
+  ) {
+    return; // sem respondWith = comportamento padrão do browser
   }
 
-  // Ícones e manifest — cache-first
+  // Ícones e manifest: cache-first
   e.respondWith(
-    caches.match(e.request)
-      .then(cached => {
-        if (cached) return cached;
-        return fetch(e.request).then(res => {
-          caches.open(CACHE).then(c => c.put(e.request, res.clone()));
-          return res;
-        });
-      })
-      .catch(() => caches.match('./index.html'))
+    caches.match(e.request).then(cached => {
+      if (cached) return cached;
+      return fetch(e.request).then(res => {
+        caches.open(CACHE).then(c => c.put(e.request, res.clone()));
+        return res;
+      });
+    }).catch(() => null)
   );
 });
 
-// ═══ NOTIFICATION CLICK — abre o app ao tocar na notificação ═══
+// Notification click: foca ou abre o app
 self.addEventListener('notificationclick', e => {
   e.notification.close();
   e.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {
-      if (clients.length > 0) {
-        return clients[0].focus();
-      }
+      if (clients.length > 0) return clients[0].focus();
       return self.clients.openWindow('./');
     })
   );

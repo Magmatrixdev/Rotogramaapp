@@ -2153,19 +2153,16 @@ let _dActiveRegion='all';
 /* ── Toggle entre versão mobile e desktop ── */
 function toggleDesktopMode(){
   const isOn=IS_DESKTOP();
+  const btn=document.getElementById('btnToggleDesktop');
   if(isOn){
-    // Desativar desktop
     document.body.classList.remove('desktop-mode');
-    localStorage.setItem('rotograma_desktop','0');
-    document.getElementById('btnToggleDesktop').innerHTML='🖥️ Versão Web';
-    // Restaurar comportamento mobile: navReset para screenHome
+    localStorage.setItem('rotograma_mobile_forced','1');
+    if(btn)btn.innerHTML='🖥️ Versão Web';
     navReset('screenHome',()=>renderHome());
   }else{
-    // Ativar desktop
     document.body.classList.add('desktop-mode');
-    localStorage.setItem('rotograma_desktop','1');
-    document.getElementById('btnToggleDesktop').innerHTML='📱 Versão Mobile';
-    // Garantir que screenHome está visível e outras escondidas
+    localStorage.removeItem('rotograma_mobile_forced');
+    if(btn)btn.innerHTML='📱 Versão Mobile';
     _dActivateHomeLayout();
     dUpdateTopbar();dUpdateSidebar();
   }
@@ -2400,27 +2397,42 @@ function renderHome(){
 }
 
 /* ── Restore desktop preference on load ── */
-function _dInitBtn(){
-  const btn=document.getElementById('btnToggleDesktop');
-  if(!btn)return;
-  // Mostrar botão somente em telas largas (desktop)
-  if(window.innerWidth>=1024){
-    btn.style.display='flex';
+// ── Auto-detecção de desktop: roda imediatamente (script está no fim do body, DOM pronto) ──
+(function _desktopAutoDetect(){
+  var w=window.innerWidth||document.documentElement.clientWidth||screen.width;
+  var btn=document.getElementById('btnToggleDesktop');
+  var mobileForcado=localStorage.getItem('rotograma_mobile_forced')==='1';
+
+  if(w>=1024){
+    // Mostrar botão sempre em telas largas
+    if(btn){btn.style.cssText='display:flex!important;position:fixed;bottom:20px;right:20px;z-index:99999;align-items:center;gap:7px;padding:10px 18px;border-radius:12px;background:#262625;color:#fff;border:none;cursor:pointer;font-family:\'Barlow Condensed\',sans-serif;font-weight:700;font-size:14px;letter-spacing:.3px;box-shadow:0 4px 20px rgba(0,0,0,.35);white-space:nowrap';}
+    if(!mobileForcado){
+      // Desktop: ativar modo desktop automaticamente
+      document.body.classList.add('desktop-mode');
+      if(btn)btn.innerHTML='📱 Versão Mobile';
+      // Não chamar _dActivateHomeLayout aqui pois o app ainda está inicializando
+      // O navReset ao fazer login vai respeitar IS_DESKTOP()
+    }else{
+      // Usuário escolheu ficar no mobile
+      if(btn)btn.innerHTML='🖥️ Versão Web';
+    }
   }else{
-    btn.style.display='none';
+    // Mobile: garantir que desktop-mode não está ativo
+    document.body.classList.remove('desktop-mode');
+    if(btn)btn.style.display='none';
   }
-}
-document.addEventListener('DOMContentLoaded',()=>{
-  _dInitBtn();
-  if(localStorage.getItem('rotograma_desktop')==='1'){
-    document.body.classList.add('desktop-mode');
-    const btn=document.getElementById('btnToggleDesktop');
-    if(btn)btn.innerHTML='📱 Versão Mobile';
+})();
+
+window.addEventListener('resize',function(){
+  var w=window.innerWidth||document.documentElement.clientWidth||screen.width;
+  var btn=document.getElementById('btnToggleDesktop');
+  if(w>=1024){
+    if(btn)btn.style.display='flex';
+  }else{
+    document.body.classList.remove('desktop-mode');
+    if(btn)btn.style.display='none';
   }
 });
-window.addEventListener('resize',_dInitBtn);
-
-// ═══ TOAST & SUCCESS ═══
 
 // ═══ TOAST & SUCCESS ═══
 function showToast(msg,color){
@@ -2633,15 +2645,15 @@ function _handleDeepLink(){
 window.addEventListener('hashchange',()=>_handleDeepLink());
 
 // ═══ INIT ═══
-document.addEventListener('DOMContentLoaded',()=>{
+// Script está no fim do body: DOM já está pronto, não precisa esperar DOMContentLoaded
+(function initApp(){
   document.getElementById('searchInput')?.addEventListener('input',e=>filterRoutes(e.target.value));
-  // Check for saved driver session
   if(loadDriverSession()){
     navReset('screenHome',()=>renderHome());
   }else{
     navReset('screenDriverLogin');
   }
-});
+})();
 window.addEventListener('online',()=>{document.getElementById('offlineToast').classList.remove('show');setSyncStatus('on','Reconectado')});
 window.addEventListener('offline',()=>{const t=document.getElementById('offlineToast');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),4000);setSyncStatus('off','Sem conexão — modo offline')});
 // ═══ INSTALL PWA (Android + iOS) ═══
