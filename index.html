@@ -436,9 +436,9 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .d-body-row{display:contents}/* sem layout proprio — só agrupa HTML */
 .d-content{display:contents}
 
-/* Botão alternância — visibilidade controlada por JS */
+/* Botão alternância desktop/mobile — SEMPRE visível */
 #btnToggleDesktop{
-  display:none;
+  display:flex;
   position:fixed;bottom:20px;right:20px;z-index:99999;
   align-items:center;gap:7px;
   padding:10px 18px;border-radius:12px;
@@ -448,6 +448,8 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
   transition:background .15s,transform .15s;white-space:nowrap;
 }
 #btnToggleDesktop:hover{background:#fe2627;transform:translateY(-2px)}
+/* No modo desktop, reposicionar para não conflitar com sidebar */
+body.desktop-mode #btnToggleDesktop{bottom:20px;right:20px}
 
 /* ══════════════════════════════════════════════
    MODO DESKTOP — ativado pela classe body.desktop-mode
@@ -2155,13 +2157,15 @@ function toggleDesktopMode(){
   const isOn=IS_DESKTOP();
   const btn=document.getElementById('btnToggleDesktop');
   if(isOn){
+    // Desativar desktop → voltar pra mobile
     document.body.classList.remove('desktop-mode');
-    localStorage.setItem('rotograma_mobile_forced','1');
+    localStorage.setItem('rotograma_desktop_on','0');
     if(btn)btn.innerHTML='🖥️ Versão Web';
     navReset('screenHome',()=>renderHome());
   }else{
+    // Ativar desktop
     document.body.classList.add('desktop-mode');
-    localStorage.removeItem('rotograma_mobile_forced');
+    localStorage.setItem('rotograma_desktop_on','1');
     if(btn)btn.innerHTML='📱 Versão Mobile';
     _dActivateHomeLayout();
     dUpdateTopbar();dUpdateSidebar();
@@ -2398,41 +2402,18 @@ function renderHome(){
 
 /* ── Restore desktop preference on load ── */
 // ── Auto-detecção de desktop: roda imediatamente (script está no fim do body, DOM pronto) ──
-(function _desktopAutoDetect(){
-  var w=window.innerWidth||document.documentElement.clientWidth||screen.width;
+// ── Inicialização desktop: restaurar preferência do localStorage ──
+(function _desktopInit(){
   var btn=document.getElementById('btnToggleDesktop');
-  var mobileForcado=localStorage.getItem('rotograma_mobile_forced')==='1';
-
-  if(w>=1024){
-    // Mostrar botão sempre em telas largas
-    if(btn){btn.style.cssText='display:flex!important;position:fixed;bottom:20px;right:20px;z-index:99999;align-items:center;gap:7px;padding:10px 18px;border-radius:12px;background:#262625;color:#fff;border:none;cursor:pointer;font-family:\'Barlow Condensed\',sans-serif;font-weight:700;font-size:14px;letter-spacing:.3px;box-shadow:0 4px 20px rgba(0,0,0,.35);white-space:nowrap';}
-    if(!mobileForcado){
-      // Desktop: ativar modo desktop automaticamente
-      document.body.classList.add('desktop-mode');
-      if(btn)btn.innerHTML='📱 Versão Mobile';
-      // Não chamar _dActivateHomeLayout aqui pois o app ainda está inicializando
-      // O navReset ao fazer login vai respeitar IS_DESKTOP()
-    }else{
-      // Usuário escolheu ficar no mobile
-      if(btn)btn.innerHTML='🖥️ Versão Web';
-    }
+  // Restaurar preferência salva: se o user ativou desktop antes, reativar
+  var desktopSalvo=localStorage.getItem('rotograma_desktop_on')==='1';
+  if(desktopSalvo){
+    document.body.classList.add('desktop-mode');
+    if(btn)btn.innerHTML='📱 Versão Mobile';
   }else{
-    // Mobile: garantir que desktop-mode não está ativo
-    document.body.classList.remove('desktop-mode');
-    if(btn)btn.style.display='none';
+    if(btn)btn.innerHTML='🖥️ Versão Web';
   }
 })();
-
-window.addEventListener('resize',function(){
-  var w=window.innerWidth||document.documentElement.clientWidth||screen.width;
-  var btn=document.getElementById('btnToggleDesktop');
-  if(w>=1024){
-    if(btn)btn.style.display='flex';
-  }else{
-    document.body.classList.remove('desktop-mode');
-    if(btn)btn.style.display='none';
-  }
-});
 
 // ═══ TOAST & SUCCESS ═══
 function showToast(msg,color){
@@ -2712,7 +2693,7 @@ document.getElementById('installDismiss')?.addEventListener('click',()=>{
 })();
 if('serviceWorker' in navigator){
   let _swRefreshing=false;
-  navigator.serviceWorker.register('./sw.js?v=8').then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=10').then(reg=>{
     // Detecta quando nova versão do SW está instalando
     reg.addEventListener('updatefound',()=>{
       const newWorker=reg.installing;
