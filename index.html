@@ -3,6 +3,29 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<script>
+/* ── CACHE BUSTER v8 — roda antes de tudo, garante versão mais recente ── */
+(function(){
+  var V='rotograma-app-v8';
+  if(localStorage.getItem('_appVersion')===V)return; // já está na versão certa
+  localStorage.setItem('_appVersion',V);
+  // Desregistra todos os Service Workers e limpa todos os caches
+  var done=function(){location.reload(true);};
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.getRegistrations().then(function(regs){
+      return Promise.all(regs.map(function(r){return r.unregister();}));
+    }).then(function(){
+      return 'caches' in window?caches.keys():Promise.resolve([]);
+    }).then(function(keys){
+      return Promise.all((keys||[]).map(function(k){return caches.delete(k);}));
+    }).then(done).catch(done);
+  } else if('caches' in window){
+    caches.keys().then(function(keys){
+      return Promise.all(keys.map(function(k){return caches.delete(k);}));
+    }).then(done).catch(done);
+  }
+})();
+</script>
 <meta name="theme-color" content="#1c1c1c">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
