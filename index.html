@@ -413,20 +413,18 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .d-body-row{display:contents}/* sem layout proprio — só agrupa HTML */
 .d-content{display:contents}
 
-/* Botão de alternância: só aparece em telas largas */
-#btnToggleDesktop{display:none}
-@media(min-width:1024px){
-  #btnToggleDesktop{
-    display:flex;align-items:center;gap:7px;
-    position:fixed;bottom:20px;right:20px;z-index:9999;
-    padding:9px 16px;border-radius:12px;
-    background:#262625;color:#fff;border:none;cursor:pointer;
-    font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;
-    letter-spacing:.3px;box-shadow:0 4px 16px rgba(0,0,0,.25);
-    transition:background .15s,transform .15s;
-  }
-  #btnToggleDesktop:hover{background:#fe2627;transform:translateY(-1px)}
+/* Botão alternância — visibilidade controlada por JS */
+#btnToggleDesktop{
+  display:none;
+  position:fixed;bottom:20px;right:20px;z-index:99999;
+  align-items:center;gap:7px;
+  padding:10px 18px;border-radius:12px;
+  background:#262625;color:#fff;border:none;cursor:pointer;
+  font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;
+  letter-spacing:.3px;box-shadow:0 4px 20px rgba(0,0,0,.35);
+  transition:background .15s,transform .15s;white-space:nowrap;
 }
+#btnToggleDesktop:hover{background:#fe2627;transform:translateY(-2px)}
 
 /* ══════════════════════════════════════════════
    MODO DESKTOP — ativado pela classe body.desktop-mode
@@ -2379,13 +2377,25 @@ function renderHome(){
 }
 
 /* ── Restore desktop preference on load ── */
+function _dInitBtn(){
+  const btn=document.getElementById('btnToggleDesktop');
+  if(!btn)return;
+  // Mostrar botão somente em telas largas (desktop)
+  if(window.innerWidth>=1024){
+    btn.style.display='flex';
+  }else{
+    btn.style.display='none';
+  }
+}
 document.addEventListener('DOMContentLoaded',()=>{
+  _dInitBtn();
   if(localStorage.getItem('rotograma_desktop')==='1'){
     document.body.classList.add('desktop-mode');
     const btn=document.getElementById('btnToggleDesktop');
     if(btn)btn.innerHTML='📱 Versão Mobile';
   }
 });
+window.addEventListener('resize',_dInitBtn);
 
 // ═══ TOAST & SUCCESS ═══
 
