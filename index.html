@@ -407,122 +407,121 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .bi-row-detail{font-family:'Barlow',sans-serif;font-size:11px;color:#9a9894;margin-top:3px}
 .bi-empty{font-family:'Barlow',sans-serif;font-size:13px;color:#9a9894;text-align:center;padding:20px}
 /* ══════════════════════════════════════════════
-   DESKTOP SHELL — oculto no mobile por padrão
+   DESKTOP SHELL — sempre oculto por padrão, ativado via JS
    ══════════════════════════════════════════════ */
 #dTopbar,#dSidebar,#dDetailPane{display:none}
+.d-body-row{display:contents}/* sem layout proprio — só agrupa HTML */
+.d-content{display:contents}
 
-/* ══════════════════════════════════════════════
-   DESKTOP MEDIA QUERY ≥ 1024px
-   ══════════════════════════════════════════════ */
+/* Botão de alternância: só aparece em telas largas */
+#btnToggleDesktop{display:none}
 @media(min-width:1024px){
-  /* ── Reset body ── */
-  body{display:flex;flex-direction:column;height:100vh;overflow:hidden}
-
-  /* ── TOP BAR ── */
-  #dTopbar{display:flex;align-items:center;height:52px;background:#262625;padding:0 20px;gap:14px;flex-shrink:0;z-index:200;position:relative}
-  .dtb-left{display:flex;align-items:center;gap:12px}
-  .dtb-logo{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;color:#fff;letter-spacing:.5px;white-space:nowrap}
-  .dtb-logo span{color:#fe2627}
-  .dtb-div{width:1px;height:22px;background:rgba(255,255,255,.15)}
-  .dtb-subtitle{font-size:12px;color:rgba(255,255,255,.5);white-space:nowrap}
-  .dtb-right{margin-left:auto;display:flex;align-items:center;gap:8px}
-  .dtb-sync{font-size:11px;color:rgba(255,255,255,.5);margin-right:4px;white-space:nowrap}
-  .dtb-notif{position:relative;cursor:pointer;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:rgba(255,255,255,.1);border:none;font-size:15px;transition:background .15s}
-  .dtb-notif:hover{background:rgba(255,255,255,.18)}
-  .dtb-driver{font-size:13px;color:rgba(255,255,255,.8);display:flex;align-items:center;gap:7px;padding:0 4px}
-  .dtb-driver-avatar{width:26px;height:26px;border-radius:7px;background:#fe2627;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:10px;color:#fff;font-family:'Barlow Condensed',sans-serif;flex-shrink:0}
-  .dtb-btn{padding:6px 13px;border-radius:8px;background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.8);font-size:12px;font-family:'Barlow',sans-serif;cursor:pointer;transition:background .15s;font-weight:500;white-space:nowrap}
-  .dtb-btn:hover{background:rgba(255,255,255,.18)}
-  .dtb-btn-red{background:#fe2627;color:#fff}
-  .dtb-btn-red:hover{background:#d41f20}
-  #dtbBadge{border-color:#262625}
-
-  /* ── DESKTOP BODY ROW ── */
-  .d-body-row{display:flex;flex:1;overflow:hidden;min-height:0}
-
-  /* ── SIDEBAR ── */
-  #dSidebar{display:flex;flex-direction:column;width:210px;flex-shrink:0;background:#fff;border-right:1.5px solid #e4e2dd;overflow-y:auto}
-  .dsb-section{padding:14px 12px 6px;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#9a9894}
-  .dsb-item{display:flex;align-items:center;gap:9px;padding:9px 12px;cursor:pointer;border-radius:10px;margin:1px 8px;transition:background .15s;font-size:13px;font-weight:500;color:#6b6967;user-select:none}
-  .dsb-item:hover{background:#f4f4f2}
-  .dsb-item.active{background:#fff0f0;color:#fe2627;font-weight:600}
-  .dsb-count{margin-left:auto;background:#eae8e3;color:#9a9894;font-size:10px;font-weight:700;padding:2px 6px;border-radius:9px;font-family:'Barlow Condensed',sans-serif;min-width:20px;text-align:center}
-  .dsb-item.active .dsb-count{background:rgba(254,38,39,.12);color:#fe2627}
-  .dsb-footer{margin-top:auto;padding:13px 14px;border-top:1.5px solid #e4e2dd;font-size:11px;color:#1a7f37;display:flex;align-items:center;gap:6px}
-  .dsb-footer::before{content:'';width:7px;height:7px;border-radius:50%;background:#1a7f37;flex-shrink:0}
-  .dsb-footer.err{color:#fe2627}
-  .dsb-footer.err::before{background:#fe2627}
-
-  /* ── CONTENT AREA ── */
-  .d-content{display:flex;flex:1;overflow:hidden;min-height:0;position:relative}
-
-  /* ── SCREENS on desktop: position within content area ── */
-  .screen{position:absolute;inset:0;top:0;left:0;right:0;bottom:0}
-
-  /* ── HOME SCREEN on desktop: two columns ── */
-  #screenHome{display:flex!important;visibility:visible!important;transform:none!important;flex-direction:row;background:#f4f4f2}
-  #screenHome .home-top .admin-toggle,
-  #screenHome .home-top .notif-bell,
-  #screenHome .home-top .logout-btn,
-  #screenHome .home-top .logo-row,
-  #screenHome .home-top .home-heading,
-  #screenHome .home-top .driver-greeting,
-  #screenHome .home-top .home-subtext,
-  #screenHome .sync-bar,
-  #screenHome .emergency-bar{display:none!important}
-  /* Notif panel repositioned for desktop (now in topbar) */
-  #notifPanel{display:none!important}
-  #screenHome .home-top{padding:12px 14px 10px;background:#fff;border-bottom:1.5px solid #e4e2dd;border-right:none}
-  #screenHome .search-wrap{margin:0}
-  #screenHome .search-input{font-size:13px}
-
-  /* Left list column */
-  .d-list-col{width:320px;flex-shrink:0;border-right:1.5px solid #e4e2dd;display:flex;flex-direction:column;background:#f4f4f2;overflow:hidden}
-  .d-list-header{padding:12px 14px 10px;background:#fff;border-bottom:1.5px solid #e4e2dd;flex-shrink:0}
-  .d-list-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:.3px;color:#1c1c1c;margin-bottom:8px}
-  .home-scroll{flex:1;overflow-y:auto}
-
-  /* Active trip banner in desktop — smaller */
-  #activeTripBanner{margin:8px 10px 0;border-radius:10px;padding:10px 14px}
-
-  /* ── DETAIL PANE ── */
-  #dDetailPane{display:flex;flex:1;overflow:hidden;flex-direction:column;background:#f4f4f2;min-width:0}
-  .ddp-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#9a9894}
-  #ddpContent{display:flex}
-  #ddpRouteContent{padding-bottom:0}
-  .ddp-trip-bar{display:none;padding:12px 16px;background:#fff;border-top:1.5px solid #e4e2dd}
-  .ddp-trip-bar.show{display:block}
-  #ddpRouteContent .back-btn{display:none!important}
-  /* route cards selected state */
-  #routeList .rcard.d-selected{border-color:#fe2627;background:#fff8f8}
-
-  /* ── SCREENS that slide in on mobile → on desktop they go over content area ── */
-  #screenRoute,#screenAdmin,#screenEditor,#screenMapLive,#screenDriverLogin,#screenDriverReg{
-    top:0;left:0;right:0;bottom:0;
+  #btnToggleDesktop{
+    display:flex;align-items:center;gap:7px;
+    position:fixed;bottom:20px;right:20px;z-index:9999;
+    padding:9px 16px;border-radius:12px;
+    background:#262625;color:#fff;border:none;cursor:pointer;
+    font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;
+    letter-spacing:.3px;box-shadow:0 4px 16px rgba(0,0,0,.25);
+    transition:background .15s,transform .15s;
   }
-  /* Admin screen full content area */
-  #screenAdmin{flex-direction:row!important;overflow:hidden}
-  #screenAdmin .admin-top .back-btn{display:none}
-  #screenAdmin .admin-top{padding-left:20px;border-bottom:1.5px solid #e4e2dd}
-  .admin-tab-bar{flex-direction:column!important;width:160px!important;flex-shrink:0!important;height:100%!important;border-bottom:none!important;border-right:1.5px solid #e4e2dd!important;padding:12px 8px!important;background:#fff!important;gap:3px!important}
-  .admin-tab-btn{border-radius:10px!important;text-align:left!important;justify-content:flex-start!important;padding:10px 12px!important;font-size:13px!important;font-weight:500!important}
-  .admin-tab-btn.active{background:#fff0f0!important;color:#fe2627!important}
-  .admin-tab-content{flex:1!important;overflow:hidden!important;display:flex!important;flex-direction:column!important}
-  .admin-tab-pane.active{overflow-y:auto!important;padding:16px 18px!important}
-  .admin-scroll{padding:0!important}
-  /* Admin route cards in a grid */
-  .admin-rcard{margin-bottom:10px}
-
-  /* Notif panel reposition for desktop topbar */
-  .notif-panel{position:fixed!important;top:56px!important;right:12px!important;left:auto!important;width:320px!important;max-height:400px!important}
+  #btnToggleDesktop:hover{background:#fe2627;transform:translateY(-1px)}
 }
 
-/* ── Helper wrapper injected by JS ── */
-.d-body-row{display:none}
-@media(min-width:1024px){.d-body-row{display:flex}}
+/* ══════════════════════════════════════════════
+   MODO DESKTOP — ativado pela classe body.desktop-mode
+   ══════════════════════════════════════════════ */
+
+/* ── Estrutura geral ── */
+body.desktop-mode{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+body.desktop-mode .d-body-row{display:flex;flex:1;overflow:hidden;min-height:0}
+body.desktop-mode .d-content{display:flex;flex:1;overflow:hidden;min-height:0;position:relative}
+
+/* ── Top bar ── */
+body.desktop-mode #dTopbar{display:flex;align-items:center;height:52px;background:#262625;padding:0 20px;gap:14px;flex-shrink:0;z-index:200;position:relative}
+.dtb-left{display:flex;align-items:center;gap:12px}
+.dtb-logo{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;color:#fff;letter-spacing:.5px;white-space:nowrap}
+.dtb-logo span{color:#fe2627}
+.dtb-div{width:1px;height:22px;background:rgba(255,255,255,.15)}
+.dtb-subtitle{font-size:12px;color:rgba(255,255,255,.5);white-space:nowrap}
+.dtb-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.dtb-sync{font-size:11px;color:rgba(255,255,255,.45);margin-right:4px;white-space:nowrap}
+.dtb-notif{position:relative;cursor:pointer;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:rgba(255,255,255,.1);border:none;font-size:15px;transition:background .15s}
+.dtb-notif:hover{background:rgba(255,255,255,.18)}
+.dtb-driver{font-size:13px;color:rgba(255,255,255,.8);display:flex;align-items:center;gap:7px;padding:0 4px}
+.dtb-driver-avatar{width:26px;height:26px;border-radius:7px;background:#fe2627;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:10px;color:#fff;font-family:'Barlow Condensed',sans-serif;flex-shrink:0}
+.dtb-btn{padding:6px 13px;border-radius:8px;background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.8);font-size:12px;font-family:'Barlow',sans-serif;cursor:pointer;transition:background .15s;font-weight:500;white-space:nowrap}
+.dtb-btn:hover{background:rgba(255,255,255,.18)}
+.dtb-btn-red{background:#fe2627;color:#fff}
+.dtb-btn-red:hover{background:#d41f20}
+body.desktop-mode #dtbBadge{border-color:#262625}
+
+/* ── Sidebar ── */
+body.desktop-mode #dSidebar{display:flex;flex-direction:column;width:210px;flex-shrink:0;background:#fff;border-right:1.5px solid #e4e2dd;overflow-y:auto}
+.dsb-section{padding:14px 12px 6px;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#9a9894}
+.dsb-item{display:flex;align-items:center;gap:9px;padding:9px 12px;cursor:pointer;border-radius:10px;margin:1px 8px;transition:background .15s;font-size:13px;font-weight:500;color:#6b6967;user-select:none}
+.dsb-item:hover{background:#f4f4f2}
+.dsb-item.active{background:#fff0f0;color:#fe2627;font-weight:600}
+.dsb-count{margin-left:auto;background:#eae8e3;color:#9a9894;font-size:10px;font-weight:700;padding:2px 6px;border-radius:9px;font-family:'Barlow Condensed',sans-serif;min-width:20px;text-align:center}
+.dsb-item.active .dsb-count{background:rgba(254,38,39,.12);color:#fe2627}
+.dsb-footer{margin-top:auto;padding:13px 14px;border-top:1.5px solid #e4e2dd;font-size:11px;color:#1a7f37;display:flex;align-items:center;gap:6px}
+.dsb-footer::before{content:'';width:7px;height:7px;border-radius:50%;background:#1a7f37;flex-shrink:0}
+.dsb-footer.err{color:#fe2627}.dsb-footer.err::before{background:#fe2627}
+
+/* ── Screens dentro do content area ── */
+body.desktop-mode .screen{position:absolute!important;top:0!important;left:0!important;right:0!important;bottom:0!important}
+
+/* ── screenHome: sempre visível, layout em duas colunas ── */
+body.desktop-mode #screenHome{display:flex!important;visibility:visible!important;transform:none!important;flex-direction:row!important;z-index:1}
+body.desktop-mode #screenHome .admin-toggle,
+body.desktop-mode #screenHome .notif-bell,
+body.desktop-mode #screenHome .logout-btn,
+body.desktop-mode #screenHome .logo-row,
+body.desktop-mode #screenHome .home-heading,
+body.desktop-mode #screenHome .driver-greeting,
+body.desktop-mode #screenHome .home-subtext,
+body.desktop-mode #screenHome .sync-bar,
+body.desktop-mode #screenHome .emergency-bar{display:none!important}
+body.desktop-mode #notifPanel{top:56px!important;right:12px!important;left:auto!important;width:320px!important;max-height:400px!important}
+body.desktop-mode #screenHome .home-top{padding:12px 14px 10px;background:#fff;border-bottom:1.5px solid #e4e2dd;flex-shrink:0}
+body.desktop-mode #screenHome .search-wrap{margin:0}
+
+/* ── Coluna lista ── */
+body.desktop-mode .d-list-col{width:320px;flex-shrink:0;border-right:1.5px solid #e4e2dd;display:flex!important;flex-direction:column;background:#f4f4f2;overflow:hidden}
+body.desktop-mode .home-scroll{flex:1;overflow-y:auto}
+body.desktop-mode #activeTripBanner{margin:8px 10px 0;border-radius:10px;padding:10px 14px}
+
+/* ── Painel detalhe ── */
+body.desktop-mode #dDetailPane{display:flex!important;flex:1;overflow:hidden;flex-direction:column;background:#f4f4f2;min-width:0}
+.ddp-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#9a9894}
+#ddpContent{display:flex}
+.ddp-trip-bar{display:none;padding:12px 16px;background:#fff;border-top:1.5px solid #e4e2dd}
+.ddp-trip-bar.show{display:block}
+body.desktop-mode #ddpRouteContent .back-btn{display:none!important}
+body.desktop-mode #routeList .rcard.d-selected{border-color:#fe2627;background:#fff8f8}
+
+/* ── Screens overlay (admin, editor etc.) ficam sobre o home ── */
+body.desktop-mode #screenAdmin,
+body.desktop-mode #screenEditor,
+body.desktop-mode #screenRoute,
+body.desktop-mode #screenMapLive,
+body.desktop-mode #screenDriverLogin,
+body.desktop-mode #screenDriverReg{z-index:10}
+
+/* ── Admin no desktop: abas verticais ── */
+body.desktop-mode #screenAdmin{flex-direction:row!important;overflow:hidden}
+body.desktop-mode #screenAdmin .admin-top .back-btn{display:none!important}
+body.desktop-mode .admin-tab-bar{flex-direction:column!important;width:160px!important;flex-shrink:0!important;height:100%!important;border-bottom:none!important;border-right:1.5px solid #e4e2dd!important;padding:12px 8px!important;background:#fff!important;gap:3px!important;overflow-y:auto!important}
+body.desktop-mode .admin-tab-btn{border-radius:10px!important;text-align:left!important;padding:10px 12px!important;font-size:13px!important;font-weight:500!important}
+body.desktop-mode .admin-tab-btn.active{background:#fff0f0!important;color:#fe2627!important}
+body.desktop-mode .admin-tab-content{flex:1!important;overflow:hidden!important;display:flex!important;flex-direction:column!important}
+body.desktop-mode .admin-tab-pane.active{overflow-y:auto!important;padding:16px 18px!important}
+body.desktop-mode .admin-scroll{padding:0!important}
 </style>
 </head>
 <body>
+<!-- Botão alternância desktop/mobile — só visível em telas ≥ 1024px -->
+<button id="btnToggleDesktop" onclick="toggleDesktopMode()">🖥️ Versão Web</button>
 <div class="install-bar" id="installBanner"><p>Instale o app</p><button class="install-btn" id="installBtn">Instalar</button><button class="install-x" id="installDismiss">✕</button></div>
 <div class="offline-toast" id="offlineToast">📡 Modo offline — dados salvos localmente</div>
 
@@ -939,7 +938,7 @@ function initFirebase(){
 }
 function saveToFirebase(){if(db&&firebaseReady){db.ref('rotogramas').set(routes).then(()=>setSyncStatus('on','Salvo e sincronizado')).catch(()=>setSyncStatus('err','Erro ao salvar'))}else{localStorage.setItem('rotogramas_data',JSON.stringify(routes))}}
 function loadLocal(){const c=localStorage.getItem('rotogramas_cache'),m=localStorage.getItem('rotogramas_data'),s=c||m;if(s){try{routes=JSON.parse(s);renderHome();return}catch(e){}}routes=JSON.parse(JSON.stringify(DEFAULTS));renderHome();}
-function setSyncStatus(t,txt){const el=document.getElementById('syncBar');if(!el)return;el.className='sync-bar'+(t==='on'?'':t==='off'?' off':' err');el.textContent=(t==='on'?'🟢':t==='off'?'🟡':'🔴')+' '+txt;}
+function setSyncStatus(t,txt){const el=document.getElementById('syncBar');if(!el)return;el.className='sync-bar'+(t==='on'?'':t==='off'?' off':' err');el.textContent=(t==='on'?'🟢':t==='off'?'🟡':'🔴')+' '+txt;if(IS_DESKTOP())setTimeout(dUpdateTopbar,50);}
 
 // ═══ DRIVER AUTH ═══
 async function doDriverRegister(){
@@ -1648,36 +1647,6 @@ function updateMonitorMap(){
 // ═══ RENDER HOME ═══
 function norm(s){return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()}
 function searchText(r){const p=[r.nome,r.estados,r.subtitulo,r.numero,r.regiao||''];for(const s of r.paradas)p.push(s.nome,s.cidade,s.cartao||'',s.razaoSocial||'');return p.join(' ')}
-function renderHome(){
-  const el=document.getElementById('routeList');if(!el)return;
-  const rm={};routes.forEach((r,i)=>{const g=r.regiao||'Outras';if(!rm[g])rm[g]=[];rm[g].push({r,i})});
-  const sorted=Object.keys(rm).sort((a,b)=>{const ia=REGION_ORDER.indexOf(a),ib=REGION_ORDER.indexOf(b);return(ia<0?99:ia)-(ib<0?99:ib)});
-  let h='';
-  for(const reg of sorted){const items=rm[reg];
-    h+=`<div class="region"><div class="region-hd"><span class="region-bar"></span><span class="region-name">${reg}</span><span class="region-count">${items.length}</span><span class="region-line"></span></div>`;
-    for(const{r,i}of items){const stops=r.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino').length;
-      h+=`<div class="rcard" data-search="${norm(searchText(r))}" onclick="showRoute(${i})"><div class="rcard-uf">${r.numero}</div><div class="rcard-info"><div class="rcard-nome">${r.nome}</div><div class="rcard-detail">${r.estados}</div><div class="rcard-stats"><span>${r.distancia||''}</span><span class="dot">·</span><span>${r.tempo||''}</span><span class="dot">·</span><span class="red">⛽ ${stops} posto${stops!==1?'s':''}</span></div></div><div class="rcard-arrow">›</div></div>`}
-    h+='</div>'}
-  h+='<div class="no-results" id="noResults"><span>🔍</span>Nenhuma rota encontrada</div>';
-  el.innerHTML=h;
-  document.getElementById('routeCountText').textContent=`${routes.length} rotas ativas · toque para abrir`;
-  const inp=document.getElementById('searchInput');if(inp&&inp.value.trim())filterRoutes(inp.value);
-  verifyDriverSession();
-  checkActiveTrip();
-  updateActiveTripBanner();
-  // Show/hide logout button and driver greeting
-  const logoutBtn=document.getElementById('logoutBtn');
-  const greeting=document.getElementById('driverGreeting');
-  if(logoutBtn){
-    if(currentDriver){logoutBtn.classList.add('show');}
-    else{logoutBtn.classList.remove('show');}
-  }
-  if(greeting){
-    if(currentDriver){greeting.textContent='Olá, '+currentDriver.nome.split(' ')[0]+'!';}
-    else if(adminMode){greeting.textContent='Modo administrador';}
-    else{greeting.textContent='';}
-  }
-}
 function filterRoutes(q){const cards=document.querySelectorAll('.rcard'),regs=document.querySelectorAll('.region'),nr=document.getElementById('noResults'),cl=document.getElementById('searchClear');const n=norm(q.trim());if(!n){cards.forEach(c=>c.style.display='');regs.forEach(r=>r.style.display='');nr.style.display='none';cl.classList.remove('vis');return}cl.classList.add('vis');const terms=n.split(/\s+/);let vis=0;cards.forEach(c=>{const m=terms.every(x=>(c.dataset.search||'').includes(x));c.style.display=m?'':'none';if(m)vis++});regs.forEach(r=>{r.style.display=[...r.querySelectorAll('.rcard')].some(c=>c.style.display!=='none')?'':'none'});nr.style.display=vis?'none':'block'}
 function clearSearch(){const i=document.getElementById('searchInput');i.value='';filterRoutes('');i.focus()}
 
@@ -2157,17 +2126,146 @@ document.addEventListener('click',e=>{
 });
 
 // ═══ DESKTOP INTERFACE ═══
-const IS_DESKTOP=()=>window.innerWidth>=1024;
+const IS_DESKTOP=()=>document.body.classList.contains('desktop-mode');
 let _dActiveRegion='all';
 
+/* ── Toggle entre versão mobile e desktop ── */
+function toggleDesktopMode(){
+  const isOn=IS_DESKTOP();
+  if(isOn){
+    // Desativar desktop
+    document.body.classList.remove('desktop-mode');
+    localStorage.setItem('rotograma_desktop','0');
+    document.getElementById('btnToggleDesktop').innerHTML='🖥️ Versão Web';
+    // Restaurar comportamento mobile: navReset para screenHome
+    navReset('screenHome',()=>renderHome());
+  }else{
+    // Ativar desktop
+    document.body.classList.add('desktop-mode');
+    localStorage.setItem('rotograma_desktop','1');
+    document.getElementById('btnToggleDesktop').innerHTML='📱 Versão Mobile';
+    // Garantir que screenHome está visível e outras escondidas
+    _dActivateHomeLayout();
+    dUpdateTopbar();dUpdateSidebar();
+  }
+}
+
+function _dActivateHomeLayout(){
+  // Esconder todos os screens sobrepostos, deixar só screenHome visível
+  const overlays=['screenAdmin','screenEditor','screenRoute','screenMapLive','screenDriverLogin','screenDriverReg'];
+  overlays.forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){el.style.visibility='hidden';el.style.transform='translateX(100%)';el.classList.remove('active','behind');}
+  });
+  const home=document.getElementById('screenHome');
+  if(home){home.style.visibility='visible';home.style.transform='none';home.classList.add('active');home.classList.remove('behind');}
+  _navStack=['screenHome'];
+  renderHome();
+}
+
+/* ── Patches nas funções de navegação para respeitar desktop ── */
+// Guarda as originais
+const _nav_origReset=navReset;
+const _nav_origPush=navPush;
+const _nav_origPop=navPop;
+
+function navReset(id,setupFn){
+  if(IS_DESKTOP()&&id==='screenHome'){
+    // No desktop, navReset para home não esconde as screens via cssText normal
+    _blur();
+    const overlays=['screenAdmin','screenEditor','screenRoute','screenMapLive','screenDriverLogin','screenDriverReg'];
+    overlays.forEach(sid=>{
+      const el=document.getElementById(sid);
+      if(el){el.style.cssText='';el.style.visibility='hidden';el.style.transform='translateX(100%)';el.classList.remove('active','behind');}
+    });
+    const dme=document.getElementById('driverMapEl');
+    if(dme)dme.style.cssText='position:absolute;inset:0;z-index:1;background:#e8f0e8';
+    _navStack=['screenHome'];
+    const home=document.getElementById('screenHome');
+    if(home){home.style.visibility='visible';home.style.transform='none';home.classList.add('active');home.classList.remove('behind');}
+    if(setupFn)setupFn();
+    return;
+  }
+  _nav_origReset(id,setupFn);
+}
+
+function navPush(id,setupFn){
+  if(IS_DESKTOP()){
+    const prevId=_navStack.length>0?_navStack[_navStack.length-1]:null;
+    _navStack.push(id);
+    const newEl=document.getElementById(id);
+    const prevEl=prevId?document.getElementById(prevId):null;
+    if(newEl)newEl.scrollTop=0;
+    if(setupFn)setupFn();
+    // No desktop: screen que vai "atrás" NÃO se move (só escurece levemente se for screenHome)
+    if(prevEl&&prevId!=='screenHome'){
+      prevEl.style.transition=`transform ${NAV_DUR}ms cubic-bezier(.4,0,.2,1)`;
+      prevEl.classList.add('behind');prevEl.classList.remove('active');
+      setTimeout(()=>{if(!prevEl.classList.contains('active'))prevEl.style.transition='';},NAV_DUR+20);
+    }
+    // Nova screen: slide da direita como overlay
+    if(newEl){
+      newEl.style.transition='none';
+      newEl.style.transform='translateX(100%)';
+      newEl.style.visibility='visible';
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        newEl.style.transition=`transform ${NAV_DUR}ms cubic-bezier(.4,0,.2,1)`;
+        newEl.style.transform='translateX(0)';
+        newEl.classList.add('active');
+        setTimeout(()=>{newEl.style.transition='';newEl.style.transform='';},NAV_DUR+20);
+      }));
+    }
+    dUpdateTopbar();
+    return;
+  }
+  _nav_origPush(id,setupFn);
+}
+
+function navPop(setupFn){
+  if(IS_DESKTOP()){
+    if(_navStack.length<=1)return;
+    const oldId=_navStack.pop();
+    const newId=_navStack[_navStack.length-1];
+    const oldEl=document.getElementById(oldId);
+    const newEl=document.getElementById(newId);
+    if(setupFn)setupFn();
+    // Animar overlay saindo para a direita
+    if(oldEl){
+      oldEl.style.transition=`transform ${NAV_DUR}ms cubic-bezier(.4,0,.2,1)`;
+      oldEl.style.transform='translateX(100%)';
+      oldEl.classList.remove('active');
+      setTimeout(()=>{oldEl.style.transition='';oldEl.style.transform='';oldEl.style.visibility='hidden';oldEl.scrollTop=0;},NAV_DUR+20);
+    }
+    // Se voltando para screenHome, apenas garantir que está visível (não animar)
+    if(newEl){
+      if(newId==='screenHome'){
+        newEl.style.visibility='visible';newEl.style.transform='none';
+        newEl.classList.add('active');newEl.classList.remove('behind');
+      }else{
+        newEl.style.transition=`transform ${NAV_DUR}ms cubic-bezier(.4,0,.2,1)`;
+        newEl.classList.add('active');newEl.classList.remove('behind');
+        newEl.style.transform='translateX(0)';
+        setTimeout(()=>{newEl.style.transition='';newEl.style.transform='';},NAV_DUR+20);
+      }
+    }
+    dUpdateTopbar();
+    return;
+  }
+  _nav_origPop(setupFn);
+}
+
+/* ── Topbar desktop ── */
 function dUpdateTopbar(){
   if(!IS_DESKTOP())return;
-  // sync status
+  const syncBar=document.getElementById('syncBar');
   const syncEl=document.getElementById('dtbSync');
   const dsbFoot=document.getElementById('dsbFooter');
-  const syncBar=document.getElementById('syncBar');
-  if(syncEl&&syncBar){syncEl.textContent=syncBar.textContent||'';if(syncBar.className.includes('on')){if(dsbFoot){dsbFoot.textContent='Sincronizado';dsbFoot.className='dsb-footer';}syncEl.style.color='rgba(255,255,255,.4)';}else if(syncBar.className.includes('err')){if(dsbFoot){dsbFoot.textContent='Erro de conexão';dsbFoot.className='dsb-footer err';}}else{if(dsbFoot){dsbFoot.textContent='Sincronizando...';dsbFoot.className='dsb-footer';}}}
-  // driver info
+  if(syncEl&&syncBar){
+    const cls=syncBar.className;
+    if(cls.includes('on')){syncEl.textContent='Sincronizado';if(dsbFoot){dsbFoot.textContent='Sincronizado';dsbFoot.className='dsb-footer';}}
+    else if(cls.includes('err')){syncEl.textContent='Erro de conexão';if(dsbFoot){dsbFoot.textContent='Erro de conexão';dsbFoot.className='dsb-footer err';}}
+    else{syncEl.textContent='Sincronizando...';if(dsbFoot){dsbFoot.textContent='Sincronizando...';dsbFoot.className='dsb-footer';}}
+  }
   const driverEl=document.getElementById('dtbDriver');
   const logoutBtn=document.getElementById('dtbLogoutBtn');
   const adminBtn=document.getElementById('dtbAdminBtn');
@@ -2178,7 +2276,7 @@ function dUpdateTopbar(){
       if(logoutBtn)logoutBtn.style.display='flex';
       if(adminBtn)adminBtn.style.display='none';
     }else if(adminMode){
-      driverEl.innerHTML='<span style="color:rgba(255,255,255,.6);font-size:12px">Modo Admin</span>';
+      driverEl.innerHTML='<span style="color:rgba(255,255,255,.6);font-size:12px">Admin</span>';
       if(logoutBtn)logoutBtn.style.display='flex';
       if(adminBtn)adminBtn.style.display='none';
     }else{
@@ -2187,52 +2285,36 @@ function dUpdateTopbar(){
       if(adminBtn)adminBtn.style.display='flex';
     }
   }
-  // subtitle
   const sub=document.getElementById('dtbSubtitle');
   if(sub){
     if(adminMode)sub.textContent='Painel Administrativo';
     else if(currentDriver)sub.textContent='Olá, '+currentDriver.nome.split(' ')[0]+'!';
     else sub.textContent='Confiança Transportes';
   }
-  // badge sync (desktop topbar badge mirrors mobile badge)
-  const mb=document.getElementById('notifBadge');
-  const db=document.getElementById('dtbBadge');
-  if(mb&&db){db.textContent=mb.textContent;db.className=mb.className.replace('notif-badge','notif-badge');}
 }
 
+/* ── Sidebar contagens ── */
 function dUpdateSidebar(){
   if(!IS_DESKTOP())return;
   const counts={all:0};
-  routes.forEach(r=>{
-    const reg=r.regiao||'Outras';
-    counts.all=(counts.all||0)+1;
-    counts[reg]=(counts[reg]||0)+1;
-  });
+  routes.forEach(r=>{const reg=r.regiao||'Outras';counts.all++;counts[reg]=(counts[reg]||0)+1;});
   const map={'all':'All','Centro-Oeste':'CO','Nordeste':'NE','Sudeste':'SE','Sul':'SU','Norte':'NO','Centro-Norte':'CN'};
-  Object.entries(map).forEach(([reg,suffix])=>{
-    const el=document.getElementById('dsbCount'+suffix);
-    if(el)el.textContent=counts[reg]||0;
-  });
+  Object.entries(map).forEach(([reg,sfx])=>{const el=document.getElementById('dsbCount'+sfx);if(el)el.textContent=counts[reg]??0;});
 }
 
+/* ── Filtro da sidebar ── */
 function dSidebarFilter(el,region){
   document.querySelectorAll('.dsb-item').forEach(i=>i.classList.remove('active'));
-  el.classList.add('active');
-  _dActiveRegion=region;
-  // Filter route cards in the home list
-  const cards=document.querySelectorAll('#routeList .rcard');
-  const regs=document.querySelectorAll('#routeList .region');
-  cards.forEach(c=>{
-    if(region==='all'){c.style.display='';}
-    else{const rcard=c.dataset.region||'';c.style.display=rcard===region?'':'none';}
+  el.classList.add('active');_dActiveRegion=region;
+  document.querySelectorAll('#routeList .rcard').forEach(c=>{
+    c.style.display=(region==='all'||c.dataset.region===region)?'':'none';
   });
-  regs.forEach(r=>{
-    if(region==='all'){r.style.display='';}
-    else{const vis=[...r.querySelectorAll('.rcard')].some(c=>c.style.display!=='none');r.style.display=vis?'':'none';}
+  document.querySelectorAll('#routeList .region').forEach(r=>{
+    r.style.display=[...r.querySelectorAll('.rcard')].some(c=>c.style.display!=='none')?'':'none';
   });
 }
 
-// Two-panel: show route detail in right pane instead of navigating
+/* ── Painel detalhe (two-panel home) ── */
 function dShowRouteDetail(i){
   const r=routes[i];currentRouteIdx=i;
   const pane=document.getElementById('ddpContent');
@@ -2240,47 +2322,55 @@ function dShowRouteDetail(i){
   const content=document.getElementById('ddpRouteContent');
   if(!pane||!content)return;
   content.innerHTML=renderRoute(r);
-  empty.style.display='none';
+  if(empty)empty.style.display='none';
   pane.style.display='flex';
-  // Trip bar
   const tripBar=document.getElementById('ddpTripBar');
   const tripBtn=document.getElementById('ddpStartTrip');
   if(tripBar&&tripBtn&&currentDriver){
     tripBar.classList.add('show');
-    if(currentTrip&&currentTrip.rotaId===r.id){
-      tripBtn.textContent='🗺️ Ver Mapa ao Vivo';tripBtn.style.background='#1a6fb5';tripBtn.onclick=showMapLive;tripBtn.disabled=false;
-    }else if(currentTrip){
-      tripBtn.textContent='🚛 Em outra viagem';tripBtn.style.background='#9a9894';tripBtn.disabled=true;
-    }else{
-      tripBtn.textContent='🚛 Iniciar Viagem';tripBtn.style.background='#1a7a3c';tripBtn.onclick=startTrip;tripBtn.disabled=false;
-    }
+    if(currentTrip&&currentTrip.rotaId===r.id){tripBtn.textContent='🗺️ Ver Mapa ao Vivo';tripBtn.style.background='#1a6fb5';tripBtn.onclick=showMapLive;tripBtn.disabled=false;}
+    else if(currentTrip){tripBtn.textContent='🚛 Em outra viagem';tripBtn.style.background='#9a9894';tripBtn.disabled=true;}
+    else{tripBtn.textContent='🚛 Iniciar Viagem';tripBtn.style.background='#1a7a3c';tripBtn.onclick=startTrip;tripBtn.disabled=false;}
   }else if(tripBar){tripBar.classList.remove('show');}
-  // Highlight selected card
-  document.querySelectorAll('#routeList .rcard').forEach((c,idx)=>c.classList.toggle('d-selected',idx===i||(c.dataset.routeIdx&&parseInt(c.dataset.routeIdx)===i)));
+  document.querySelectorAll('#routeList .rcard').forEach((c,idx)=>c.classList.toggle('d-selected',idx===i));
 }
 
-// Override showRoute for desktop
-const _origShowRoute=window.showRoute;
+/* ── showRoute intercept ── */
 function showRoute(i){
-  if(IS_DESKTOP()&&_navStack.length<=1||IS_DESKTOP()&&_navStack[_navStack.length-1]==='screenHome'){
+  if(IS_DESKTOP()&&(_navStack.length<=1||_navStack[_navStack.length-1]==='screenHome')){
     dShowRouteDetail(i);return;
   }
-  if(typeof _origShowRoute==='function')_origShowRoute(i);
+  // fallback: comportamento mobile
+  const r=routes[i];currentRouteIdx=i;
+  _nav_origPush('screenRoute',()=>{
+    document.getElementById('routeContent').innerHTML=renderRoute(r);
+    const bar=document.getElementById('driverTripBar');const btn=document.getElementById('btnStartTrip');
+    if(bar&&currentDriver){bar.classList.add('show');if(currentTrip&&currentTrip.rotaId===r.id){btn.textContent='🗺️ Ver Mapa ao Vivo';btn.style.background='#1a6fb5';btn.onclick=showMapLive;btn.disabled=false;}else if(currentTrip){btn.textContent='🚛 Em outra viagem';btn.style.background='#9a9894';btn.disabled=true;}else{btn.textContent='🚛 Iniciar Viagem';btn.style.background='#1a7a3c';btn.onclick=startTrip;btn.disabled=false;}}else if(bar){bar.classList.remove('show');}
+  });
 }
 
-// Hook into renderHome to add desktop data attributes and update sidebar
-const _origRenderHome=window.renderHome;
+/* ── renderHome com suporte desktop ── */
 function renderHome(){
-  if(typeof _origRenderHome==='function')_origRenderHome();
-  dUpdateSidebar();dUpdateTopbar();
-  // Add region data-attr to route cards for sidebar filtering
+  const el=document.getElementById('routeList');if(!el)return;
+  const rm={};routes.forEach((r,i)=>{const g=r.regiao||'Outras';if(!rm[g])rm[g]=[];rm[g].push({r,i})});
+  const sorted=Object.keys(rm).sort((a,b)=>{const ia=REGION_ORDER.indexOf(a),ib=REGION_ORDER.indexOf(b);return(ia<0?99:ia)-(ib<0?99:ib)});
+  let h='';
+  for(const reg of sorted){const items=rm[reg];
+    h+=`<div class="region"><div class="region-hd"><span class="region-bar"></span><span class="region-name">${reg}</span><span class="region-count">${items.length}</span><span class="region-line"></span></div>`;
+    for(const{r,i}of items){const stops=r.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino').length;
+      h+=`<div class="rcard" data-search="${norm(searchText(r))}" data-region="${r.regiao||'Outras'}" data-route-idx="${i}" onclick="showRoute(${i})"><div class="rcard-uf">${r.numero}</div><div class="rcard-info"><div class="rcard-nome">${r.nome}</div><div class="rcard-detail">${r.estados}</div><div class="rcard-stats"><span>${r.distancia||''}</span><span class="dot">·</span><span>${r.tempo||''}</span><span class="dot">·</span><span class="red">⛽ ${stops} posto${stops!==1?'s':''}</span></div></div><div class="rcard-arrow">›</div></div>`}
+    h+='</div>'}
+  h+='<div class="no-results" id="noResults"><span>🔍</span>Nenhuma rota encontrada</div>';
+  el.innerHTML=h;
+  document.getElementById('routeCountText').textContent=`${routes.length} rotas ativas · toque para abrir`;
+  const inp=document.getElementById('searchInput');if(inp&&inp.value.trim())filterRoutes(inp.value);
+  verifyDriverSession();checkActiveTrip();updateActiveTripBanner();
+  const logoutBtn=document.getElementById('logoutBtn');const greeting=document.getElementById('driverGreeting');
+  if(logoutBtn){if(currentDriver){logoutBtn.classList.add('show');}else{logoutBtn.classList.remove('show');}}
+  if(greeting){if(currentDriver){greeting.textContent='Olá, '+currentDriver.nome.split(' ')[0]+'!';}else if(adminMode){greeting.textContent='Modo administrador';}else{greeting.textContent='';}}
+  // Desktop extras
   if(IS_DESKTOP()){
-    document.querySelectorAll('#routeList .rcard').forEach((card,i)=>{
-      card.dataset.routeIdx=i;
-      const route=routes[i];
-      if(route)card.dataset.region=route.regiao||'Outras';
-    });
-    // Re-apply current region filter
+    dUpdateSidebar();dUpdateTopbar();
     if(_dActiveRegion&&_dActiveRegion!=='all'){
       const activeItem=document.querySelector(`.dsb-item[data-region="${_dActiveRegion}"]`);
       if(activeItem)dSidebarFilter(activeItem,_dActiveRegion);
@@ -2288,15 +2378,16 @@ function renderHome(){
   }
 }
 
-// Also hook setSyncStatus to keep topbar updated
-const _origSetSyncStatus=window.setSyncStatus;
-function setSyncStatus(state,msg){
-  if(typeof _origSetSyncStatus==='function')_origSetSyncStatus(state,msg);
-  if(IS_DESKTOP())setTimeout(dUpdateTopbar,50);
-}
+/* ── Restore desktop preference on load ── */
+document.addEventListener('DOMContentLoaded',()=>{
+  if(localStorage.getItem('rotograma_desktop')==='1'){
+    document.body.classList.add('desktop-mode');
+    const btn=document.getElementById('btnToggleDesktop');
+    if(btn)btn.innerHTML='📱 Versão Mobile';
+  }
+});
 
-// Init desktop on load
-window.addEventListener('resize',()=>{if(IS_DESKTOP())dUpdateTopbar();});
+// ═══ TOAST & SUCCESS ═══
 
 // ═══ TOAST & SUCCESS ═══
 function showToast(msg,color){
@@ -2426,25 +2517,6 @@ function showHome(){
     navReset('screenHome');
   }
   renderHome();
-}
-
-function showRoute(i){
-  const r=routes[i];currentRouteIdx=i;
-  navPush('screenRoute',()=>{
-    document.getElementById('routeContent').innerHTML=renderRoute(r);
-    const bar=document.getElementById('driverTripBar');
-    const btn=document.getElementById('btnStartTrip');
-    if(bar&&currentDriver){
-      bar.classList.add('show');
-      if(currentTrip&&currentTrip.rotaId===r.id){
-        btn.textContent='🗺️ Ver Mapa ao Vivo';btn.style.background='#1a6fb5';btn.onclick=showMapLive;btn.disabled=false;
-      }else if(currentTrip){
-        btn.textContent='🚛 Em outra viagem';btn.style.background='#9a9894';btn.disabled=true;
-      }else{
-        btn.textContent='🚛 Iniciar Viagem';btn.style.background='#1a7a3c';btn.onclick=startTrip;btn.disabled=false;
-      }
-    }else if(bar){bar.classList.remove('show');}
-  });
 }
 
 function showMapLive(){
