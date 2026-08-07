@@ -557,6 +557,48 @@ body.desktop-mode .admin-scroll{padding:0!important}
 body.desktop-mode #adminRouteCards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 body.desktop-mode #adminDriversList .driver-card{margin-bottom:0}
 body.desktop-mode #adminDriversList{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-content:start}
+/* ═══ DESKTOP — ABA ROTAS ═══ */
+body.desktop-mode #adminList{display:grid;grid-template-columns:1fr auto;grid-template-rows:auto 1fr;column-gap:12px;row-gap:0;align-items:center}
+body.desktop-mode #adminList .admin-search{grid-column:1;grid-row:1;margin-bottom:0}
+body.desktop-mode #adminList .admin-add{grid-column:2;grid-row:1;width:auto;min-width:160px;padding:0 22px;height:44px;font-size:13px;margin-bottom:0;border-radius:10px}
+body.desktop-mode #adminList #adminRouteCards{grid-column:1/-1;grid-row:2;margin-top:16px}
+body.desktop-mode .admin-rcard{border-radius:10px;padding:14px 18px;margin-bottom:0;transition:box-shadow .15s,border-color .15s}
+body.desktop-mode .admin-rcard:hover{border-color:#fe2627;box-shadow:0 4px 16px rgba(254,38,39,.1)}
+body.desktop-mode .admin-rcard-actions{margin-top:8px;gap:8px}
+body.desktop-mode .admin-btn{min-height:34px;font-size:12px;padding:0 12px;border-radius:7px}
+
+/* ═══ DESKTOP — ABA MOTORISTAS ═══ */
+body.desktop-mode #adminDriversList .admin-add{grid-column:1/-1;width:auto;height:40px;font-size:13px;padding:0 22px;justify-self:start;border-radius:10px;margin-bottom:4px}
+body.desktop-mode .driver-card{border-radius:12px;padding:14px 16px;margin-bottom:0;transition:box-shadow .15s,border-color .15s}
+body.desktop-mode .driver-card:hover{border-color:#fe2627;box-shadow:0 4px 16px rgba(254,38,39,.1)}
+body.desktop-mode .driver-card-avatar{width:48px;height:48px;border-radius:14px;font-size:17px}
+body.desktop-mode .driver-card-actions{margin-top:10px;gap:8px}
+body.desktop-mode .driver-btn{min-height:34px;font-size:12px;padding:0 12px}
+
+/* ═══ DESKTOP — ABA MONITOR ═══ */
+body.desktop-mode #monitorStats{display:grid!important;grid-template-columns:repeat(3,1fr)!important;gap:14px!important;padding:0 0 16px!important}
+body.desktop-mode .monitor-stat{padding:20px 16px!important;border-radius:14px!important;border:1.5px solid #e8e6e1!important}
+body.desktop-mode .monitor-stat-val{font-size:42px!important;line-height:1!important}
+body.desktop-mode .monitor-stat-lbl{font-size:11px!important;margin-top:8px!important;font-weight:700!important;letter-spacing:.08em!important;text-transform:uppercase!important;color:#9a9894!important}
+body.desktop-mode .monitor-toggle{display:none!important}
+body.desktop-mode #monitorCardsView{display:grid!important;grid-template-columns:1fr 1fr!important;gap:12px!important;align-content:start!important}
+body.desktop-mode .monitor-driver-card{margin-bottom:0!important;border-radius:12px!important;padding:14px 18px!important;transition:box-shadow .15s!important;align-items:flex-start!important}
+body.desktop-mode .monitor-driver-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.08)!important;border-color:#d0cdc8!important}
+body.desktop-mode .monitor-driver-info{flex:1}
+body.desktop-mode .monitor-driver-name{font-size:15px!important;font-weight:700!important}
+body.desktop-mode .monitor-driver-route{font-size:13px!important;margin-top:3px}
+
+/* ═══ DESKTOP — ABA ANÁLISE ═══ */
+body.desktop-mode .bi-grid{grid-template-columns:repeat(4,1fr)!important;gap:14px!important;padding:0 0 4px!important}
+body.desktop-mode .bi-card{border-radius:14px!important;padding:22px 16px!important;border:1.5px solid #e8e6e1!important}
+body.desktop-mode .bi-val{font-size:48px!important;line-height:1!important}
+body.desktop-mode .bi-lbl{font-size:11px!important;margin-top:10px!important;letter-spacing:.07em!important;text-transform:uppercase!important;font-weight:700!important;color:#9a9894!important}
+body.desktop-mode .bi-section{margin:22px 0 0!important}
+body.desktop-mode .bi-section-title{font-size:11px!important;letter-spacing:.12em!important;margin-bottom:12px!important;padding-bottom:10px!important;border-bottom:1px solid #e8e6e1!important}
+body.desktop-mode .bi-row{padding:10px 0!important;display:flex!important;align-items:center!important;justify-content:space-between!important;border-bottom:1px solid #f0ede8!important}
+body.desktop-mode .bi-row-name{font-size:14px!important;font-weight:600!important}
+body.desktop-mode .bi-row-detail{font-size:12px!important;color:#9a9894!important;text-align:right}
+body.desktop-mode #biContent{padding:0}
 </style>
 </head>
 <body>
