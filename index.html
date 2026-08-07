@@ -536,15 +536,27 @@ body.desktop-mode #screenMapLive,
 body.desktop-mode #screenDriverLogin,
 body.desktop-mode #screenDriverReg{z-index:10}
 
-/* ── Admin no desktop: abas verticais ── */
-body.desktop-mode #screenAdmin{flex-direction:row!important;overflow:hidden}
-body.desktop-mode #screenAdmin .admin-top .back-btn{display:none!important}
-body.desktop-mode .admin-tab-bar{flex-direction:column!important;width:160px!important;flex-shrink:0!important;height:100%!important;border-bottom:none!important;border-right:1.5px solid #e4e2dd!important;padding:12px 8px!important;background:#fff!important;gap:3px!important;overflow-y:auto!important}
-body.desktop-mode .admin-tab-btn{border-radius:10px!important;text-align:left!important;padding:10px 12px!important;font-size:13px!important;font-weight:500!important}
-body.desktop-mode .admin-tab-btn.active{background:#fff0f0!important;color:#fe2627!important}
-body.desktop-mode .admin-tab-content{flex:1!important;overflow:hidden!important;display:flex!important;flex-direction:column!important}
-body.desktop-mode .admin-tab-pane.active{overflow-y:auto!important;padding:16px 18px!important}
+/* ── Admin no desktop: grid header+sidebar+conteúdo ── */
+body.desktop-mode #screenAdmin{display:grid!important;grid-template-rows:52px 1fr;grid-template-columns:180px 1fr;overflow:hidden}
+body.desktop-mode #screenAdmin .admin-top{grid-column:1/-1;grid-row:1;background:#262625;padding:0 20px;display:flex!important;align-items:center;gap:12px;flex-shrink:0;padding-top:0}
+body.desktop-mode #screenAdmin .admin-top .back-btn{display:flex!important;background:rgba(255,255,255,.1);color:#fff;border:none;width:36px;height:36px;font-size:20px}
+body.desktop-mode #screenAdmin .admin-top .back-btn:hover{background:rgba(255,255,255,.2)}
+body.desktop-mode #screenAdmin .admin-title{color:#fff;font-size:16px;letter-spacing:.06em}
+body.desktop-mode .admin-tab-bar{grid-column:1;grid-row:2;flex-direction:column!important;width:auto!important;height:auto!important;background:#1c1c1c!important;border-right:none!important;border-bottom:none!important;padding:8px 0!important;gap:0!important;overflow-y:auto!important}
+.admin-dsb-section{display:none}
+body.desktop-mode .admin-dsb-section{display:block;padding:14px 16px 6px;font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:rgba(255,255,255,.3)}
+body.desktop-mode .admin-tab-btn{border-radius:0!important;text-align:left!important;padding:10px 16px!important;font-size:13px!important;font-weight:600!important;color:rgba(255,255,255,.45)!important;border-left:3px solid transparent!important;border-bottom:none!important;letter-spacing:.2px;display:flex;align-items:center;gap:9px}
+body.desktop-mode .admin-tab-btn i{font-size:15px;opacity:.7}
+body.desktop-mode .admin-tab-btn:hover{background:rgba(255,255,255,.04)!important;color:rgba(255,255,255,.75)!important}
+body.desktop-mode .admin-tab-btn:hover i{opacity:1}
+body.desktop-mode .admin-tab-btn.active{background:rgba(254,38,39,.12)!important;color:#fff!important;border-left-color:#fe2627!important}
+body.desktop-mode .admin-tab-btn.active i{opacity:1}
+body.desktop-mode .admin-tab-content{grid-column:2;grid-row:2;overflow:hidden!important;display:flex!important;flex-direction:column!important;background:#f4f4f2}
+body.desktop-mode .admin-tab-pane.active{overflow-y:auto!important;padding:20px 24px!important}
 body.desktop-mode .admin-scroll{padding:0!important}
+body.desktop-mode #adminRouteCards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+body.desktop-mode #adminDriversList .driver-card{margin-bottom:0}
+body.desktop-mode #adminDriversList{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-content:start}
 </style>
 </head>
 <body>
@@ -726,10 +738,11 @@ body.desktop-mode .admin-scroll{padding:0!important}
 <div class="screen" id="screenAdmin">
   <div class="admin-top"><button class="back-btn" onclick="navPop(renderHome)">‹</button><div class="admin-title">Administração</div></div>
   <div class="admin-tab-bar">
-    <button class="admin-tab-btn active" onclick="switchAdminTab('routes',this)">Rotas</button>
-    <button class="admin-tab-btn" onclick="switchAdminTab('drivers',this)">Motoristas</button>
-    <button class="admin-tab-btn" onclick="switchAdminTab('monitor',this)">Monitor</button>
-    <button class="admin-tab-btn" onclick="switchAdminTab('bi',this)">Análise</button>
+    <div class="admin-dsb-section">Painel Admin</div>
+    <button class="admin-tab-btn active" onclick="switchAdminTab('routes',this)"><i class="ti ti-route" aria-hidden="true"></i> Rotas</button>
+    <button class="admin-tab-btn" onclick="switchAdminTab('drivers',this)"><i class="ti ti-users" aria-hidden="true"></i> Motoristas</button>
+    <button class="admin-tab-btn" onclick="switchAdminTab('monitor',this)"><i class="ti ti-activity" aria-hidden="true"></i> Monitor</button>
+    <button class="admin-tab-btn" onclick="switchAdminTab('bi',this)"><i class="ti ti-chart-bar" aria-hidden="true"></i> Análise</button>
   </div>
   <div class="admin-tab-content">
     <div id="adminTabRoutes" class="admin-tab-pane active">
