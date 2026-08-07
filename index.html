@@ -2066,9 +2066,10 @@ function toggleNotifPanel(){
   const panel=document.getElementById('notifPanel');
   if(!panel)return;
   if(IS_DESKTOP()){
+    const topbar=document.getElementById('dTopbar');
+    if(topbar&&!topbar.contains(panel))topbar.appendChild(panel);
     if(notifPanelOpen){
-      document.body.appendChild(panel);
-      panel.style.cssText='display:block;position:fixed;top:56px;right:12px;left:auto;width:320px;max-height:400px;overflow-y:auto;z-index:99990;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.2);background:#fff;animation:notifSlide .22s ease-out';
+      panel.style.cssText='display:block;position:absolute;top:52px;right:8px;width:320px;max-height:400px;overflow-y:auto;z-index:9999;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.35);background:#fff;animation:notifSlide .22s ease-out';
       renderNotifList();
     }else{
       panel.style.display='none';
@@ -2231,7 +2232,7 @@ function dUpdateTopbar(){
       const initials=currentDriver.nome.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
       driverEl.innerHTML=`<div class="dtb-driver-avatar">${initials}</div><span>${currentDriver.nome.split(' ')[0]}</span>`;
       if(logoutBtn)logoutBtn.style.display='flex';
-      if(adminBtn)adminBtn.style.display='none';
+      if(adminBtn)adminBtn.style.display='flex';
     }else if(adminMode){
       driverEl.innerHTML='<span style="color:rgba(255,255,255,.6);font-size:12px">Admin</span>';
       if(logoutBtn)logoutBtn.style.display='flex';
