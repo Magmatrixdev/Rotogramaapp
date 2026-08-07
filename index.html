@@ -51,13 +51,13 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .logo-sub{font-family:'Barlow',sans-serif;font-weight:500;font-size:9.5px;letter-spacing:.28em;color:#9a9894;margin-top:3px}
 .home-heading{font-weight:700;font-size:34px;color:#1c1c1c;line-height:.95;text-transform:uppercase}
 .home-subtext{font-family:'Barlow',sans-serif;font-size:13px;color:#8a8886;margin-top:6px}
-.admin-toggle{position:absolute;top:calc(env(safe-area-inset-top, 20px) + 8px);right:22px;width:42px;height:42px;border-radius:12px;background:#eae8e3;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px}
-.admin-toggle:active{background:#e4e2dd}
-.logout-btn{position:absolute;top:calc(env(safe-area-inset-top, 20px) + 52px);right:22px;height:32px;border-radius:9px;background:rgba(254,38,39,.08);border:1.5px solid rgba(254,38,39,.18);display:none;align-items:center;gap:6px;padding:0 11px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;color:#fe2627}
-.logout-btn:active{background:rgba(254,38,39,.15)}
-.logout-btn.show{display:flex}
-.notif-bell{position:absolute;top:calc(env(safe-area-inset-top, 20px) + 8px);right:70px;width:42px;height:42px;border-radius:12px;background:#eae8e3;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px}
-.notif-bell:active{background:#e4e2dd}
+.admin-toggle{height:44px;padding:0 12px;min-width:48px;border-radius:10px;background:rgba(254,38,39,.12);border:1.5px solid rgba(254,38,39,.3);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer}
+.admin-toggle:active{background:rgba(254,38,39,.2)}
+.logout-btn{height:44px;padding:0 12px;min-width:48px;border-radius:10px;background:#262625;border:none;display:none;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer}
+.logout-btn:active{background:#3a3a38}
+.logout-btn.show{display:flex}.mobile-btn-bar{position:absolute;top:calc(env(safe-area-inset-top, 20px) + 8px);right:22px;display:flex;align-items:center;gap:6px}.mobile-btn-label{font-size:8px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;font-family:'Barlow Condensed',sans-serif;line-height:1}.admin-toggle .mobile-btn-label{color:rgba(254,38,39,.7)}.admin-toggle i{font-size:17px;color:#fe2627}.notif-bell .mobile-btn-label,.logout-btn .mobile-btn-label{color:rgba(255,255,255,.45)}.notif-bell i,.logout-btn i{font-size:17px;color:rgba(255,255,255,.78)}
+.notif-bell{height:44px;padding:0 12px;min-width:48px;border-radius:10px;background:#262625;border:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;position:relative}
+.notif-bell:active{background:#3a3a38}
 .notif-badge{position:absolute;top:4px;right:4px;background:#fe2627;color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;min-width:18px;height:18px;border-radius:9px;display:none;align-items:center;justify-content:center;padding:0 5px;border:2px solid #f4f4f2;line-height:1}
 .notif-badge.show{display:flex}
 .notif-panel{display:none;position:absolute;top:calc(env(safe-area-inset-top, 20px) + 56px);right:14px;left:14px;background:#fff;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.16);z-index:50;overflow:hidden;animation:notifSlide .22s ease-out}
@@ -504,6 +504,7 @@ body.desktop-mode #screenHome{display:flex!important;visibility:visible!importan
 body.desktop-mode #screenHome .admin-toggle,
 body.desktop-mode #screenHome .notif-bell,
 body.desktop-mode #screenHome .logout-btn,
+body.desktop-mode #screenHome .mobile-btn-bar,
 body.desktop-mode #screenHome .logo-row,
 body.desktop-mode #screenHome .home-heading,
 body.desktop-mode #screenHome .driver-greeting,
@@ -677,9 +678,11 @@ body.desktop-mode #biContent{padding:0}
 <div class="screen" id="screenHome">
 <div class="d-list-col">
   <div class="home-top" style="position:relative">
-    <button class="admin-toggle" onclick="showAdminLogin()">⚙️</button>
-    <button class="notif-bell" id="notifBell" onclick="toggleNotifPanel()">🔔<div class="notif-badge" id="notifBadge">0</div></button>
-    <button class="logout-btn" id="logoutBtn" onclick="promptLogout()">↩ Sair</button>
+    <div class="mobile-btn-bar">
+      <button class="logout-btn" id="logoutBtn" onclick="promptLogout()"><i class="ti ti-logout" aria-hidden="true"></i><span class="mobile-btn-label">Sair</span></button>
+      <button class="notif-bell" id="notifBell" onclick="toggleNotifPanel()"><i class="ti ti-bell" aria-hidden="true"></i><span class="mobile-btn-label">Avisos</span><div class="notif-badge" id="notifBadge">0</div></button>
+      <button class="admin-toggle" onclick="showAdminLogin()"><i class="ti ti-shield-half" aria-hidden="true"></i><span class="mobile-btn-label">Admin</span></button>
+    </div>
     <div class="notif-panel" id="notifPanel">
       <div class="notif-panel-head"><span class="notif-panel-title">Notificações</span><button class="notif-panel-clear" onclick="markAllNotifRead()">Marcar tudo como lido</button></div>
       <div class="notif-panel-body" id="notifList"></div>
