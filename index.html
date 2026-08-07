@@ -2358,7 +2358,7 @@ function showRoute(i){
   }
   // fallback: comportamento mobile
   const r=routes[i];currentRouteIdx=i;
-  _nav_origPush('screenRoute',()=>{
+  _navPushOrig('screenRoute',()=>{
     document.getElementById('routeContent').innerHTML=renderRoute(r);
     const bar=document.getElementById('driverTripBar');const btn=document.getElementById('btnStartTrip');
     if(bar&&currentDriver){bar.classList.add('show');if(currentTrip&&currentTrip.rotaId===r.id){btn.textContent='🗺️ Ver Mapa ao Vivo';btn.style.background='#1a6fb5';btn.onclick=showMapLive;btn.disabled=false;}else if(currentTrip){btn.textContent='🚛 Em outra viagem';btn.style.background='#9a9894';btn.disabled=true;}else{btn.textContent='🚛 Iniciar Viagem';btn.style.background='#1a7a3c';btn.onclick=startTrip;btn.disabled=false;}}else if(bar){bar.classList.remove('show');}
