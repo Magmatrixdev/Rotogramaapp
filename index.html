@@ -31,6 +31,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Rotogramas — Confiança</title>
 <link rel="manifest" href="./manifest.json">
+<link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
@@ -480,15 +481,18 @@ body.desktop-mode #dTopbar{display:flex;align-items:center;height:52px;backgroun
 body.desktop-mode #dtbBadge{border-color:#262625}
 
 /* ── Sidebar ── */
-body.desktop-mode #dSidebar{display:flex;flex-direction:column;width:210px;flex-shrink:0;background:#fff;border-right:1.5px solid #e4e2dd;overflow-y:auto}
-.dsb-section{padding:14px 12px 6px;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#9a9894}
-.dsb-item{display:flex;align-items:center;gap:9px;padding:9px 12px;cursor:pointer;border-radius:10px;margin:1px 8px;transition:background .15s;font-size:13px;font-weight:500;color:#6b6967;user-select:none}
-.dsb-item:hover{background:#f4f4f2}
-.dsb-item.active{background:#fff0f0;color:#fe2627;font-weight:600}
-.dsb-count{margin-left:auto;background:#eae8e3;color:#9a9894;font-size:10px;font-weight:700;padding:2px 6px;border-radius:9px;font-family:'Barlow Condensed',sans-serif;min-width:20px;text-align:center}
-.dsb-item.active .dsb-count{background:rgba(254,38,39,.12);color:#fe2627}
-.dsb-footer{margin-top:auto;padding:13px 14px;border-top:1.5px solid #e4e2dd;font-size:11px;color:#1a7f37;display:flex;align-items:center;gap:6px}
-.dsb-footer::before{content:'';width:7px;height:7px;border-radius:50%;background:#1a7f37;flex-shrink:0}
+body.desktop-mode #dSidebar{display:flex;flex-direction:column;width:210px;flex-shrink:0;background:#1c1c1c;border-right:none;overflow-y:auto}
+.dsb-section{padding:16px 14px 6px;font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:rgba(255,255,255,.3)}
+.dsb-item{display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;border-left:3px solid transparent;transition:background .15s,color .15s;font-size:13px;font-weight:600;color:rgba(255,255,255,.45);letter-spacing:.2px;user-select:none;font-family:'Barlow Condensed',sans-serif}
+.dsb-item:hover{background:rgba(255,255,255,.04);color:rgba(255,255,255,.75)}
+.dsb-item.active{background:rgba(254,38,39,.12);color:#fff;border-left-color:#fe2627}
+.dsb-item i{font-size:15px;flex-shrink:0;opacity:.7}
+.dsb-item.active i{opacity:1}
+.dsb-divider{height:1px;background:rgba(255,255,255,.07);margin:6px 14px}
+.dsb-count{margin-left:auto;background:rgba(255,255,255,.1);color:rgba(255,255,255,.45);font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;font-family:'Barlow Condensed',sans-serif;min-width:20px;text-align:center}
+.dsb-item.active .dsb-count{background:rgba(254,38,39,.25);color:#ff8080}
+.dsb-footer{margin-top:auto;padding:12px 14px;border-top:1px solid rgba(255,255,255,.07);font-size:11px;color:#1f8a3d;display:flex;align-items:center;gap:6px;font-family:'Barlow Condensed',sans-serif;font-weight:600;letter-spacing:.2px}
+.dsb-footer::before{content:'';width:7px;height:7px;border-radius:50%;background:#1f8a3d;flex-shrink:0}
 .dsb-footer.err{color:#fe2627}.dsb-footer.err::before{background:#fe2627}
 
 /* ── Screens dentro do content area ── */
@@ -604,13 +608,14 @@ body.desktop-mode .admin-scroll{padding:0!important}
 <div class="d-body-row">
 <div id="dSidebar">
   <div class="dsb-section">Regiões</div>
-  <div class="dsb-item active" data-region="all" onclick="dSidebarFilter(this,'all')"><span>🗺️</span> Todas as rotas<span class="dsb-count" id="dsbCountAll">—</span></div>
-  <div class="dsb-item" data-region="Centro-Oeste" onclick="dSidebarFilter(this,'Centro-Oeste')"><span>📍</span> Centro-Oeste<span class="dsb-count" id="dsbCountCO">—</span></div>
-  <div class="dsb-item" data-region="Nordeste" onclick="dSidebarFilter(this,'Nordeste')"><span>📍</span> Nordeste<span class="dsb-count" id="dsbCountNE">—</span></div>
-  <div class="dsb-item" data-region="Sudeste" onclick="dSidebarFilter(this,'Sudeste')"><span>📍</span> Sudeste<span class="dsb-count" id="dsbCountSE">—</span></div>
-  <div class="dsb-item" data-region="Sul" onclick="dSidebarFilter(this,'Sul')"><span>📍</span> Sul<span class="dsb-count" id="dsbCountSU">—</span></div>
-  <div class="dsb-item" data-region="Norte" onclick="dSidebarFilter(this,'Norte')"><span>📍</span> Norte<span class="dsb-count" id="dsbCountNO">—</span></div>
-  <div class="dsb-item" data-region="Centro-Norte" onclick="dSidebarFilter(this,'Centro-Norte')"><span>📍</span> Centro-Norte<span class="dsb-count" id="dsbCountCN">—</span></div>
+  <div class="dsb-item active" data-region="all" onclick="dSidebarFilter(this,'all')"><i class="ti ti-map" aria-hidden="true"></i> Todas as rotas<span class="dsb-count" id="dsbCountAll">—</span></div>
+  <div class="dsb-divider"></div>
+  <div class="dsb-item" data-region="Centro-Oeste" onclick="dSidebarFilter(this,'Centro-Oeste')"><i class="ti ti-map-pin" aria-hidden="true"></i> Centro-Oeste<span class="dsb-count" id="dsbCountCO">—</span></div>
+  <div class="dsb-item" data-region="Nordeste" onclick="dSidebarFilter(this,'Nordeste')"><i class="ti ti-map-pin" aria-hidden="true"></i> Nordeste<span class="dsb-count" id="dsbCountNE">—</span></div>
+  <div class="dsb-item" data-region="Sudeste" onclick="dSidebarFilter(this,'Sudeste')"><i class="ti ti-map-pin" aria-hidden="true"></i> Sudeste<span class="dsb-count" id="dsbCountSE">—</span></div>
+  <div class="dsb-item" data-region="Sul" onclick="dSidebarFilter(this,'Sul')"><i class="ti ti-map-pin" aria-hidden="true"></i> Sul<span class="dsb-count" id="dsbCountSU">—</span></div>
+  <div class="dsb-item" data-region="Norte" onclick="dSidebarFilter(this,'Norte')"><i class="ti ti-map-pin" aria-hidden="true"></i> Norte<span class="dsb-count" id="dsbCountNO">—</span></div>
+  <div class="dsb-item" data-region="Centro-Norte" onclick="dSidebarFilter(this,'Centro-Norte')"><i class="ti ti-map-pin" aria-hidden="true"></i> Centro-Norte<span class="dsb-count" id="dsbCountCN">—</span></div>
   <div class="dsb-footer" id="dsbFooter">⏳ Sincronizando...</div>
 </div>
 <div class="d-content">
@@ -2059,17 +2064,6 @@ function toggleNotifPanel(){
   notifPanelOpen=!notifPanelOpen;
   const panel=document.getElementById('notifPanel');
   if(!panel)return;
-  if(IS_DESKTOP()){
-    // No desktop: mover para body e posicionar abaixo do topbar
-    if(notifPanelOpen){
-      document.body.appendChild(panel);
-      panel.style.cssText='display:block;position:fixed;top:56px;right:12px;left:auto;width:320px;max-height:400px;overflow-y:auto;z-index:99990;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.2);background:#fff;animation:notifSlide .22s ease-out';
-      renderNotifList();
-    }else{
-      panel.style.cssText='display:none';
-    }
-    return;
-  }
   panel.className='notif-panel'+(notifPanelOpen?' open':'');
   if(notifPanelOpen)renderNotifList();
 }
@@ -2177,15 +2171,10 @@ function toggleDesktopMode(){
     if(btn)btn.innerHTML='🖥️ Versão Web';
     navReset('screenHome',()=>renderHome());
   }else{
-    // Ativar desktop — exige login
+    // Ativar desktop
+    document.body.classList.add('desktop-mode');
     localStorage.setItem('rotograma_desktop_on','1');
     if(btn)btn.innerHTML='📱 Versão Mobile';
-    if(!currentDriver&&!adminMode){
-      // Não ativa desktop-mode ainda; login ativará após autenticação
-      navReset('screenDriverLogin');
-      return;
-    }
-    document.body.classList.add('desktop-mode');
     _dActivateHomeLayout();
     dUpdateTopbar();dUpdateSidebar();
   }
@@ -2333,9 +2322,14 @@ function renderHome(){
 // ── Inicialização desktop: restaurar preferência do localStorage ──
 (function _desktopInit(){
   var btn=document.getElementById('btnToggleDesktop');
-  // Só atualiza o texto do botão — a classe desktop-mode é ativada após login em showHome()
+  // Restaurar preferência salva: se o user ativou desktop antes, reativar
   var desktopSalvo=localStorage.getItem('rotograma_desktop_on')==='1';
-  if(btn)btn.innerHTML=desktopSalvo?'📱 Versão Mobile':'🖥️ Versão Web';
+  if(desktopSalvo){
+    document.body.classList.add('desktop-mode');
+    if(btn)btn.innerHTML='📱 Versão Mobile';
+  }else{
+    if(btn)btn.innerHTML='🖥️ Versão Web';
+  }
 })();
 
 // ═══ TOAST & SUCCESS ═══
@@ -2528,12 +2522,6 @@ function showHome(){
   if(!currentDriver&&!adminMode){showDriverLogin();return;}
   isEditing=false;if(window._draftInterval)clearInterval(window._draftInterval);
   requestNotifPermission();
-  // Ativar desktop-mode se preferência salva e ainda não ativo
-  if(localStorage.getItem('rotograma_desktop_on')==='1'&&!IS_DESKTOP()){
-    document.body.classList.add('desktop-mode');
-    var btn=document.getElementById('btnToggleDesktop');
-    if(btn)btn.innerHTML='📱 Versão Mobile';
-  }
   dUpdateTopbar();
   // Se home já está na pilha, faz pop até chegar nela
   const homeIdx=_navStack.indexOf('screenHome');
