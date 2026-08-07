@@ -31,7 +31,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Rotogramas — Confiança</title>
 <link rel="manifest" href="./manifest.json">
-<link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
@@ -437,9 +437,9 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .d-body-row{display:contents}/* sem layout proprio — só agrupa HTML */
 .d-content{display:contents}
 
-/* Botão alternância desktop/mobile — SEMPRE visível */
+/* Botão alternância desktop/mobile — só visível em desktop (≥ 1024px) */
 #btnToggleDesktop{
-  display:flex;
+  display:none;
   position:fixed;bottom:20px;right:20px;z-index:99999;
   align-items:center;gap:7px;
   padding:10px 18px;border-radius:12px;
@@ -448,6 +448,7 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
   letter-spacing:.3px;box-shadow:0 4px 20px rgba(0,0,0,.35);
   transition:background .15s,transform .15s;white-space:nowrap;
 }
+@media(min-width:1024px){#btnToggleDesktop{display:flex}}
 #btnToggleDesktop:hover{background:#fe2627;transform:translateY(-2px)}
 /* No modo desktop, reposicionar para não conflitar com sidebar */
 body.desktop-mode #btnToggleDesktop{bottom:20px;right:20px}
@@ -2064,6 +2065,16 @@ function toggleNotifPanel(){
   notifPanelOpen=!notifPanelOpen;
   const panel=document.getElementById('notifPanel');
   if(!panel)return;
+  if(IS_DESKTOP()){
+    if(notifPanelOpen){
+      document.body.appendChild(panel);
+      panel.style.cssText='display:block;position:fixed;top:56px;right:12px;left:auto;width:320px;max-height:400px;overflow-y:auto;z-index:99990;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.2);background:#fff;animation:notifSlide .22s ease-out';
+      renderNotifList();
+    }else{
+      panel.style.display='none';
+    }
+    return;
+  }
   panel.className='notif-panel'+(notifPanelOpen?' open':'');
   if(notifPanelOpen)renderNotifList();
 }
@@ -2151,8 +2162,11 @@ document.addEventListener('click',e=>{
   if(!notifPanelOpen)return;
   const panel=document.getElementById('notifPanel');
   const bell=document.getElementById('notifBell');
-  if(panel&&bell&&!panel.contains(e.target)&&!bell.contains(e.target)){
-    notifPanelOpen=false;panel.className='notif-panel';
+  const dtbBell=document.getElementById('dtbNotifBtn');
+  if(panel&&!panel.contains(e.target)&&!bell?.contains(e.target)&&!dtbBell?.contains(e.target)){
+    notifPanelOpen=false;
+    panel.className='notif-panel';
+    panel.style.display='none';
   }
 });
 
@@ -2171,10 +2185,14 @@ function toggleDesktopMode(){
     if(btn)btn.innerHTML='🖥️ Versão Web';
     navReset('screenHome',()=>renderHome());
   }else{
-    // Ativar desktop
-    document.body.classList.add('desktop-mode');
+    // Ativar desktop — exige login
     localStorage.setItem('rotograma_desktop_on','1');
     if(btn)btn.innerHTML='📱 Versão Mobile';
+    if(!currentDriver&&!adminMode){
+      navReset('screenDriverLogin');
+      return;
+    }
+    document.body.classList.add('desktop-mode');
     _dActivateHomeLayout();
     dUpdateTopbar();dUpdateSidebar();
   }
@@ -2322,14 +2340,8 @@ function renderHome(){
 // ── Inicialização desktop: restaurar preferência do localStorage ──
 (function _desktopInit(){
   var btn=document.getElementById('btnToggleDesktop');
-  // Restaurar preferência salva: se o user ativou desktop antes, reativar
   var desktopSalvo=localStorage.getItem('rotograma_desktop_on')==='1';
-  if(desktopSalvo){
-    document.body.classList.add('desktop-mode');
-    if(btn)btn.innerHTML='📱 Versão Mobile';
-  }else{
-    if(btn)btn.innerHTML='🖥️ Versão Web';
-  }
+  if(btn)btn.innerHTML=desktopSalvo?'📱 Versão Mobile':'🖥️ Versão Web';
 })();
 
 // ═══ TOAST & SUCCESS ═══
@@ -2522,6 +2534,11 @@ function showHome(){
   if(!currentDriver&&!adminMode){showDriverLogin();return;}
   isEditing=false;if(window._draftInterval)clearInterval(window._draftInterval);
   requestNotifPermission();
+  if(localStorage.getItem('rotograma_desktop_on')==='1'&&!IS_DESKTOP()){
+    document.body.classList.add('desktop-mode');
+    var btn=document.getElementById('btnToggleDesktop');
+    if(btn)btn.innerHTML='📱 Versão Mobile';
+  }
   dUpdateTopbar();
   // Se home já está na pilha, faz pop até chegar nela
   const homeIdx=_navStack.indexOf('screenHome');
