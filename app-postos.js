@@ -61,12 +61,16 @@ function updateBottomNav(active){
 }
 
 function bnavGoRotas(){
-  if(_navStack[_navStack.length-1]==='screenPostos')navPop();
-  updateBottomNav('Rotas');
+  const top=_navStack[_navStack.length-1];
+  if(top==='screenHome'){updateBottomNav('Rotas');return;}
+  if(top==='screenPostos'){navPop();updateBottomNav('Rotas');return;}
+  showHome();
 }
 
 function bnavGoPostos(){
-  if(_navStack[_navStack.length-1]==='screenPostos'){updateBottomNav('Postos');return;}
+  const top=_navStack[_navStack.length-1];
+  if(top==='screenPostos'){updateBottomNav('Postos');return;}
+  if(top!=='screenHome')showHome();
   showPostos();
 }
 
