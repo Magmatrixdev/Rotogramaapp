@@ -183,6 +183,7 @@ function showHome(){
     navReset('screenHome');
   }
   renderHome();
+  if(typeof updateBottomNav==='function')updateBottomNav('Rotas');
 }
 
 function showMapLive(){
