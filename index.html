@@ -121,7 +121,6 @@
     <div class="mobile-btn-bar">
       <button class="logout-btn" id="logoutBtn" onclick="promptLogout()"><i class="ti ti-logout" aria-hidden="true"></i><span class="mobile-btn-label">Sair</span></button>
       <button class="notif-bell" id="notifBell" onclick="toggleNotifPanel()"><i class="ti ti-bell" aria-hidden="true"></i><span class="mobile-btn-label">Avisos</span><div class="notif-badge" id="notifBadge">0</div></button>
-      <button class="postos-nav-btn" onclick="showPostos()"><i class="ti ti-gas-station" aria-hidden="true"></i><span class="mobile-btn-label">Postos</span></button>
       <button class="admin-toggle" onclick="showAdminLogin()"><i class="ti ti-shield-half" aria-hidden="true"></i><span class="mobile-btn-label">Admin</span></button>
     </div>
     <div class="notif-panel" id="notifPanel">
@@ -163,7 +162,7 @@
 <div class="screen" id="screenPostos">
   <div class="postos-topbar">
     <div class="postos-topbar-row">
-      <button class="back-btn" onclick="navPop()">‹</button>
+      <button class="back-btn" onclick="bnavGoRotas()">‹</button>
       <div class="postos-topbar-title">Postos</div>
     </div>
     <div class="postos-search-wrap">
@@ -286,6 +285,23 @@
 </div><!-- /.d-content -->
 </div><!-- /.d-body-row -->
 
+
+
+<!-- ═══ BOTTOM NAV ═══ -->
+<div id="bottomNav" style="display:none">
+  <button class="bnav-item" id="bnavRotas" onclick="bnavGoRotas()">
+    <i class="ti ti-map" aria-hidden="true"></i>
+    <span>Rotas</span>
+  </button>
+  <button class="bnav-item" id="bnavPostos" onclick="bnavGoPostos()">
+    <i class="ti ti-gas-station" aria-hidden="true"></i>
+    <span>Postos</span>
+  </button>
+  <button class="bnav-item" id="bnavViagem" onclick="bnavGoViagem()">
+    <i class="ti ti-truck" aria-hidden="true"></i>
+    <span>Viagem</span>
+  </button>
+</div>
 
 <script src="app-config.js"></script>
 <script src="app-state.js"></script>
