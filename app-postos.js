@@ -16,7 +16,7 @@ function getCartaoClass(cartao){
   return 'ptag-outro';
 }
 
-// ─── extrai postos das rotas ───
+// ─── extrai postos das rotas (usa variável global `routes`) ───
 function extractPostosFromRoutes(){
   const src=routes.length>0?routes:DEFAULTS;
   const list=[];
@@ -32,7 +32,7 @@ function extractPostosFromRoutes(){
   return list;
 }
 
-// ─── listener Firebase (inicializa lazy no primeiro acesso) ───
+// ─── Firebase listener (lazy) ───
 function initPostosListener(){
   if(!db)return;
   db.ref('postos').on('value',snap=>{
@@ -46,6 +46,35 @@ function showPostos(){
   if(!_postosListenerInit){initPostosListener();_postosListenerInit=true;}
   navPush('screenPostos');
   renderPostosList();
+  updateBottomNav('Postos');
+}
+
+// ─── bottom nav ───
+function updateBottomNav(active){
+  const nav=document.getElementById('bottomNav');
+  if(!nav)return;
+  if(IS_DESKTOP()){nav.style.display='none';return;}
+  nav.style.display='flex';
+  document.querySelectorAll('.bnav-item').forEach(b=>b.classList.remove('active'));
+  const btn=document.getElementById('bnav'+active);
+  if(btn)btn.classList.add('active');
+}
+
+function bnavGoRotas(){
+  if(_navStack[_navStack.length-1]==='screenPostos')navPop();
+  updateBottomNav('Rotas');
+}
+
+function bnavGoPostos(){
+  if(_navStack[_navStack.length-1]==='screenPostos'){updateBottomNav('Postos');return;}
+  showPostos();
+}
+
+function bnavGoViagem(){showMapLive();}
+
+function hideBottomNav(){
+  const nav=document.getElementById('bottomNav');
+  if(nav)nav.style.display='none';
 }
 
 // ─── render lista ───
