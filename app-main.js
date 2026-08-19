@@ -3,7 +3,7 @@
 (function initApp(){
   document.getElementById('searchInput')?.addEventListener('input',e=>filterRoutes(e.target.value));
   if(loadDriverSession()){
-    navReset('screenHome',()=>renderHome());
+    navReset('screenHome',()=>{renderHome();if(typeof updateBottomNav==='function')updateBottomNav('Rotas');});
   }else{
     navReset('screenDriverLogin');
   }
