@@ -1,0 +1,69 @@
+/* ═══ POSTOS ═══ */
+#screenPostos{display:flex;flex-direction:column;height:100%;overflow:hidden}
+
+/* topbar */
+.postos-topbar{background:#1c1c1c;padding:14px 16px 12px;flex-shrink:0}
+.postos-topbar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.postos-topbar-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:#fff;letter-spacing:.3px;flex:1}
+.postos-search-wrap{display:flex;align-items:center;background:rgba(255,255,255,.12);border-radius:10px;padding:8px 12px;gap:8px}
+.postos-search-wrap i{font-size:16px;color:rgba(255,255,255,.5)}
+.postos-search-wrap input{background:none;border:none;outline:none;color:#fff;font-size:14px;flex:1;font-family:'Barlow',sans-serif}
+.postos-search-wrap input::placeholder{color:rgba(255,255,255,.4)}
+
+/* filtros */
+.postos-filter-row{display:flex;gap:8px;padding:10px 14px 8px;overflow-x:auto;flex-shrink:0;background:#f8f7f4}
+.postos-filter-row::-webkit-scrollbar{display:none}
+.postos-chip{white-space:nowrap;padding:5px 14px;border-radius:20px;font-size:12px;font-family:'Barlow',sans-serif;font-weight:600;border:1px solid #d5d3cf;color:#6b6a66;background:#fff;cursor:pointer;transition:all .15s}
+.postos-chip.active{background:#1c1c1c;color:#fff;border-color:#1c1c1c}
+
+/* lista */
+.postos-list{flex:1;overflow-y:auto;padding:12px 14px 90px;display:flex;flex-direction:column;gap:10px}
+.postos-section-label{font-size:11px;font-weight:600;color:#9a9894;text-transform:uppercase;letter-spacing:.5px;padding:4px 0 2px}
+.postos-divider{height:1px;background:#eae8e3;margin:4px 0 2px}
+.postos-empty{display:flex;flex-direction:column;align-items:center;gap:10px;padding:56px 0;color:#b5b3af}
+.postos-empty i{font-size:44px}
+.postos-empty p{font-size:13px;font-family:'Barlow Condensed',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+
+/* cards */
+.postos-card{background:#fff;border:1px solid #eae8e3;border-radius:12px;padding:12px 14px}
+.postos-card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;gap:8px}
+.postos-card-name{font-size:14px;font-weight:600;color:#1c1c1c;line-height:1.3;font-family:'Barlow',sans-serif}
+.postos-card-city{font-size:12px;color:#9a9894;margin-top:2px}
+.postos-card-tags{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.postos-maps-btn{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#185fa5;padding:5px 9px;border:1px solid #b5d4f4;border-radius:6px;cursor:pointer;white-space:nowrap;background:none;font-family:'Barlow',sans-serif;font-weight:600;text-decoration:none}
+.postos-del-btn{background:none;border:none;color:#c4c2b8;padding:4px;cursor:pointer;font-size:18px;line-height:1;display:flex;align-items:center}
+.postos-del-btn:hover{color:#fe2627}
+
+/* tags cartão */
+.postos-tag{font-size:11px;padding:3px 9px;border-radius:6px;font-weight:600;display:inline-flex;align-items:center;gap:4px;font-family:'Barlow',sans-serif}
+.ptag-rota{background:#e6f0fb;color:#185fa5;border:1px solid #b5d4f4}
+.ptag-avulso{background:#e6f0fb;color:#185fa5;border:1px solid #b5d4f4}
+.ptag-truckpag{background:#e6f4ea;color:#1a7a32;border:1px solid #a8d5b5}
+.ptag-shell{background:#fdecea;color:#b71c1c;border:1px solid #f5a9a9}
+.ptag-frota{background:#f1f0eb;color:#5f5e5a;border:1px solid #c4c2b8}
+.ptag-antecipada{background:#fef8e1;color:#8a6200;border:1px solid #f0d87a}
+.ptag-outro{background:#f1f0eb;color:#5f5e5a;border:1px solid #c4c2b8}
+
+/* FAB admin */
+.postos-fab{position:fixed;bottom:24px;right:20px;width:52px;height:52px;background:#1c1c1c;color:#fff;border:none;border-radius:50%;font-size:24px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,.25)}
+.postos-fab:active{transform:scale(.95)}
+
+/* form overlay */
+.postos-form-ov{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;display:flex;align-items:flex-end}
+.postos-form-box{background:#fff;border-radius:20px 20px 0 0;padding:24px 20px 40px;width:100%;display:flex;flex-direction:column;gap:14px}
+.postos-form-title{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:#1c1c1c;text-transform:uppercase;letter-spacing:.3px}
+.postos-form-field{display:flex;flex-direction:column;gap:6px}
+.postos-form-field label{font-size:11px;font-weight:700;color:#6b6a66;text-transform:uppercase;letter-spacing:.4px}
+.postos-form-field input,.postos-form-field select{padding:10px 12px;border:1px solid #d5d3cf;border-radius:8px;font-size:14px;font-family:'Barlow',sans-serif;color:#1c1c1c;outline:none;background:#fff}
+.postos-form-field input:focus,.postos-form-field select:focus{border-color:#1c1c1c}
+.postos-form-err{font-size:13px;color:#b71c1c;font-family:'Barlow',sans-serif}
+.postos-form-btns{display:flex;gap:10px;margin-top:4px}
+.postos-form-cancel{flex:1;padding:12px;background:#eae8e3;color:#1c1c1c;border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;font-family:'Barlow',sans-serif}
+.postos-form-save{flex:1;padding:12px;background:#1c1c1c;color:#fff;border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;font-family:'Barlow',sans-serif}
+
+/* botão nav mobile */
+.postos-nav-btn{display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;color:#6b6a66;cursor:pointer;font-family:'Barlow',sans-serif;padding:4px 8px}
+.postos-nav-btn i{font-size:22px}
+
+/* desktop sidebar item */
+body.desktop-mode .postos-nav-btn{display:none}
