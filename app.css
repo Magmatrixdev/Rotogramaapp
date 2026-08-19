@@ -309,7 +309,7 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .maplive-stop-name.done{text-decoration:line-through;color:#9a9894}
 .maplive-stop-city{font-family:'Barlow',sans-serif;font-size:11px;color:#9a9894;margin-top:1px}
 .maplive-stop-km{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;color:#b0aea9;flex-shrink:0}
-.maplive-action-row{display:flex;gap:10px;padding:12px 14px 22px;flex-shrink:0;background:#fff;position:sticky;bottom:0;border-top:1px solid #f0eeea}
+.maplive-action-row{display:flex;gap:10px;padding:12px 14px calc(22px + 64px + env(safe-area-inset-bottom, 0px));flex-shrink:0;background:#fff;position:sticky;bottom:0;border-top:1px solid #f0eeea}
 .btn-fuel-confirm{flex:2;padding:14px;background:#1f8a3d;color:#fff;border:none;border-radius:12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;cursor:pointer;min-height:50px;display:none}
 .btn-fuel-confirm.show{display:block}
 .btn-fuel-confirm:active{background:#177030}
