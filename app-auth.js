@@ -100,6 +100,7 @@ function verifyDriverSession(){
 function logoutDriver(){
   currentDriver=null;adminMode=false;
   localStorage.removeItem('drv_session');
+  firebase.auth().signOut().catch(()=>{});
   navReset('screenDriverLogin');
 }
 
@@ -121,13 +122,36 @@ function switchAuthTab(tab){
 function showAdminLogin(){
   document.querySelector('.login-overlay')?.remove();
   const ov=document.createElement('div');ov.className='login-overlay';
-  ov.innerHTML=`<div class="login-box"><div class="login-logo"><div class="lb"><span>C</span></div><span class="lt">CONFIANÇA</span></div><div class="login-title">Área Restrita</div><div class="login-sub">Credenciais de administrador</div><div class="login-field"><label>Usuário</label><input type="text" id="loginUser" placeholder="Usuário" autocomplete="off"></div><div class="login-field"><label>Senha</label><input type="password" id="loginPass" placeholder="Senha"></div><button class="login-btn" onclick="doAdminLogin()">ENTRAR</button><div class="login-error" id="loginError">Usuário ou senha incorretos</div><button class="login-cancel" onclick="this.closest('.login-overlay').remove()">Cancelar</button></div>`;
+  ov.innerHTML=`<div class="login-box"><div class="login-logo"><div class="lb"><span>C</span></div><span class="lt">CONFIANÇA</span></div><div class="login-title">Área Restrita</div><div class="login-sub">Credenciais de administrador</div><div class="login-field"><label>E-mail</label><input type="email" id="loginUser" placeholder="admin@confianca.com.br" autocomplete="off"></div><div class="login-field"><label>Senha</label><input type="password" id="loginPass" placeholder="Senha"></div><button class="login-btn" onclick="doAdminLogin()">ENTRAR</button><div class="login-error" id="loginError">E-mail ou senha incorretos</div><button class="login-cancel" onclick="this.closest('.login-overlay').remove()">Cancelar</button></div>`;
   document.body.appendChild(ov);setTimeout(()=>document.getElementById('loginUser')?.focus(),100);
   ov.addEventListener('keydown',e=>{if(e.key==='Enter')doAdminLogin()});
 }
 
-function doAdminLogin(){
-  const u=(document.getElementById('loginUser')?.value||'').trim(),p=(document.getElementById('loginPass')?.value||'').trim();
-  if(u===ADMIN_USER&&p===ADMIN_PASS){adminMode=true;document.querySelector('.login-overlay')?.remove();renderAdmin();navPush('screenAdmin');}
-  else{const e=document.getElementById('loginError');if(e){e.style.display='block';setTimeout(()=>e.style.display='none',3000);}}
+async function doAdminLogin(){
+  const email=(document.getElementById('loginUser')?.value||'').trim();
+  const pass=(document.getElementById('loginPass')?.value||'').trim();
+  const btn=document.querySelector('.login-btn');
+  const errEl=document.getElementById('loginError');
+  function showErr(msg){errEl.textContent=msg;errEl.style.display='block';setTimeout(()=>errEl.style.display='none',3500);}
+  if(!email||!pass){showErr('Preencha e-mail e senha');return;}
+  if(btn){btn.disabled=true;btn.textContent='Verificando...';}
+  try{
+    await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.NONE);
+    await firebase.auth().signInWithEmailAndPassword(email,pass);
+    adminMode=true;
+    document.querySelector('.login-overlay')?.remove();
+    renderAdmin();
+    navPush('screenAdmin');
+  }catch(err){
+    const msgs={
+      'auth/user-not-found':'E-mail não encontrado',
+      'auth/wrong-password':'Senha incorreta',
+      'auth/invalid-email':'E-mail inválido',
+      'auth/invalid-credential':'Credenciais inválidas',
+      'auth/too-many-requests':'Muitas tentativas — tente mais tarde'
+    };
+    showErr(msgs[err.code]||'Erro ao entrar. Tente novamente.');
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='ENTRAR';}
+  }
 }
