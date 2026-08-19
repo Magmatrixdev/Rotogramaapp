@@ -13,7 +13,7 @@
 /* filtros */
 .postos-filter-row{display:flex;gap:8px;padding:10px 14px 8px;overflow-x:auto;flex-shrink:0;background:#f8f7f4}
 .postos-filter-row::-webkit-scrollbar{display:none}
-.postos-chip{white-space:nowrap;padding:5px 14px;border-radius:20px;font-size:12px;font-family:'Barlow',sans-serif;font-weight:600;border:1px solid #d5d3cf;color:#6b6a66;background:#fff;cursor:pointer;transition:all .15s}
+.postos-chip{white-space:nowrap;padding:5px 14px;border-radius:20px;font-size:12px;font-family:'Barlow',sans-serif;font-weight:600;border:1px solid #d5d3cf;color:#6b6a66;background:#fff;cursor:pointer}
 .postos-chip.active{background:#1c1c1c;color:#fff;border-color:#1c1c1c}
 
 /* lista */
@@ -45,7 +45,7 @@
 .ptag-outro{background:#f1f0eb;color:#5f5e5a;border:1px solid #c4c2b8}
 
 /* FAB admin */
-.postos-fab{position:fixed;bottom:24px;right:20px;width:52px;height:52px;background:#1c1c1c;color:#fff;border:none;border-radius:50%;font-size:24px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,.25)}
+.postos-fab{position:fixed;bottom:74px;right:20px;width:52px;height:52px;background:#1c1c1c;color:#fff;border:none;border-radius:50%;font-size:24px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,.25)}
 .postos-fab:active{transform:scale(.95)}
 
 /* form overlay */
@@ -61,9 +61,15 @@
 .postos-form-cancel{flex:1;padding:12px;background:#eae8e3;color:#1c1c1c;border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;font-family:'Barlow',sans-serif}
 .postos-form-save{flex:1;padding:12px;background:#1c1c1c;color:#fff;border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;font-family:'Barlow',sans-serif}
 
-/* botão nav mobile */
-.postos-nav-btn{display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;color:#6b6a66;cursor:pointer;font-family:'Barlow',sans-serif;padding:4px 8px}
-.postos-nav-btn i{font-size:22px}
+/* ─── bottom nav ─── */
+#bottomNav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #eae8e3;display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom,0)}
+.bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 4px 11px;background:none;border:none;color:#b5b3af;cursor:pointer;font-family:'Barlow',sans-serif;transition:color .15s}
+.bnav-item i{font-size:24px}
+.bnav-item span{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.bnav-item.active{color:#1c1c1c}
 
-/* desktop sidebar item */
-body.desktop-mode .postos-nav-btn{display:none}
+/* ocultar bottom nav no desktop */
+body.desktop-mode #bottomNav{display:none!important}
+
+/* padding-bottom nas telas que usam o bottom nav */
+#screenHome .d-list-col{padding-bottom:64px}
