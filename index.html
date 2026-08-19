@@ -37,6 +37,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <link rel="stylesheet" href="app.css">
+<link rel="stylesheet" href="app-postos.css">
 </head>
 <body>
 <!-- Botão alternância desktop/mobile — só visível em telas ≥ 1024px -->
@@ -99,6 +100,9 @@
 </div>
 <div class="d-body-row">
 <div id="dSidebar">
+  <div class="dsb-section">Postos</div>
+  <div class="dsb-item" onclick="showPostos()"><i class="ti ti-gas-station" aria-hidden="true"></i> Postos de abastecimento</div>
+  <div class="dsb-divider"></div>
   <div class="dsb-section">Regiões</div>
   <div class="dsb-item active" data-region="all" onclick="dSidebarFilter(this,'all')"><i class="ti ti-map" aria-hidden="true"></i> Todas as rotas<span class="dsb-count" id="dsbCountAll">—</span></div>
   <div class="dsb-divider"></div>
@@ -117,6 +121,7 @@
     <div class="mobile-btn-bar">
       <button class="logout-btn" id="logoutBtn" onclick="promptLogout()"><i class="ti ti-logout" aria-hidden="true"></i><span class="mobile-btn-label">Sair</span></button>
       <button class="notif-bell" id="notifBell" onclick="toggleNotifPanel()"><i class="ti ti-bell" aria-hidden="true"></i><span class="mobile-btn-label">Avisos</span><div class="notif-badge" id="notifBadge">0</div></button>
+      <button class="postos-nav-btn" onclick="showPostos()"><i class="ti ti-gas-station" aria-hidden="true"></i><span class="mobile-btn-label">Postos</span></button>
       <button class="admin-toggle" onclick="showAdminLogin()"><i class="ti ti-shield-half" aria-hidden="true"></i><span class="mobile-btn-label">Admin</span></button>
     </div>
     <div class="notif-panel" id="notifPanel">
@@ -153,6 +158,29 @@
   </div>
 </div>
 </div><!-- /#screenHome -->
+
+<!-- ═══ POSTOS ═══ -->
+<div class="screen" id="screenPostos">
+  <div class="postos-topbar">
+    <div class="postos-topbar-row">
+      <button class="back-btn" onclick="navPop()">‹</button>
+      <div class="postos-topbar-title">Postos</div>
+    </div>
+    <div class="postos-search-wrap">
+      <i class="ti ti-search" aria-hidden="true"></i>
+      <input id="postosSearch" placeholder="Buscar posto ou cidade..." oninput="filterPostos()" autocomplete="off" autocorrect="off" spellcheck="false">
+    </div>
+  </div>
+  <div class="postos-filter-row">
+    <div class="postos-chip active" data-filter="all" onclick="setPostosFilter(this,'all')">Todos</div>
+    <div class="postos-chip" data-filter="truckpag" onclick="setPostosFilter(this,'truckpag')">TruckPag</div>
+    <div class="postos-chip" data-filter="shell" onclick="setPostosFilter(this,'shell')">Shell</div>
+    <div class="postos-chip" data-filter="frota" onclick="setPostosFilter(this,'frota')">Rede Frota</div>
+    <div class="postos-chip" data-filter="antecipada" onclick="setPostosFilter(this,'antecipada')">Antecipada</div>
+  </div>
+  <div id="postosListContainer" class="postos-list"></div>
+  <button class="postos-fab" id="postosFab" onclick="showAddPostoForm()" aria-label="Adicionar posto" style="display:none"><i class="ti ti-plus" aria-hidden="true"></i></button>
+</div>
 
 <!-- ═══ ROTA (estático) ═══ -->
 <div class="screen" id="screenRoute">
@@ -274,6 +302,7 @@
 <script src="app-editor.js"></script>
 <script src="app-utils.js"></script>
 <script src="app-pwa.js"></script>
+<script src="app-postos.js"></script>
 <script src="app-main.js"></script>
 
 </html>
