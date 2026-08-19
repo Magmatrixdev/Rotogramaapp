@@ -18,7 +18,7 @@ function getCartaoClass(cartao){
 
 // ─── extrai postos das rotas ───
 function extractPostosFromRoutes(){
-  const src=Object.keys(rotogramas||{}).length>0?Object.values(rotogramas):DEFAULTS;
+  const src=routes.length>0?routes:DEFAULTS;
   const list=[];
   src.forEach(rota=>{
     (rota.paradas||[]).forEach(p=>{
