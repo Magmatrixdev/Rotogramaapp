@@ -267,8 +267,9 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .active-trip-banner-arr{color:rgba(255,255,255,.7);font-size:20px}
 
 /* ═══ DRIVER TRIP BAR (bottom of route screen) ═══ */
-.driver-trip-bar{display:none;padding:14px 20px;background:#f4f4f2;border-top:1px solid #e4e2dd;gap:10px}
+.driver-trip-bar{display:none;padding:14px 20px calc(14px + env(safe-area-inset-bottom, 0px));background:#f4f4f2;border-top:1px solid #e4e2dd;gap:10px}
 .driver-trip-bar.show{display:flex}
+#screenRoute{padding-bottom:64px}
 .btn-start-trip{flex:1;padding:15px;background:#1a7a3c;color:#fff;border:none;border-radius:12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;cursor:pointer;min-height:52px}
 .btn-start-trip:active{background:#145f2e}
 .btn-view-static{flex:1;padding:15px;background:#eae8e3;color:#1c1c1c;border:none;border-radius:12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;cursor:pointer;min-height:52px}
