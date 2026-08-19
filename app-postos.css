@@ -2,7 +2,7 @@
 #screenPostos{display:flex;flex-direction:column;height:100%;overflow:hidden}
 
 /* topbar */
-.postos-topbar{background:#1c1c1c;padding:14px 16px 12px;flex-shrink:0}
+.postos-topbar{background:#1c1c1c;padding:calc(env(safe-area-inset-top, 0px) + 14px) 16px 12px;flex-shrink:0}
 .postos-topbar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
 .postos-topbar-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:#fff;letter-spacing:.3px;flex:1}
 .postos-search-wrap{display:flex;align-items:center;background:rgba(255,255,255,.12);border-radius:10px;padding:8px 12px;gap:8px}
