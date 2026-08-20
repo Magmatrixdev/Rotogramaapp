@@ -143,7 +143,7 @@ function navPop(setupFn){
 function navReset(id,setupFn){
   if(IS_DESKTOP()&&id==='screenHome'){
     _blur();
-    const overlays=['screenAdmin','screenEditor','screenRoute','screenMapLive','screenDriverLogin','screenDriverReg'];
+    const overlays=['screenAdmin','screenEditor','screenRoute','screenMapLive','screenPostos','screenDriverLogin','screenDriverReg'];
     overlays.forEach(sid=>{
       const el=document.getElementById(sid);
       if(el){el.style.cssText='';el.style.visibility='hidden';el.style.transform='translateX(100%)';el.classList.remove('active','behind');}
@@ -246,3 +246,4 @@ function _handleDeepLink(){
 }
 
 window.addEventListener('hashchange',()=>_handleDeepLink());
+
