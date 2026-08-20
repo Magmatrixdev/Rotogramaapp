@@ -251,6 +251,7 @@
     <button class="admin-tab-btn" onclick="switchAdminTab('drivers',this)"><i class="ti ti-users" aria-hidden="true"></i> Motoristas</button>
     <button class="admin-tab-btn" onclick="switchAdminTab('monitor',this)"><i class="ti ti-activity" aria-hidden="true"></i> Monitor</button>
     <button class="admin-tab-btn" onclick="switchAdminTab('bi',this)"><i class="ti ti-chart-bar" aria-hidden="true"></i> Análise</button>
+    <button class="admin-tab-btn" onclick="switchAdminTab('postos',this)"><i class="ti ti-gas-station" aria-hidden="true"></i> Postos</button>
   </div>
   <div class="admin-tab-content">
     <div id="adminTabRoutes" class="admin-tab-pane active">
@@ -272,6 +273,9 @@
     </div>
     <div id="adminTabBI" class="admin-tab-pane" style="overflow-y:auto">
       <div id="biContent"></div>
+    </div>
+    <div id="adminTabPostos" class="admin-tab-pane">
+      <div class="admin-scroll" id="adminPostosList"></div>
     </div>
   </div>
 </div>
@@ -322,3 +326,4 @@
 <script src="app-main.js"></script>
 
 </html>
+
