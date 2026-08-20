@@ -219,6 +219,8 @@ function switchAdminTab(tab,el){
 }
 
 // ═══ ADMIN POSTOS ═══
+let _adminPostoFilter='';
+
 function _adminPostoCard(p,actionsHtml,mapsHtml){
   const cls=getCartaoClass(p.cartao);const lbl=getCartaoLabel(p.cartao);
   return `<div class="admin-rcard">
@@ -248,14 +250,26 @@ function renderAdminPostos(){
   // --- Postos avulsos ---
   const avulsoList=Object.values(postosAvulsos||{}).sort((a,b)=>(a.nome||'').localeCompare(b.nome||''));
 
-  let h=`<button class="admin-add" onclick="showAddPostoForm()">＋ NOVO POSTO AVULSO</button>`;
+  // --- Filtro ---
+  const q=_adminPostoFilter.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const filteredRoute=q?routeStops.filter(p=>{
+    const t=((p.nome||'')+' '+(p.cidade||'')+' '+(p._routeName||'')+' '+(p._routeNum||'')).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    return t.includes(q);
+  }):routeStops;
+  const filteredAvulso=q?avulsoList.filter(p=>{
+    const t=((p.nome||'')+' '+(p.cidade||'')).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    return t.includes(q);
+  }):avulsoList;
+
+  let h=`<div class="admin-search"><span class="admin-search-icon">🔍</span><input id="adminPostoSearch" type="text" placeholder="Pesquisar posto..." value="${esc(_adminPostoFilter)}" oninput="_adminPostoFilter=this.value;renderAdminPostos()"><button class="admin-search-clear ${_adminPostoFilter?'visible':''}" onclick="_adminPostoFilter='';document.getElementById('adminPostoSearch').value='';renderAdminPostos()">✕</button></div>`;
+  h+=`<button class="admin-add" onclick="showAddPostoForm()">＋ NOVO POSTO AVULSO</button>`;
 
   // Seção rotas
-  h+=`<div style="font-family:'Barlow',sans-serif;font-weight:700;font-size:13px;color:#5a5854;text-transform:uppercase;letter-spacing:.5px;padding:16px 0 8px">⛽ Postos em Rotas <span style="font-weight:400;color:#9a9894">(${routeStops.length})</span></div>`;
-  if(routeStops.length===0){
-    h+=`<div style="text-align:center;padding:24px 20px;color:#9a9894;font-family:'Barlow',sans-serif;font-size:13px">Nenhum posto cadastrado em rotas</div>`;
+  h+=`<div style="font-family:'Barlow',sans-serif;font-weight:700;font-size:13px;color:#5a5854;text-transform:uppercase;letter-spacing:.5px;padding:16px 0 8px">⛽ Postos em Rotas <span style="font-weight:400;color:#9a9894">(${filteredRoute.length})</span></div>`;
+  if(filteredRoute.length===0){
+    h+=`<div style="text-align:center;padding:24px 20px;color:#9a9894;font-family:'Barlow',sans-serif;font-size:13px">${q?'Nenhum posto encontrado':'Nenhum posto cadastrado em rotas'}</div>`;
   }else{
-    routeStops.forEach(p=>{
+    filteredRoute.forEach(p=>{
       const maps=p.link?`<a href="${p.link}" target="_blank" style="color:#1a6fb5;font-size:12px;text-decoration:none">🗺️ Maps</a>`:'';
       const acts=`<button class="admin-btn admin-btn-edit" onclick="showEditPostoRota(${p._routeIdx},${p._paraIdx})">✏️ Editar</button>`;
       h+=_adminPostoCard(p,acts,maps);
@@ -263,11 +277,11 @@ function renderAdminPostos(){
   }
 
   // Seção avulsos
-  h+=`<div style="font-family:'Barlow',sans-serif;font-weight:700;font-size:13px;color:#5a5854;text-transform:uppercase;letter-spacing:.5px;padding:20px 0 8px">📋 Postos Avulsos <span style="font-weight:400;color:#9a9894">(${avulsoList.length})</span></div>`;
-  if(avulsoList.length===0){
-    h+=`<div style="text-align:center;padding:24px 20px;color:#9a9894;font-family:'Barlow',sans-serif;font-size:13px">Nenhum posto avulso cadastrado</div>`;
+  h+=`<div style="font-family:'Barlow',sans-serif;font-weight:700;font-size:13px;color:#5a5854;text-transform:uppercase;letter-spacing:.5px;padding:20px 0 8px">📋 Postos Avulsos <span style="font-weight:400;color:#9a9894">(${filteredAvulso.length})</span></div>`;
+  if(filteredAvulso.length===0){
+    h+=`<div style="text-align:center;padding:24px 20px;color:#9a9894;font-family:'Barlow',sans-serif;font-size:13px">${q?'Nenhum posto encontrado':'Nenhum posto avulso cadastrado'}</div>`;
   }else{
-    avulsoList.forEach(p=>{
+    filteredAvulso.forEach(p=>{
       const maps=p.link?`<a href="${p.link}" target="_blank" style="color:#1a6fb5;font-size:12px;text-decoration:none">🗺️ Maps</a>`:'';
       const acts=`<button class="admin-btn admin-btn-edit" onclick="showEditPostoAvulso('${p.id}')">✏️ Editar</button><button class="admin-btn admin-btn-del" onclick="deletePostoAvulso('${p.id}')">🗑️ Excluir</button>`;
       h+=_adminPostoCard(p,acts,maps);
