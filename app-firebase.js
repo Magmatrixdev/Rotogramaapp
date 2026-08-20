@@ -27,7 +27,7 @@ function initFirebase(){
 
     db.ref('rotogramas').on('value',snap=>{
       const data=snap.val();
-      if(data&&Array.isArray(data)){routes=data;firebaseReady=true;localStorage.setItem('rotogramas_cache',JSON.stringify(routes));setSyncStatus('on','Sincronizado');if(!isEditing)renderHome();_handleDeepLink()}
+      if(data&&Array.isArray(data)){routes=data;firebaseReady=true;localStorage.setItem('rotogramas_cache',JSON.stringify(routes));setSyncStatus('on','Sincronizado');if(!isEditing)renderHome();if(typeof renderPostosList==='function'&&document.getElementById('screenPostos')?.classList.contains('active'))renderPostosList();_handleDeepLink()}
       else if(!data){db.ref('rotogramas').set(DEFAULTS).then(()=>{routes=DEFAULTS;firebaseReady=true;setSyncStatus('on','Sincronizado');renderHome()})}
     },err=>{setSyncStatus('err','Erro Firebase — dados locais');loadLocal()});
 
