@@ -128,8 +128,23 @@ function showAdminLogin(){
   ov.addEventListener('keydown',e=>{if(e.key==='Enter')doAdminLogin()});
 }
 
-function doAdminLogin(){
-  const u=(document.getElementById('loginUser')?.value||'').trim(),p=(document.getElementById('loginPass')?.value||'').trim();
-  if(u===ADMIN_USER&&p===ADMIN_PASS){adminMode=true;document.querySelector('.login-overlay')?.remove();renderAdmin();navPush('screenAdmin');}
-  else{const e=document.getElementById('loginError');if(e){e.style.display='block';setTimeout(()=>e.style.display='none',3000);}}
+async function doAdminLogin(){
+  const u=(document.getElementById('loginUser')?.value||'').trim();
+  const p=(document.getElementById('loginPass')?.value||'').trim();
+  const btn=document.querySelector('.login-btn');
+  const errEl=document.getElementById('loginError');
+  if(!u||!p){if(errEl){errEl.textContent='Preencha usuário e senha';errEl.style.display='block';setTimeout(()=>errEl.style.display='none',3000);}return;}
+  if(btn){btn.disabled=true;btn.textContent='Aguarde...';}
+  try{
+    await firebase.auth().signInWithEmailAndPassword(u,p);
+    adminMode=true;
+    document.querySelector('.login-overlay')?.remove();
+    renderAdmin();
+    navPush('screenAdmin');
+  }catch(err){
+    console.error('Admin login error:',err);
+    if(errEl){errEl.textContent='Usuário ou senha incorretos';errEl.style.display='block';setTimeout(()=>errEl.style.display='none',3000);}
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='ENTRAR';}
+  }
 }
