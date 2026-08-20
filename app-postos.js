@@ -44,7 +44,12 @@ function initPostosListener(){
 // ─── navegação ───
 function showPostos(){
   if(!_postosListenerInit){initPostosListener();_postosListenerInit=true;}
-  navPush('screenPostos');
+  if(IS_DESKTOP()){
+    _navPushOrig('screenPostos');
+    if(typeof dUpdateTopbar==='function')dUpdateTopbar();
+  }else{
+    navPush('screenPostos');
+  }
   renderPostosList();
   updateBottomNav('Postos');
 }
@@ -61,16 +66,12 @@ function updateBottomNav(active){
 }
 
 function bnavGoRotas(){
-  const top=_navStack[_navStack.length-1];
-  if(top==='screenHome'){updateBottomNav('Rotas');return;}
-  if(top==='screenPostos'){navPop();updateBottomNav('Rotas');return;}
-  showHome();
+  if(_navStack[_navStack.length-1]==='screenPostos')navPop();
+  updateBottomNav('Rotas');
 }
 
 function bnavGoPostos(){
-  const top=_navStack[_navStack.length-1];
-  if(top==='screenPostos'){updateBottomNav('Postos');return;}
-  if(top!=='screenHome')showHome();
+  if(_navStack[_navStack.length-1]==='screenPostos'){updateBottomNav('Postos');return;}
   showPostos();
 }
 
