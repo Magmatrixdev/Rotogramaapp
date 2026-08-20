@@ -44,12 +44,7 @@ function initPostosListener(){
 // ─── navegação ───
 function showPostos(){
   if(!_postosListenerInit){initPostosListener();_postosListenerInit=true;}
-  if(IS_DESKTOP()){
-    _navPushOrig('screenPostos');
-    if(typeof dUpdateTopbar==='function')dUpdateTopbar();
-  }else{
-    navPush('screenPostos');
-  }
+  navPush('screenPostos');
   renderPostosList();
   updateBottomNav('Postos');
 }
