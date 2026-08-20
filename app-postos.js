@@ -91,9 +91,11 @@ function renderPostosList(){
     if(activeFilter==='antecipada')return c.includes('antecipada');
     return true;
   }
+  const norm=s=>(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const queryNorm=norm(query);
   function matchQuery(p){
-    if(!query)return true;
-    return (p.nome||'').toLowerCase().includes(query)||(p.cidade||'').toLowerCase().includes(query);
+    if(!queryNorm)return true;
+    return norm(p.nome).includes(queryNorm)||norm(p.cidade).includes(queryNorm);
   }
 
   const rotaList=extractPostosFromRoutes().filter(p=>matchFilter(p.cartao)&&matchQuery(p));
@@ -179,14 +181,23 @@ async function savePostoAvulso(){
   const cartao=document.getElementById('pfCartao')?.value||'truckpag';
   const link=(document.getElementById('pfLink')?.value||'').trim();
   const errEl=document.getElementById('pfError');
+  const btn=document.querySelector('.postos-form-ov .postos-form-save');
   if(!nome||!cidade){errEl.textContent='Nome e cidade são obrigatórios';errEl.style.display='block';return;}
+  // checagem de duplicata
+  const norm=s=>(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const dup=Object.values(postosAvulsos).find(p=>norm(p.nome)===norm(nome)&&norm(p.cidade)===norm(cidade));
+  if(dup){errEl.textContent='Posto já cadastrado com esse nome e cidade.';errEl.style.display='block';return;}
+  if(btn){btn.disabled=true;btn.textContent='Salvando...';}
   const id='posto_'+Date.now();
   const posto={id,nome,cidade,cartao,link,criadoEm:Date.now()};
   try{
     if(db)await db.ref('postos/'+id).set(posto);
     else{postosAvulsos[id]={...posto,_source:'avulso'};renderPostosList();}
     document.querySelector('.postos-form-ov')?.remove();
-  }catch(e){errEl.textContent='Erro ao salvar. Tente novamente.';errEl.style.display='block';}
+  }catch(e){
+    errEl.textContent='Erro ao salvar. Tente novamente.';errEl.style.display='block';
+    if(btn){btn.disabled=false;btn.textContent='Salvar';}
+  }
 }
 
 function deletePostoAvulso(id){
@@ -202,3 +213,4 @@ function deletePostoAvulso(id){
     ov.remove();
   };
 }
+
