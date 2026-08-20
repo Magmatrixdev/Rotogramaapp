@@ -30,6 +30,8 @@ function deleteRoute(i){const r=routes[i];const ov=document.createElement('div')
 function confirmDeleteRoute(i){routes.splice(i,1);saveToFirebase();renderAdmin()}
 
 // ═══ RENDER DRIVER MANAGER ═══
+let _driverFilter='';
+
 function showAddDriverModal(){
   document.querySelector('.driver-modal-overlay')?.remove();
   const ov=document.createElement('div');ov.className='driver-modal-overlay confirm-overlay';
@@ -77,12 +79,75 @@ async function doAddDriverAdmin(){
   finally{if(btn){btn.disabled=false;btn.textContent='Cadastrar';}}
 }
 
+function showEditDriverModal(id){
+  const d=drivers[id];if(!d)return;
+  document.querySelector('.driver-modal-overlay')?.remove();
+  const ov=document.createElement('div');ov.className='driver-modal-overlay confirm-overlay';
+  ov.innerHTML=`<div class="confirm-box" style="max-width:380px;text-align:left">
+    <h3 style="margin-bottom:4px">Editar Motorista</h3>
+    <p style="font-size:13px;color:#9a9894;margin-bottom:16px;font-family:'Barlow',sans-serif">CPF não pode ser alterado</p>
+    <div class="login-field"><label>Nome completo</label><input type="text" id="edNome" value="${esc(d.nome)}" style="width:100%;padding:12px;border:1.5px solid #e4e2dd;border-radius:10px;font-family:'Barlow',sans-serif;font-size:14px;outline:none"></div>
+    <div class="login-field" style="margin-top:10px"><label>Novo PIN (deixe vazio para não alterar)</label><input type="password" id="edPIN" placeholder="••••" maxlength="4" inputmode="numeric" style="width:100%;padding:12px;border:1.5px solid #e4e2dd;border-radius:10px;font-family:'Barlow',sans-serif;font-size:14px;outline:none"></div>
+    <div class="login-error" id="edError" style="display:none;margin-top:8px"></div>
+    <div class="btns" style="margin-top:16px">
+      <button style="background:#eae8e3;color:#1c1c1c;flex:1;padding:12px;border-radius:10px;border:none;font-weight:700;cursor:pointer" onclick="this.closest('.driver-modal-overlay').remove()">Cancelar</button>
+      <button id="edSaveBtn" style="background:#1c1c1c;color:#fff;flex:1;padding:12px;border-radius:10px;border:none;font-weight:700;cursor:pointer" onclick="doEditDriver('${id}')">Salvar</button>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+  setTimeout(()=>document.getElementById('edNome')?.focus(),100);
+}
+
+async function doEditDriver(id){
+  const d=drivers[id];if(!d)return;
+  const nome=(document.getElementById('edNome')?.value||'').trim();
+  const pin=(document.getElementById('edPIN')?.value||'').trim();
+  const errEl=document.getElementById('edError');
+  const btn=document.getElementById('edSaveBtn');
+  function showErr(msg){errEl.textContent=msg;errEl.style.display='block';setTimeout(()=>errEl.style.display='none',4000);}
+  if(!nome){showErr('Informe o nome completo');return;}
+  if(pin&&(pin.length!==4||!/^\d{4}$/.test(pin))){showErr('PIN deve ter 4 dígitos numéricos');return;}
+  if(btn){btn.disabled=true;btn.textContent='Salvando...';}
+  try{
+    const updates={nome};
+    if(pin){
+      const hashFn=(!window.crypto||!window.crypto.subtle)?sha256Fallback:sha256;
+      updates.pinHash=await hashFn(pin);
+    }
+    if(db){
+      await db.ref('motoristas/'+id).update(updates);
+    }else{
+      drivers[id]={...d,...updates};
+      await renderDriverCards();
+    }
+    document.querySelector('.driver-modal-overlay')?.remove();
+  }catch(err){showErr('Erro: '+(err.message||'tente novamente'));}
+  finally{if(btn){btn.disabled=false;btn.textContent='Salvar';}}
+}
+
 async function renderDriverManager(){
   const el=document.getElementById('adminDriversList');if(!el)return;
-  const driverList=Object.values(drivers);
-  if(driverList.length===0){el.innerHTML=`<div style="padding:0 0 16px"><button class="admin-add" onclick="showAddDriverModal()">＋ CADASTRAR MOTORISTA</button></div><div style="text-align:center;padding:30px 20px;color:#9a9894;font-family:'Barlow',sans-serif"><span style="font-size:40px">👤</span><p style="margin-top:8px">Nenhum motorista cadastrado ainda</p></div>`;return;}
-  let h='<button class="admin-add" onclick="showAddDriverModal()">＋ CADASTRAR MOTORISTA</button>';
-  for(const d of driverList.sort((a,b)=>a.nome.localeCompare(b.nome))){
+  let h=`<div class="admin-search"><span class="admin-search-icon">🔍</span><input id="driverSearch" type="text" placeholder="Pesquisar motorista..." value="${esc(_driverFilter)}" oninput="_driverFilter=this.value;renderDriverCards()"><button class="admin-search-clear ${_driverFilter?'visible':''}" onclick="_driverFilter='';document.getElementById('driverSearch').value='';renderDriverCards()">✕</button></div>`;
+  h+=`<button class="admin-add" onclick="showAddDriverModal()">＋ CADASTRAR MOTORISTA</button>`;
+  h+=`<div id="driverCardsContainer"></div>`;
+  el.innerHTML=h;
+  await renderDriverCards();
+}
+
+async function renderDriverCards(){
+  const container=document.getElementById('driverCardsContainer');if(!container)return;
+  const norm=s=>(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const q=norm(_driverFilter);
+  const clearBtn=document.getElementById('driverSearch')?.parentElement?.querySelector('.admin-search-clear');
+  if(clearBtn)clearBtn.className='admin-search-clear'+(q?' visible':'');
+  const driverList=Object.values(drivers).sort((a,b)=>a.nome.localeCompare(b.nome,'pt'));
+  const filtered=q?driverList.filter(d=>norm(d.nome).includes(q)):driverList;
+  if(filtered.length===0){
+    container.innerHTML=`<div style="text-align:center;padding:30px 20px;color:#9a9894;font-family:'Barlow',sans-serif"><span style="font-size:40px">${q?'🔍':'👤'}</span><p style="margin-top:8px">${q?'Nenhum motorista encontrado para "'+esc(_driverFilter)+'"':'Nenhum motorista cadastrado ainda'}</p></div>`;
+    return;
+  }
+  let h='';
+  for(const d of filtered){
     const initials=d.nome.split(' ').slice(0,2).map(n=>n[0]).join('').toUpperCase();
     const isOnTrip=Object.values(viagens).some(v=>v.motoristaId===d.id&&v.status==='em_viagem');
     const lastAccess=d.ultimoAcesso?new Date(d.ultimoAcesso).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'Nunca';
@@ -102,12 +167,13 @@ async function renderDriverManager(){
       </div>
       <div class="driver-card-meta">Último acesso: ${lastAccess}</div>
       <div class="driver-card-actions">
+        <button class="driver-btn driver-btn-edit" onclick="showEditDriverModal('${d.id}')">✏️ Editar</button>
         <button class="driver-btn ${d.bloqueado?'driver-btn-unblock':'driver-btn-block'}" onclick="toggleBlockDriver('${d.id}',${d.bloqueado})">${d.bloqueado?'🔓 Desbloquear':'🔒 Bloquear'}</button>
         <button class="driver-btn driver-btn-del" onclick="deleteDriver('${d.id}')">🗑️ Excluir</button>
       </div>
     </div>`;
   }
-  el.innerHTML=h;
+  container.innerHTML=h;
 }
 
 async function toggleBlockDriver(id,blocked){
