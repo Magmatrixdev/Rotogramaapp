@@ -497,6 +497,7 @@ body.desktop-mode #screenAdmin,
 body.desktop-mode #screenEditor,
 body.desktop-mode #screenRoute,
 body.desktop-mode #screenMapLive,
+body.desktop-mode #screenPostos,
 body.desktop-mode #screenDriverLogin,
 body.desktop-mode #screenDriverReg{z-index:10}
 
