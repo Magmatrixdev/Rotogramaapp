@@ -86,6 +86,7 @@ function dUpdateSidebar(){
 
 /* ── Filtro da sidebar ── */
 function dSidebarFilter(el,region){
+  if(IS_DESKTOP()&&_navStack[_navStack.length-1]==='screenPostos')navPop();
   document.querySelectorAll('.dsb-item').forEach(i=>i.classList.remove('active'));
   el.classList.add('active');_dActiveRegion=region;
   document.querySelectorAll('#routeList .rcard').forEach(c=>{
@@ -123,3 +124,4 @@ function dShowRouteDetail(i){
   var desktopSalvo=localStorage.getItem('rotograma_desktop_on')==='1';
   if(btn)btn.innerHTML=desktopSalvo?'📱 Versão Mobile':'🖥️ Versão Web';
 })();
+
