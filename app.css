@@ -351,6 +351,7 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .driver-btn-block{background:rgba(254,38,39,.1);color:#fe2627}
 .driver-btn-unblock{background:rgba(31,138,61,.1);color:#1f8a3d}
 .driver-btn-del{background:#f4f4f2;color:#9a9894}
+.driver-btn-edit{background:rgba(28,28,28,.07);color:#1c1c1c}
 
 /* ═══ MONITORING ═══ */
 .monitor-stats{display:flex;gap:8px;padding:14px 20px 0;flex-shrink:0}
