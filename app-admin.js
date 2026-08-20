@@ -219,34 +219,114 @@ function switchAdminTab(tab,el){
 }
 
 // ═══ ADMIN POSTOS ═══
+function _adminPostoCard(p,actionsHtml,mapsHtml){
+  const cls=getCartaoClass(p.cartao);const lbl=getCartaoLabel(p.cartao);
+  return `<div class="admin-rcard">
+    <div class="admin-rcard-head">
+      <div class="admin-rcard-num" style="background:#2d5a27;font-size:14px">⛽</div>
+      <div class="admin-rcard-info">
+        <div class="admin-rcard-name">${esc(p.nome||'—')}</div>
+        <div class="admin-rcard-sub">${esc(p.cidade||'')} · <span class="postos-tag ${cls}" style="font-size:11px;padding:2px 6px;border-radius:4px;display:inline-block">${lbl}</span></div>
+        ${p._routeName?`<div class="admin-rcard-sub" style="font-size:11px;color:#9a9894;margin-top:1px">Rota ${esc(p._routeNum)} · ${esc(p._routeName)}</div>`:''}
+      </div>
+      <div style="margin-left:auto;padding-right:4px">${mapsHtml}</div>
+    </div>
+    <div class="admin-rcard-actions">${actionsHtml}</div>
+  </div>`;
+}
+
 function renderAdminPostos(){
   const el=document.getElementById('adminPostosList');if(!el)return;
-  const list=Object.values(postosAvulsos||{});
+  // --- Postos em rotas ---
+  const routeStops=[];
+  routes.forEach((r,ri)=>{
+    (r.paradas||[]).forEach((p,pi)=>{
+      if(p.tipo==='origem'||p.tipo==='destino')return;
+      routeStops.push({...p,_routeIdx:ri,_paraIdx:pi,_routeName:r.nome,_routeNum:r.numero});
+    });
+  });
+  // --- Postos avulsos ---
+  const avulsoList=Object.values(postosAvulsos||{}).sort((a,b)=>(a.nome||'').localeCompare(b.nome||''));
+
   let h=`<button class="admin-add" onclick="showAddPostoForm()">＋ NOVO POSTO AVULSO</button>`;
-  if(list.length===0){
-    h+=`<div style="text-align:center;padding:40px 20px;color:#9a9894;font-family:'Barlow',sans-serif"><span style="font-size:40px">⛽</span><p style="margin-top:8px">Nenhum posto avulso cadastrado</p><p style="font-size:12px;margin-top:4px">Postos das rotas são gerenciados no editor de rotas</p></div>`;
+
+  // Seção rotas
+  h+=`<div style="font-family:'Barlow',sans-serif;font-weight:700;font-size:13px;color:#5a5854;text-transform:uppercase;letter-spacing:.5px;padding:16px 0 8px">⛽ Postos em Rotas <span style="font-weight:400;color:#9a9894">(${routeStops.length})</span></div>`;
+  if(routeStops.length===0){
+    h+=`<div style="text-align:center;padding:24px 20px;color:#9a9894;font-family:'Barlow',sans-serif;font-size:13px">Nenhum posto cadastrado em rotas</div>`;
   }else{
-    list.sort((a,b)=>(a.nome||'').localeCompare(b.nome||'')).forEach(p=>{
-      const cls=getCartaoClass(p.cartao);
-      const lbl=getCartaoLabel(p.cartao);
+    routeStops.forEach(p=>{
       const maps=p.link?`<a href="${p.link}" target="_blank" style="color:#1a6fb5;font-size:12px;text-decoration:none">🗺️ Maps</a>`:'';
-      h+=`<div class="admin-rcard">
-        <div class="admin-rcard-head">
-          <div class="admin-rcard-num" style="background:#2d5a27;font-size:14px">⛽</div>
-          <div class="admin-rcard-info">
-            <div class="admin-rcard-name">${p.nome}</div>
-            <div class="admin-rcard-sub">${p.cidade} · <span class="postos-tag ${cls}" style="font-size:11px;padding:2px 6px;border-radius:4px;display:inline-block">${lbl}</span></div>
-          </div>
-          <div style="margin-left:auto;padding-right:4px">${maps}</div>
-        </div>
-        <div class="admin-rcard-actions">
-          <button class="admin-btn admin-btn-edit" onclick="showEditPostoAvulso('${p.id}')">✏️ Editar</button>
-          <button class="admin-btn admin-btn-del" onclick="deletePostoAvulso('${p.id}')">🗑️ Excluir</button>
-        </div>
-      </div>`;
+      const acts=`<button class="admin-btn admin-btn-edit" onclick="showEditPostoRota(${p._routeIdx},${p._paraIdx})">✏️ Editar</button>`;
+      h+=_adminPostoCard(p,acts,maps);
+    });
+  }
+
+  // Seção avulsos
+  h+=`<div style="font-family:'Barlow',sans-serif;font-weight:700;font-size:13px;color:#5a5854;text-transform:uppercase;letter-spacing:.5px;padding:20px 0 8px">📋 Postos Avulsos <span style="font-weight:400;color:#9a9894">(${avulsoList.length})</span></div>`;
+  if(avulsoList.length===0){
+    h+=`<div style="text-align:center;padding:24px 20px;color:#9a9894;font-family:'Barlow',sans-serif;font-size:13px">Nenhum posto avulso cadastrado</div>`;
+  }else{
+    avulsoList.forEach(p=>{
+      const maps=p.link?`<a href="${p.link}" target="_blank" style="color:#1a6fb5;font-size:12px;text-decoration:none">🗺️ Maps</a>`:'';
+      const acts=`<button class="admin-btn admin-btn-edit" onclick="showEditPostoAvulso('${p.id}')">✏️ Editar</button><button class="admin-btn admin-btn-del" onclick="deletePostoAvulso('${p.id}')">🗑️ Excluir</button>`;
+      h+=_adminPostoCard(p,acts,maps);
     });
   }
   el.innerHTML=h;
+}
+
+function _postoRotaFormHTML(p,ri,pi,title,saveFn){
+  return `<div class="postos-form-box">
+    <div class="postos-form-title">${title}</div>
+    <div class="postos-form-field"><label>Nome do posto</label><input id="prNome" value="${esc(p.nome||'')}"></div>
+    <div class="postos-form-field"><label>Cidade — UF</label><input id="prCidade" value="${esc(p.cidade||'')}"></div>
+    <div class="postos-form-field"><label>Tipo de pagamento</label>
+      <select id="prCartao">
+        <option value="truckpag"${p.cartao==='truckpag'?' selected':''}>TruckPag</option>
+        <option value="shell"${p.cartao==='shell'?' selected':''}>Shell</option>
+        <option value="shell_expers"${p.cartao==='shell_expers'?' selected':''}>Shell Expers</option>
+        <option value="redefrota"${p.cartao==='redefrota'?' selected':''}>Rede Frota</option>
+        <option value="compra_antecipada"${p.cartao==='compra_antecipada'?' selected':''}>Compra Antecipada</option>
+      </select>
+    </div>
+    <div class="postos-form-field"><label>Litragem</label><input id="prLitragem" value="${esc(p.litragem||'')}"></div>
+    <div class="postos-form-field"><label>KM</label><input id="prKm" value="${esc(p.km||'')}"></div>
+    <div class="postos-form-field"><label>Link Google Maps</label><input id="prLink" value="${esc(p.link||'')}"></div>
+    <div class="postos-form-err" id="prError" style="display:none"></div>
+    <div class="postos-form-btns">
+      <button class="postos-form-cancel" onclick="this.closest('.postos-form-ov').remove()">Cancelar</button>
+      <button class="postos-form-save" onclick="${saveFn}">Salvar</button>
+    </div>
+  </div>`;
+}
+
+function showEditPostoRota(ri,pi){
+  const r=routes[ri];if(!r)return;
+  const p=r.paradas[pi];if(!p)return;
+  document.querySelector('.postos-form-ov')?.remove();
+  const ov=document.createElement('div');ov.className='postos-form-ov';
+  ov.innerHTML=_postoRotaFormHTML(p,ri,pi,`Editar posto · Rota ${esc(r.numero)}`,'saveEditPostoRota('+ri+','+pi+')');
+  document.body.appendChild(ov);
+  setTimeout(()=>document.getElementById('prNome')?.focus(),100);
+}
+
+async function saveEditPostoRota(ri,pi){
+  const nome=(document.getElementById('prNome')?.value||'').trim();
+  const cidade=(document.getElementById('prCidade')?.value||'').trim();
+  const cartao=document.getElementById('prCartao')?.value||'truckpag';
+  const litragem=(document.getElementById('prLitragem')?.value||'').trim();
+  const km=(document.getElementById('prKm')?.value||'').trim();
+  const link=(document.getElementById('prLink')?.value||'').trim();
+  const errEl=document.getElementById('prError');
+  if(!nome||!cidade){errEl.textContent='Nome e cidade são obrigatórios';errEl.style.display='block';return;}
+  const r=routes[ri];if(!r)return;
+  r.paradas[pi]={...r.paradas[pi],nome,cidade,cartao,litragem,km,link};
+  try{
+    await saveToFirebase();
+    document.querySelector('.postos-form-ov')?.remove();
+    renderAdminPostos();
+  }catch(e){errEl.textContent='Erro ao salvar.';errEl.style.display='block';}
 }
 
 function showEditPostoAvulso(id){
