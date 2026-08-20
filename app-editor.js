@@ -73,11 +73,11 @@ function renderStopEditor(s,si){
 function getFuelStops(){return editData.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino')}
 function updateStop(si,k,v){getFuelStops()[si][k]=v}
 function updateAlt(si,k,v){const s=getFuelStops()[si];if(s.alternativa)s.alternativa[k]=v}
-function toggleAlt(si){const s=getFuelStops()[si];if(s.alternativa)delete s.alternativa;else s.alternativa={nome:'',cidade:'',litragem:'',cartao:s.cartao,km:'',nota:'',link:''};renderEditor()}
-function addMarca(si){const s=getFuelStops()[si];if(!s.marcas)s.marcas=[];s.marcas.push({marca:'',litros:''});renderEditor()}
-function removeMarca(si,mi){getFuelStops()[si].marcas.splice(mi,1);renderEditor()}
-function addStop(){const fs=getFuelStops();const o=fs.length?Math.max(...fs.map(s=>s.ordem))+1:1;editData.paradas.splice(editData.paradas.length-1,0,{ordem:o,tipo:'completa',nome:'',cidade:'',litragem:'Completa o tanque',cartao:'truckpag',km:'',link:''});renderEditor()}
-function removeStop(si){const s=getFuelStops()[si];editData.paradas.splice(editData.paradas.indexOf(s),1);renderEditor()}
+function toggleAlt(si){captureEditorFields();const s=getFuelStops()[si];if(s.alternativa)delete s.alternativa;else s.alternativa={nome:'',cidade:'',litragem:'',cartao:s.cartao,km:'',nota:'',link:''};renderEditor()}
+function addMarca(si){captureEditorFields();const s=getFuelStops()[si];if(!s.marcas)s.marcas=[];s.marcas.push({marca:'',litros:''});renderEditor()}
+function removeMarca(si,mi){captureEditorFields();getFuelStops()[si].marcas.splice(mi,1);renderEditor()}
+function addStop(){captureEditorFields();const fs=getFuelStops();const o=fs.length?Math.max(...fs.map(s=>s.ordem))+1:1;editData.paradas.splice(editData.paradas.length-1,0,{ordem:o,tipo:'completa',nome:'',cidade:'',litragem:'Completa o tanque',cartao:'truckpag',km:'',link:''});renderEditor()}
+function removeStop(si){captureEditorFields();const s=getFuelStops()[si];editData.paradas.splice(editData.paradas.indexOf(s),1);renderEditor()}
 
 function _diffRoute(oldR,newR){
   const msgs=[];
@@ -97,23 +97,30 @@ function _diffRoute(oldR,newR){
 // ─── Drag-to-reorder postos ───
 function initStopDrag(){
   if(!document.getElementById('_sdStyle')){
-    const s=document.createElement('style');s.id='_sdStyle';
-    s.textContent=`
-      .stop-drag-handle{display:inline-flex;align-items:center;cursor:grab;font-size:20px;color:#c8c5bf;padding:0 10px 0 0;user-select:none;touch-action:none;-webkit-touch-callout:none;line-height:1}
-      .stop-drag-handle:active{cursor:grabbing;color:#888}
-      .stop-editor.sd-drop-above{box-shadow:0 -3px 0 0 #fe2627}
-      .stop-editor.sd-drop-below{box-shadow:0 3px 0 0 #fe2627}
-      .stop-editor.sd-dragging{opacity:.2}`;
-    document.head.appendChild(s);
+    const st=document.createElement('style');st.id='_sdStyle';
+    st.textContent='.stop-drag-handle{display:inline-flex;align-items:center;cursor:grab;font-size:20px;color:#c8c5bf;padding:0 10px 0 0;user-select:none;touch-action:none;-webkit-touch-callout:none;line-height:1}.stop-drag-handle:active{cursor:grabbing;color:#888}.stop-editor.sd-drop-above{outline:2px solid #fe2627;outline-offset:-2px;border-radius:12px}.stop-editor.sd-drop-below{outline:2px solid #fe2627;outline-offset:-2px;border-radius:12px}.stop-editor.sd-dragging{opacity:.25}';
+    document.head.appendChild(st);
   }
   const items=Array.from(document.querySelectorAll('#editorContent .stop-editor[data-si]'));
   if(items.length<2)return;
-  let srcSi=-1,clone=null,offsetY=0,lastTgtSi=-1,lastDir='';
+  let srcSi=-1,clone=null,offsetY=0,tgtSi=-1;
+
+  function getItemAt(y){
+    // hide clone briefly so elementFromPoint hits the real DOM
+    if(clone)clone.style.display='none';
+    const el=document.elementFromPoint(80,y);
+    if(clone)clone.style.display='';
+    if(!el)return -1;
+    const card=el.closest('.stop-editor[data-si]');
+    if(!card)return -1;
+    const si=parseInt(card.dataset.si);
+    return si===srcSi?-1:si;
+  }
 
   function cleanup(){
     if(clone){clone.remove();clone=null;}
-    items.forEach(it=>{it.classList.remove('sd-dragging','sd-drop-above','sd-drop-below');});
-    srcSi=-1;lastTgtSi=-1;lastDir='';
+    items.forEach(it=>it.classList.remove('sd-dragging','sd-drop-above','sd-drop-below'));
+    srcSi=-1;tgtSi=-1;
   }
 
   items.forEach(item=>{
@@ -127,33 +134,28 @@ function initStopDrag(){
       offsetY=e.clientY-rect.top;
       clone=item.cloneNode(true);
       Object.assign(clone.style,{position:'fixed',left:rect.left+'px',top:rect.top+'px',
-        width:rect.width+'px',opacity:'.88',zIndex:'9999',pointerEvents:'none',
-        borderRadius:'12px',boxShadow:'0 8px 32px rgba(0,0,0,.25)',transform:'scale(1.02)'});
+        width:rect.width+'px',opacity:'.9',zIndex:'9999',pointerEvents:'none',
+        borderRadius:'12px',boxShadow:'0 8px 32px rgba(0,0,0,.28)',transform:'scale(1.02)',display:''});
       document.body.appendChild(clone);
       item.classList.add('sd-dragging');
       handle.setPointerCapture(e.pointerId);
-      lastTgtSi=-1;
+      tgtSi=-1;
     },{passive:false});
 
     handle.addEventListener('pointermove',e=>{
       if(srcSi<0||!clone)return;
       e.preventDefault();
       clone.style.top=(e.clientY-offsetY)+'px';
-      lastTgtSi=-1;lastDir='';
-      items.forEach(it=>{
-        it.classList.remove('sd-drop-above','sd-drop-below');
-        const si=parseInt(it.dataset.si);if(si===srcSi)return;
-        const r=it.getBoundingClientRect();
-        if(e.clientY>=r.top&&e.clientY<=r.bottom){
-          lastTgtSi=si;
-          lastDir=si>srcSi?'below':'above';
-          it.classList.add(si>srcSi?'sd-drop-below':'sd-drop-above');
-        }
-      });
+      items.forEach(it=>it.classList.remove('sd-drop-above','sd-drop-below'));
+      tgtSi=getItemAt(e.clientY);
+      if(tgtSi>=0){
+        const tgtItem=items.find(it=>parseInt(it.dataset.si)===tgtSi);
+        if(tgtItem)tgtItem.classList.add(tgtSi>srcSi?'sd-drop-below':'sd-drop-above');
+      }
     },{passive:false});
 
     handle.addEventListener('pointerup',()=>{
-      const s=srcSi,t=lastTgtSi;
+      const s=srcSi,t=tgtSi;
       cleanup();
       if(t<0||t===s)return;
       captureEditorFields();
