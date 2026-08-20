@@ -106,15 +106,17 @@ function initStopDrag(){
   let srcSi=-1,clone=null,offsetY=0,tgtSi=-1;
 
   function getItemAt(y){
-    // hide clone briefly so elementFromPoint hits the real DOM
-    if(clone)clone.style.display='none';
-    const el=document.elementFromPoint(80,y);
-    if(clone)clone.style.display='';
-    if(!el)return -1;
-    const card=el.closest('.stop-editor[data-si]');
-    if(!card)return -1;
-    const si=parseInt(card.dataset.si);
-    return si===srcSi?-1:si;
+    let bestSi=-1,bestDist=Infinity;
+    items.forEach(it=>{
+      const si=parseInt(it.dataset.si);
+      if(si===srcSi)return;
+      const r=it.getBoundingClientRect();
+      const mid=(r.top+r.bottom)/2;
+      const dist=Math.abs(y-mid);
+      // aceita se y está dentro da bbox vertical do card (com margem de 8px)
+      if(y>=r.top-8&&y<=r.bottom+8&&dist<bestDist){bestDist=dist;bestSi=si;}
+    });
+    return bestSi;
   }
 
   function cleanup(){
@@ -296,3 +298,4 @@ function applyPropagation(){
   saveToFirebase();
   showToast('✅ '+affectedIdxs.length+' rota(s) atualizada(s) com os novos dados dos postos');
 }
+
