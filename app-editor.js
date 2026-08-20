@@ -58,12 +58,11 @@ function renderStopEditor(s,si){
   const hasAlt=!!s.alternativa;const a=s.alternativa||{};let mh='';
   if(s.marcas&&s.marcas.length){s.marcas.forEach((m,mi)=>{mh+=`<div class="marca-row"><div class="field" style="margin:0"><input value="${esc(m.marca)}" onchange="editData.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino')[${si}].marcas[${mi}].marca=this.value" placeholder="Marca"></div><div class="field" style="margin:0;display:flex;gap:4px"><input value="${esc(m.litros)}" onchange="editData.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino')[${si}].marcas[${mi}].litros=this.value" placeholder="Litros"><button style="background:#fe2627;color:#fff;border:none;border-radius:6px;width:32px;cursor:pointer;font-size:16px" onclick="removeMarca(${si},${mi})">✕</button></div></div>`})}
   return `<div class="stop-editor"><div class="stop-editor-head"><span class="stop-editor-num">${si+1}º Posto</span><button class="stop-editor-del" onclick="removeStop(${si})">✕</button></div>
-  <div class="field"><label>Nome do posto</label><input value="${esc(s.nome)}" onchange="updateStop(${si},'nome',this.value)"></div>
+  <div class="field stop-ac-wrap"><label>Nome do posto</label><input id="stop_nome_${si}" value="${esc(s.nome)}" autocomplete="off" oninput="updateStop(${si},'nome',this.value);stopNameInput(${si},this.value)" onblur="setTimeout(()=>closeStopAC(${si}),200)"><div class="stop-ac-drop" id="stop_ac_${si}"></div></div>
   <div class="field"><label>Cidade — UF</label><input value="${esc(s.cidade)}" onchange="updateStop(${si},'cidade',this.value)"></div>
   <div class="field-row"><div class="field"><label>Tipo</label><select onchange="updateStop(${si},'tipo',this.value)"><option value="completa"${s.tipo==='completa'?' selected':''}>Completa</option><option value="parcial"${s.tipo==='parcial'?' selected':''}>Parcial</option></select></div><div class="field"><label>KM</label><input value="${esc(s.km)}" onchange="updateStop(${si},'km',this.value)"></div></div>
   <div class="field-row"><div class="field"><label>Litragem</label><input value="${esc(s.litragem)}" onchange="updateStop(${si},'litragem',this.value)"></div><div class="field"><label>Tipo de pagamento</label><select onchange="updateStop(${si},'cartao',this.value)"><option value="truckpag"${s.cartao==='truckpag'?' selected':''}>TruckPag</option><option value="shell"${s.cartao==='shell'?' selected':''}>Shell</option><option value="shell_expers"${s.cartao==='shell_expers'?' selected':''}>Shell Expers</option><option value="redefrota"${s.cartao==='redefrota'?' selected':''}>Rede Frota</option><option value="compra_antecipada"${s.cartao==='compra_antecipada'?' selected':''}>Compra Antecipada</option></select></div></div>
   <div class="field"><label>Link Google Maps</label><input value="${esc(s.link||'')}" onchange="updateStop(${si},'link',this.value)"></div>
-  <div class="field"><label>Razão social</label><input value="${esc(s.razaoSocial||'')}" onchange="updateStop(${si},'razaoSocial',this.value)"></div>
   <div class="field"><label>Nota / Estratégia</label><textarea onchange="updateStop(${si},'nota',this.value)">${esc(s.nota||'')}</textarea></div>
   <div class="field"><label>Litragem por marca</label>${mh}<button class="add-marca-btn" onclick="addMarca(${si})">＋ Adicionar marca</button></div>
   <button class="alt-toggle" onclick="toggleAlt(${si})"><span class="red">OU</span> ${hasAlt?'Remover alternativo':'Adicionar alternativo'}</button>
@@ -102,6 +101,7 @@ function saveRoute(){captureEditorFields();
   if(editingIndex>=0)routes[editingIndex]=editData;else routes.push(editData);
   clearDraft();isEditing=false;if(window._draftInterval)clearInterval(window._draftInterval);
   saveToFirebase();
+  if(!isNew&&oldRoute)_checkPostoPropagation(oldRoute,editData);
   if(isNew){
     pushNotification('new',editData.nome,'Nova rota adicionada');
   }else if(oldRoute){
@@ -117,4 +117,103 @@ function cancelEdit(){
   const ov=document.createElement('div');ov.className='confirm-overlay';
   ov.innerHTML=`<div class="confirm-box"><h3>Sair da edição?</h3><p>Seu rascunho foi salvo automaticamente.</p><div class="btns"><button style="background:#eae8e3;color:#1c1c1c" onclick="clearDraft();this.closest('.confirm-overlay').remove();navPop(()=>renderAdmin())">Descartar</button><button style="background:#fe2627;color:#fff" onclick="this.closest('.confirm-overlay').remove();navPop(()=>renderAdmin())">Manter rascunho</button></div></div>`;
   document.body.appendChild(ov);
+}
+
+
+// ─── Autocomplete de postos ───
+let _currentACSuggestions={};
+
+function getAllKnownPostos(){
+  const map={};
+  routes.forEach(rota=>{
+    (rota.paradas||[]).forEach(p=>{
+      if(p.tipo==='origem'||p.tipo==='destino')return;
+      const k=(p.nome||'').trim()+'|'+(p.cidade||'').trim();
+      if(!map[k]&&p.nome)map[k]={nome:p.nome,cidade:p.cidade||'',cartao:p.cartao||'truckpag',link:p.link||''};
+    });
+  });
+  Object.values(typeof postosAvulsos!=='undefined'?postosAvulsos:{}).forEach(p=>{
+    const k=(p.nome||'').trim()+'|'+(p.cidade||'').trim();
+    if(!map[k]&&p.nome)map[k]={nome:p.nome,cidade:p.cidade||'',cartao:p.cartao||'truckpag',link:p.link||''};
+  });
+  return Object.values(map).sort((a,b)=>(a.nome||'').localeCompare(b.nome||'','pt'));
+}
+
+function stopNameInput(si,val){
+  const drop=document.getElementById('stop_ac_'+si);
+  if(!drop)return;
+  const q=(val||'').trim().toLowerCase();
+  if(q.length<2){drop.innerHTML='';drop.style.display='none';return;}
+  const results=getAllKnownPostos().filter(p=>(p.nome||'').toLowerCase().includes(q)).slice(0,8);
+  if(!results.length){drop.innerHTML='';drop.style.display='none';return;}
+  _currentACSuggestions[si]=results;
+  drop.innerHTML=results.map((p,i)=>`<div class="stop-ac-item" onmousedown="selectPostoSuggestion(${si},${i})"><div class="stop-ac-nome">${esc(p.nome)}</div><div class="stop-ac-cidade">${esc(p.cidade)}</div></div>`).join('');
+  drop.style.display='block';
+}
+
+function closeStopAC(si){
+  const drop=document.getElementById('stop_ac_'+si);
+  if(drop){drop.innerHTML='';drop.style.display='none';}
+}
+
+function selectPostoSuggestion(si,idx){
+  const posto=(_currentACSuggestions[si]||[])[idx];
+  if(!posto)return;
+  const fs=getFuelStops();
+  if(!fs[si])return;
+  fs[si].nome=posto.nome;
+  fs[si].cidade=posto.cidade;
+  fs[si].cartao=posto.cartao;
+  fs[si].link=posto.link||'';
+  renderEditor();
+  setTimeout(()=>{
+    const inp=document.getElementById('stop_nome_'+si);
+    if(inp){inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);}
+  },50);
+}
+
+// ─── Propagação de alterações entre rotas ───
+let _pendingPropagation=null;
+
+function _checkPostoPropagation(oldRoute,newRoute){
+  const oldStops=(oldRoute.paradas||[]).filter(p=>p.tipo!=='origem'&&p.tipo!=='destino');
+  const newStops=(newRoute.paradas||[]).filter(p=>p.tipo!=='origem'&&p.tipo!=='destino');
+  const changed=[];
+  newStops.forEach(ns=>{
+    const key=(ns.nome||'').trim()+'|'+(ns.cidade||'').trim();
+    if(!key.replace('|','').trim())return;
+    const os=oldStops.find(s=>((s.nome||'').trim()+'|'+(s.cidade||'').trim())===key);
+    if(os&&(os.cartao!==ns.cartao||os.link!==ns.link))changed.push({key,cartao:ns.cartao,link:ns.link||''});
+  });
+  if(!changed.length)return;
+  const affected=new Set();
+  routes.forEach((r,ri)=>{
+    if(ri===editingIndex)return;
+    (r.paradas||[]).forEach(p=>{
+      if(p.tipo==='origem'||p.tipo==='destino')return;
+      const pk=(p.nome||'').trim()+'|'+(p.cidade||'').trim();
+      if(changed.some(c=>c.key===pk))affected.add(ri);
+    });
+  });
+  if(!affected.size)return;
+  _pendingPropagation={changed,affectedIdxs:[...affected]};
+  const ov=document.createElement('div');ov.className='confirm-overlay';
+  ov.innerHTML=`<div class="confirm-box"><h3>Propagar alterações?</h3><p>${changed.length} posto(s) com dados atualizados aparecem em <strong>${affected.size} outra(s) rota(s)</strong>. Deseja atualizar cartão e link nessas rotas também?</p><div class="btns"><button style="background:#eae8e3;color:#1c1c1c;flex:1;padding:12px;border-radius:10px;border:none;font-weight:700;cursor:pointer" onclick="this.closest('.confirm-overlay').remove()">Não</button><button style="background:#1c1c1c;color:#fff;flex:1;padding:12px;border-radius:10px;border:none;font-weight:700;cursor:pointer" onclick="applyPropagation();this.closest('.confirm-overlay').remove()">Atualizar tudo</button></div></div>`;
+  document.body.appendChild(ov);
+}
+
+function applyPropagation(){
+  if(!_pendingPropagation)return;
+  const{changed,affectedIdxs}=_pendingPropagation;
+  _pendingPropagation=null;
+  affectedIdxs.forEach(ri=>{
+    (routes[ri].paradas||[]).forEach(p=>{
+      if(p.tipo==='origem'||p.tipo==='destino')return;
+      const pk=(p.nome||'').trim()+'|'+(p.cidade||'').trim();
+      const upd=changed.find(c=>c.key===pk);
+      if(upd){p.cartao=upd.cartao;p.link=upd.link;}
+    });
+  });
+  saveToFirebase();
+  showToast('✅ '+affectedIdxs.length+' rota(s) atualizada(s) com os novos dados dos postos');
 }
