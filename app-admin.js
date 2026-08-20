@@ -239,6 +239,19 @@ function _adminPostoCard(p,actionsHtml,mapsHtml){
 
 function renderAdminPostos(){
   const el=document.getElementById('adminPostosList');if(!el)return;
+  let h=`<div class="admin-search"><span class="admin-search-icon">🔍</span><input id="adminPostoSearch" type="text" placeholder="Pesquisar posto..." value="${esc(_adminPostoFilter)}" oninput="_adminPostoFilter=this.value;renderAdminPostoCards()"><button class="admin-search-clear ${_adminPostoFilter?'visible':''}" onclick="_adminPostoFilter='';document.getElementById('adminPostoSearch').value='';renderAdminPostoCards()">✕</button></div>`;
+  h+=`<button class="admin-add" onclick="showAddPostoForm()">＋ NOVO POSTO AVULSO</button>`;
+  h+=`<div id="adminPostoCards"></div>`;
+  el.innerHTML=h;
+  renderAdminPostoCards();
+}
+
+function renderAdminPostoCards(){
+  const container=document.getElementById('adminPostoCards');if(!container)return;
+  // --- Filtro ---
+  const q=_adminPostoFilter.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const clearBtn=document.querySelector('#adminPostoSearch')?.parentElement?.querySelector('.admin-search-clear');
+  if(clearBtn)clearBtn.className='admin-search-clear'+(q?' visible':'');
   // --- Postos em rotas ---
   const routeStops=[];
   routes.forEach((r,ri)=>{
@@ -247,23 +260,18 @@ function renderAdminPostos(){
       routeStops.push({...p,_routeIdx:ri,_paraIdx:pi,_routeName:r.nome,_routeNum:r.numero});
     });
   });
-  // --- Postos avulsos ---
-  const avulsoList=Object.values(postosAvulsos||{}).sort((a,b)=>(a.nome||'').localeCompare(b.nome||''));
-
-  // --- Filtro ---
-  const q=_adminPostoFilter.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
   const filteredRoute=q?routeStops.filter(p=>{
     const t=((p.nome||'')+' '+(p.cidade||'')+' '+(p._routeName||'')+' '+(p._routeNum||'')).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
     return t.includes(q);
   }):routeStops;
+  // --- Postos avulsos ---
+  const avulsoList=Object.values(postosAvulsos||{}).sort((a,b)=>(a.nome||'').localeCompare(b.nome||''));
   const filteredAvulso=q?avulsoList.filter(p=>{
     const t=((p.nome||'')+' '+(p.cidade||'')).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
     return t.includes(q);
   }):avulsoList;
 
-  let h=`<div class="admin-search"><span class="admin-search-icon">🔍</span><input id="adminPostoSearch" type="text" placeholder="Pesquisar posto..." value="${esc(_adminPostoFilter)}" oninput="_adminPostoFilter=this.value;renderAdminPostos()"><button class="admin-search-clear ${_adminPostoFilter?'visible':''}" onclick="_adminPostoFilter='';document.getElementById('adminPostoSearch').value='';renderAdminPostos()">✕</button></div>`;
-  h+=`<button class="admin-add" onclick="showAddPostoForm()">＋ NOVO POSTO AVULSO</button>`;
-
+  let h='';
   // Seção rotas
   h+=`<div style="font-family:'Barlow',sans-serif;font-weight:700;font-size:13px;color:#5a5854;text-transform:uppercase;letter-spacing:.5px;padding:16px 0 8px">⛽ Postos em Rotas <span style="font-weight:400;color:#9a9894">(${filteredRoute.length})</span></div>`;
   if(filteredRoute.length===0){
@@ -275,7 +283,6 @@ function renderAdminPostos(){
       h+=_adminPostoCard(p,acts,maps);
     });
   }
-
   // Seção avulsos
   h+=`<div style="font-family:'Barlow',sans-serif;font-weight:700;font-size:13px;color:#5a5854;text-transform:uppercase;letter-spacing:.5px;padding:20px 0 8px">📋 Postos Avulsos <span style="font-weight:400;color:#9a9894">(${filteredAvulso.length})</span></div>`;
   if(filteredAvulso.length===0){
@@ -287,7 +294,7 @@ function renderAdminPostos(){
       h+=_adminPostoCard(p,acts,maps);
     });
   }
-  el.innerHTML=h;
+  container.innerHTML=h;
 }
 
 function _postoRotaFormHTML(p,ri,pi,title,saveFn){
