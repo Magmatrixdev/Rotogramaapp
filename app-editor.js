@@ -174,22 +174,28 @@ function initStopDrag(){
   });
 }
 
-function saveRoute(){captureEditorFields();
-  editData.subtitulo='Rota '+editData.numero;editData.id=editData.nome.toLowerCase().replace(/[^a-z0-9]/g,'-').replace(/-+/g,'-');
-  let ord=1;editData.paradas.forEach(p=>{if(p.tipo!=='origem'&&p.tipo!=='destino')p.ordem=ord++});
+function saveRoute(){
+  try{captureEditorFields();}catch(e){console.error('[saveRoute] captureEditorFields:',e);}
+  try{
+    editData.subtitulo='Rota '+editData.numero;
+    editData.id=(editData.nome||'rota').toLowerCase().replace(/[^a-z0-9]/g,'-').replace(/-+/g,'-')||('rota-'+Date.now());
+    let ord=1;editData.paradas.forEach(p=>{if(p.tipo!=='origem'&&p.tipo!=='destino')p.ordem=ord++;});
+  }catch(e){console.error('[saveRoute] prep:',e);}
   const isNew=editingIndex<0;
-  const oldRoute=(!isNew&&editingIndex>=0)?JSON.parse(JSON.stringify(routes[editingIndex])):null;
+  let oldRoute=null;
+  try{oldRoute=(!isNew&&editingIndex>=0)?JSON.parse(JSON.stringify(routes[editingIndex])):null;}catch(e){console.error('[saveRoute] oldRoute:',e);}
   if(editingIndex>=0)routes[editingIndex]=editData;else routes.push(editData);
   clearDraft();isEditing=false;if(window._draftInterval)clearInterval(window._draftInterval);
   saveToFirebase();
-  if(!isNew&&oldRoute)_checkPostoPropagation(oldRoute,editData);
-  if(isNew){
-    pushNotification('new',editData.nome,'Nova rota adicionada');
-  }else if(oldRoute){
-    const diffs=_diffRoute(oldRoute,editData);
-    if(diffs.length>0){diffs.forEach(d=>pushNotification(d.type,editData.nome,d.msg));}
-    else{pushNotification('edit',editData.nome,'Rota atualizada');}
-  }
+  try{if(!isNew&&oldRoute)_checkPostoPropagation(oldRoute,editData);}catch(e){console.error('[saveRoute] propagation:',e);}
+  try{
+    if(isNew){pushNotification('new',editData.nome,'Nova rota adicionada');}
+    else if(oldRoute){
+      const diffs=_diffRoute(oldRoute,editData);
+      if(diffs.length>0){diffs.forEach(d=>pushNotification(d.type,editData.nome,d.msg));}
+      else{pushNotification('edit',editData.nome,'Rota atualizada');}
+    }
+  }catch(e){console.error('[saveRoute] notification:',e);}
   navPop(()=>renderAdmin());
 }
 
