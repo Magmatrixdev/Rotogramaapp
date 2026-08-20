@@ -290,8 +290,6 @@ function _postoRotaFormHTML(p,ri,pi,title,saveFn){
         <option value="compra_antecipada"${p.cartao==='compra_antecipada'?' selected':''}>Compra Antecipada</option>
       </select>
     </div>
-    <div class="postos-form-field"><label>Litragem</label><input id="prLitragem" value="${esc(p.litragem||'')}"></div>
-    <div class="postos-form-field"><label>KM</label><input id="prKm" value="${esc(p.km||'')}"></div>
     <div class="postos-form-field"><label>Link Google Maps</label><input id="prLink" value="${esc(p.link||'')}"></div>
     <div class="postos-form-err" id="prError" style="display:none"></div>
     <div class="postos-form-btns">
@@ -315,13 +313,11 @@ async function saveEditPostoRota(ri,pi){
   const nome=(document.getElementById('prNome')?.value||'').trim();
   const cidade=(document.getElementById('prCidade')?.value||'').trim();
   const cartao=document.getElementById('prCartao')?.value||'truckpag';
-  const litragem=(document.getElementById('prLitragem')?.value||'').trim();
-  const km=(document.getElementById('prKm')?.value||'').trim();
   const link=(document.getElementById('prLink')?.value||'').trim();
   const errEl=document.getElementById('prError');
   if(!nome||!cidade){errEl.textContent='Nome e cidade são obrigatórios';errEl.style.display='block';return;}
   const r=routes[ri];if(!r)return;
-  r.paradas[pi]={...r.paradas[pi],nome,cidade,cartao,litragem,km,link};
+  r.paradas[pi]={...r.paradas[pi],nome,cidade,cartao,link};
   try{
     await saveToFirebase();
     document.querySelector('.postos-form-ov')?.remove();
