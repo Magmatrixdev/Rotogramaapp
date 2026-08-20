@@ -25,7 +25,7 @@ function toggleDesktopMode(){
 }
 
 function _dActivateHomeLayout(){
-  const overlays=['screenAdmin','screenEditor','screenRoute','screenMapLive','screenDriverLogin','screenDriverReg'];
+  const overlays=['screenAdmin','screenEditor','screenRoute','screenMapLive','screenPostos','screenDriverLogin','screenDriverReg'];
   overlays.forEach(id=>{
     const el=document.getElementById(id);
     if(el){el.style.visibility='hidden';el.style.transform='translateX(100%)';el.classList.remove('active','behind');}
