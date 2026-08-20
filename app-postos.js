@@ -4,7 +4,7 @@ var _postosListenerInit=false;
 
 // ─── helpers cartão ───
 function getCartaoLabel(cartao){
-  const m={truckpag:'TruckPag',shell:'Shell',shell_expers:'Shell Experis',frota:'Rede Frota',rede_frota:'Rede Frota',antecipada:'Antecipada',compra_antecipada:'Antecipada'};
+  const m={truckpag:'TruckPag',shell:'Shell',shell_expers:'Shell Experis',frota:'Rede Frota',rede_frota:'Rede Frota',redefrota:'Rede Frota',antecipada:'Antecipada',compra_antecipada:'Antecipada'};
   return m[(cartao||'').toLowerCase()]||cartao||'—';
 }
 function getCartaoClass(cartao){
