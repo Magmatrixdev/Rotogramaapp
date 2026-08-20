@@ -61,12 +61,13 @@ function updateBottomNav(active){
 }
 
 function bnavGoRotas(){
-  if(_navStack[_navStack.length-1]==='screenPostos')navPop();
-  updateBottomNav('Rotas');
+  showHome(); // showHome() colapsa qualquer tela ativa (mapLive, postos, etc.) e vai para screenHome
 }
 
 function bnavGoPostos(){
-  if(_navStack[_navStack.length-1]==='screenPostos'){updateBottomNav('Postos');return;}
+  const top=_navStack[_navStack.length-1];
+  if(top==='screenPostos'){updateBottomNav('Postos');return;}
+  if(top!=='screenHome')showHome(); // garante que saímos de mapLive ou qualquer overlay
   showPostos();
 }
 
