@@ -52,12 +52,13 @@ function renderEditor(){
   <div class="field"><label>Descrição</label><input id="ed_dest_cidade" value="${esc(dest.cidade)}" placeholder="Chegada ao destino"></div>
   <div class="field"><label>KM total</label><input id="ed_dest_km" value="${esc(dest.km)}" placeholder="2.450"></div></div>`;
   document.getElementById('editorContent').innerHTML=h;
+  initStopDrag();
 }
 
 function renderStopEditor(s,si){
   const hasAlt=!!s.alternativa;const a=s.alternativa||{};let mh='';
   if(s.marcas&&s.marcas.length){s.marcas.forEach((m,mi)=>{mh+=`<div class="marca-row"><div class="field" style="margin:0"><input value="${esc(m.marca)}" onchange="editData.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino')[${si}].marcas[${mi}].marca=this.value" placeholder="Marca"></div><div class="field" style="margin:0;display:flex;gap:4px"><input value="${esc(m.litros)}" onchange="editData.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino')[${si}].marcas[${mi}].litros=this.value" placeholder="Litros"><button style="background:#fe2627;color:#fff;border:none;border-radius:6px;width:32px;cursor:pointer;font-size:16px" onclick="removeMarca(${si},${mi})">✕</button></div></div>`})}
-  return `<div class="stop-editor"><div class="stop-editor-head"><span class="stop-editor-num">${si+1}º Posto</span><button class="stop-editor-del" onclick="removeStop(${si})">✕</button></div>
+  return `<div class="stop-editor" data-si="${si}"><div class="stop-editor-head"><span class="stop-drag-handle" title="Reordenar">⠿</span><span class="stop-editor-num">${si+1}º Posto</span><button class="stop-editor-del" onclick="removeStop(${si})">✕</button></div>
   <div class="field stop-ac-wrap"><label>Nome do posto</label><input id="stop_nome_${si}" value="${esc(s.nome)}" autocomplete="off" oninput="updateStop(${si},'nome',this.value);stopNameInput(${si},this.value)" onblur="setTimeout(()=>closeStopAC(${si}),200)"><div class="stop-ac-drop" id="stop_ac_${si}"></div></div>
   <div class="field"><label>Cidade — UF</label><input value="${esc(s.cidade)}" onchange="updateStop(${si},'cidade',this.value)"></div>
   <div class="field-row"><div class="field"><label>Tipo</label><select onchange="updateStop(${si},'tipo',this.value)"><option value="completa"${s.tipo==='completa'?' selected':''}>Completa</option><option value="parcial"${s.tipo==='parcial'?' selected':''}>Parcial</option></select></div><div class="field"><label>KM</label><input value="${esc(s.km)}" onchange="updateStop(${si},'km',this.value)"></div></div>
@@ -91,6 +92,82 @@ function _diffRoute(oldR,newR){
   });
   if(['nome','distancia','tempo','estados','observacao'].some(f=>oldR[f]!==newR[f]))msgs.push({type:'edit',msg:'Dados gerais da rota atualizados'});
   return msgs;
+}
+
+// ─── Drag-to-reorder postos ───
+function initStopDrag(){
+  if(!document.getElementById('_sdStyle')){
+    const s=document.createElement('style');s.id='_sdStyle';
+    s.textContent=`
+      .stop-drag-handle{display:inline-flex;align-items:center;cursor:grab;font-size:20px;color:#c8c5bf;padding:0 10px 0 0;user-select:none;touch-action:none;-webkit-touch-callout:none;line-height:1}
+      .stop-drag-handle:active{cursor:grabbing;color:#888}
+      .stop-editor.sd-drop-above{box-shadow:0 -3px 0 0 #fe2627}
+      .stop-editor.sd-drop-below{box-shadow:0 3px 0 0 #fe2627}
+      .stop-editor.sd-dragging{opacity:.2}`;
+    document.head.appendChild(s);
+  }
+  const items=Array.from(document.querySelectorAll('#editorContent .stop-editor[data-si]'));
+  if(items.length<2)return;
+  let srcSi=-1,clone=null,offsetY=0,lastTgtSi=-1,lastDir='';
+
+  function cleanup(){
+    if(clone){clone.remove();clone=null;}
+    items.forEach(it=>{it.classList.remove('sd-dragging','sd-drop-above','sd-drop-below');});
+    srcSi=-1;lastTgtSi=-1;lastDir='';
+  }
+
+  items.forEach(item=>{
+    const handle=item.querySelector('.stop-drag-handle');
+    if(!handle)return;
+
+    handle.addEventListener('pointerdown',e=>{
+      e.preventDefault();
+      srcSi=parseInt(item.dataset.si);
+      const rect=item.getBoundingClientRect();
+      offsetY=e.clientY-rect.top;
+      clone=item.cloneNode(true);
+      Object.assign(clone.style,{position:'fixed',left:rect.left+'px',top:rect.top+'px',
+        width:rect.width+'px',opacity:'.88',zIndex:'9999',pointerEvents:'none',
+        borderRadius:'12px',boxShadow:'0 8px 32px rgba(0,0,0,.25)',transform:'scale(1.02)'});
+      document.body.appendChild(clone);
+      item.classList.add('sd-dragging');
+      handle.setPointerCapture(e.pointerId);
+      lastTgtSi=-1;
+    },{passive:false});
+
+    handle.addEventListener('pointermove',e=>{
+      if(srcSi<0||!clone)return;
+      e.preventDefault();
+      clone.style.top=(e.clientY-offsetY)+'px';
+      lastTgtSi=-1;lastDir='';
+      items.forEach(it=>{
+        it.classList.remove('sd-drop-above','sd-drop-below');
+        const si=parseInt(it.dataset.si);if(si===srcSi)return;
+        const r=it.getBoundingClientRect();
+        if(e.clientY>=r.top&&e.clientY<=r.bottom){
+          lastTgtSi=si;
+          lastDir=si>srcSi?'below':'above';
+          it.classList.add(si>srcSi?'sd-drop-below':'sd-drop-above');
+        }
+      });
+    },{passive:false});
+
+    handle.addEventListener('pointerup',()=>{
+      const s=srcSi,t=lastTgtSi;
+      cleanup();
+      if(t<0||t===s)return;
+      captureEditorFields();
+      const fs=getFuelStops();
+      const[moved]=fs.splice(s,1);
+      fs.splice(t,0,moved);
+      const orig=editData.paradas.find(p=>p.tipo==='origem');
+      const dest=editData.paradas.find(p=>p.tipo==='destino');
+      editData.paradas=[...(orig?[orig]:[]),...fs,...(dest?[dest]:[])];
+      renderEditor();
+    });
+
+    handle.addEventListener('pointercancel',cleanup);
+  });
 }
 
 function saveRoute(){captureEditorFields();
