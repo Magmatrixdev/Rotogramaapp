@@ -209,10 +209,86 @@ function switchAdminTab(tab,el){
   document.querySelectorAll('.admin-tab-btn').forEach(b=>b.classList.remove('active'));
   el.classList.add('active');
   document.querySelectorAll('.admin-tab-pane').forEach(p=>p.classList.remove('active'));
-  const paneMap={routes:'adminTabRoutes',drivers:'adminTabDrivers',monitor:'adminTabMonitor',bi:'adminTabBI'};
+  const paneMap={routes:'adminTabRoutes',drivers:'adminTabDrivers',monitor:'adminTabMonitor',bi:'adminTabBI',postos:'adminTabPostos'};
   const pane=document.getElementById(paneMap[tab]);if(pane)pane.classList.add('active');
   if(tab==='routes')renderAdmin();
   else if(tab==='drivers')renderDriverManager();
   else if(tab==='monitor'){renderMonitoring();}
   else if(tab==='bi')renderBI();
+  else if(tab==='postos'){if(!_postosListenerInit){initPostosListener();_postosListenerInit=true;}renderAdminPostos();}
 }
+
+// ═══ ADMIN POSTOS ═══
+function renderAdminPostos(){
+  const el=document.getElementById('adminPostosList');if(!el)return;
+  const list=Object.values(postosAvulsos||{});
+  let h=`<button class="admin-add" onclick="showAddPostoForm()">＋ NOVO POSTO AVULSO</button>`;
+  if(list.length===0){
+    h+=`<div style="text-align:center;padding:40px 20px;color:#9a9894;font-family:'Barlow',sans-serif"><span style="font-size:40px">⛽</span><p style="margin-top:8px">Nenhum posto avulso cadastrado</p><p style="font-size:12px;margin-top:4px">Postos das rotas são gerenciados no editor de rotas</p></div>`;
+  }else{
+    list.sort((a,b)=>(a.nome||'').localeCompare(b.nome||'')).forEach(p=>{
+      const cls=getCartaoClass(p.cartao);
+      const lbl=getCartaoLabel(p.cartao);
+      const maps=p.link?`<a href="${p.link}" target="_blank" style="color:#1a6fb5;font-size:12px;text-decoration:none">🗺️ Maps</a>`:'';
+      h+=`<div class="admin-rcard">
+        <div class="admin-rcard-head">
+          <div class="admin-rcard-num" style="background:#2d5a27;font-size:14px">⛽</div>
+          <div class="admin-rcard-info">
+            <div class="admin-rcard-name">${p.nome}</div>
+            <div class="admin-rcard-sub">${p.cidade} · <span class="postos-tag ${cls}" style="font-size:11px;padding:2px 6px;border-radius:4px;display:inline-block">${lbl}</span></div>
+          </div>
+          <div style="margin-left:auto;padding-right:4px">${maps}</div>
+        </div>
+        <div class="admin-rcard-actions">
+          <button class="admin-btn admin-btn-edit" onclick="showEditPostoAvulso('${p.id}')">✏️ Editar</button>
+          <button class="admin-btn admin-btn-del" onclick="deletePostoAvulso('${p.id}')">🗑️ Excluir</button>
+        </div>
+      </div>`;
+    });
+  }
+  el.innerHTML=h;
+}
+
+function showEditPostoAvulso(id){
+  const p=postosAvulsos[id];if(!p)return;
+  document.querySelector('.postos-form-ov')?.remove();
+  const ov=document.createElement('div');ov.className='postos-form-ov';
+  ov.innerHTML=`<div class="postos-form-box">
+    <div class="postos-form-title">Editar posto</div>
+    <div class="postos-form-field"><label>Nome</label><input id="pfNome" value="${esc(p.nome||'')}"></div>
+    <div class="postos-form-field"><label>Cidade</label><input id="pfCidade" value="${esc(p.cidade||'')}"></div>
+    <div class="postos-form-field"><label>Cartão</label>
+      <select id="pfCartao">
+        <option value="truckpag"${p.cartao==='truckpag'?' selected':''}>TruckPag</option>
+        <option value="shell"${p.cartao==='shell'?' selected':''}>Shell</option>
+        <option value="frota"${p.cartao==='frota'?' selected':''}>Rede Frota</option>
+        <option value="antecipada"${p.cartao==='antecipada'?' selected':''}>Antecipada</option>
+      </select>
+    </div>
+    <div class="postos-form-field"><label>Link Google Maps</label><input id="pfLink" value="${esc(p.link||'')}"></div>
+    <div class="postos-form-err" id="pfError" style="display:none"></div>
+    <div class="postos-form-btns">
+      <button class="postos-form-cancel" onclick="this.closest('.postos-form-ov').remove()">Cancelar</button>
+      <button class="postos-form-save" onclick="saveEditPostoAvulso('${id}')">Salvar</button>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+  setTimeout(()=>document.getElementById('pfNome')?.focus(),100);
+}
+
+async function saveEditPostoAvulso(id){
+  const nome=(document.getElementById('pfNome')?.value||'').trim();
+  const cidade=(document.getElementById('pfCidade')?.value||'').trim();
+  const cartao=document.getElementById('pfCartao')?.value||'truckpag';
+  const link=(document.getElementById('pfLink')?.value||'').trim();
+  const errEl=document.getElementById('pfError');
+  if(!nome||!cidade){errEl.textContent='Nome e cidade são obrigatórios';errEl.style.display='block';return;}
+  const posto={...postosAvulsos[id],nome,cidade,cartao,link};
+  try{
+    if(db)await db.ref('postos/'+id).set(posto);
+    else postosAvulsos[id]={...posto,_source:'avulso'};
+    document.querySelector('.postos-form-ov')?.remove();
+    renderAdminPostos();
+  }catch(e){errEl.textContent='Erro ao salvar.';errEl.style.display='block';}
+}
+
