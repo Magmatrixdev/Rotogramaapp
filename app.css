@@ -563,3 +563,12 @@ body.desktop-mode .bi-row{padding:10px 0!important;display:flex!important;align-
 body.desktop-mode .bi-row-name{font-size:14px!important;font-weight:600!important}
 body.desktop-mode .bi-row-detail{font-size:12px!important;color:#9a9894!important;text-align:right}
 body.desktop-mode #biContent{padding:0}
+
+/* ─── autocomplete postos ─── */
+.stop-ac-wrap{position:relative}
+.stop-ac-drop{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #d5d3cf;border-radius:8px;z-index:300;max-height:200px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.15);margin-top:2px;display:none}
+.stop-ac-item{padding:10px 12px;cursor:pointer;font-family:'Barlow',sans-serif;border-bottom:1px solid #f0eeea}
+.stop-ac-item:last-child{border-bottom:none}
+.stop-ac-item:active,.stop-ac-item:hover{background:#f8f7f4}
+.stop-ac-nome{font-size:13px;font-weight:600;color:#1c1c1c}
+.stop-ac-cidade{font-size:11px;color:#9a9894;margin-top:2px}
