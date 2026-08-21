@@ -119,9 +119,25 @@ function dShowRouteDetail(i){
 }
 
 /* ── Restaura preferência desktop ao carregar ── */
+var _desktopRestored=false;
 (function _desktopInit(){
   var btn=document.getElementById('btnToggleDesktop');
   var desktopSalvo=localStorage.getItem('rotograma_desktop_on')==='1';
   if(btn)btn.innerHTML=desktopSalvo?'📱 Versão Mobile':'🖥️ Versão Web';
+  // Aplica a classe imediatamente para evitar flash de layout incorreto
+  if(desktopSalvo)document.body.classList.add('desktop-mode');
 })();
+
+// Chamada após rotas carregarem do Firebase — ativa o layout desktop completo
+function _restoreDesktopIfNeeded(){
+  if(_desktopRestored)return;       // já restaurou, ignora chamadas subsequentes
+  if(!IS_DESKTOP())return;          // desktop mode não está salvo
+  if(adminMode)return;              // admin tem seu próprio fluxo de restauração
+  if(!currentDriver)return;         // motorista não autenticado ainda
+  _desktopRestored=true;
+  _dActivateHomeLayout();
+  dUpdateTopbar();
+  dUpdateSidebar();
+}
+
 
