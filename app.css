@@ -508,6 +508,10 @@ body.desktop-mode #screenAdmin .admin-top{grid-column:1/-1;grid-row:1;background
 body.desktop-mode #screenAdmin .admin-top .back-btn{display:flex!important;background:rgba(255,255,255,.1);color:#fff;border:none;width:36px;height:36px;font-size:20px}
 body.desktop-mode #screenAdmin .admin-top .back-btn:hover{background:rgba(255,255,255,.2)}
 body.desktop-mode #screenAdmin .admin-title{color:#fff;font-size:16px;letter-spacing:.06em}
+body.desktop-mode #screenAdmin .admin-top .logout-btn{display:flex!important;background:rgba(255,255,255,.1);margin-left:auto}
+body.desktop-mode #screenAdmin .admin-top .logout-btn:hover{background:rgba(255,255,255,.2)}
+body.desktop-mode #screenAdmin .admin-top .logout-btn i{color:rgba(255,255,255,.78)}
+body.desktop-mode #screenAdmin .admin-top .logout-btn .mobile-btn-label{color:rgba(255,255,255,.45)}
 body.desktop-mode .admin-tab-bar{grid-column:1;grid-row:2;flex-direction:column!important;width:auto!important;height:auto!important;background:#1c1c1c!important;border-right:none!important;border-bottom:none!important;padding:8px 0!important;gap:0!important;overflow-y:auto!important}
 .admin-dsb-section{display:none}
 body.desktop-mode .admin-dsb-section{display:block;padding:14px 16px 6px;font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:rgba(255,255,255,.3)}
@@ -574,4 +578,5 @@ body.desktop-mode #biContent{padding:0}
 .stop-ac-item:active,.stop-ac-item:hover{background:#f8f7f4}
 .stop-ac-nome{font-size:13px;font-weight:600;color:#1c1c1c}
 .stop-ac-cidade{font-size:11px;color:#9a9894;margin-top:2px}
+
 
