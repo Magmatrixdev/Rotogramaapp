@@ -10,14 +10,11 @@ function initFirebase(){
       if(user&&!adminMode){
         adminMode=true;
         if(typeof hideBottomNav==='function')hideBottomNav();
-        // Se o overlay de login existe, o doAdminLogin() está em andamento
-        // e vai gerenciar a navegação — evita double push no navStack
-        if(!document.querySelector('.login-overlay')){
-          navReset('screenHome',function(){
-            renderHome();
-            if(typeof renderAdmin==='function'){renderAdmin();navPush('screenAdmin');}
-          });
-        }
+        // Usa home como base da pilha (permite voltar) e empilha admin por cima
+        navReset('screenHome',function(){
+          renderHome();
+          if(typeof renderAdmin==='function'){renderAdmin();navPush('screenAdmin');}
+        });
       }
     });
 
