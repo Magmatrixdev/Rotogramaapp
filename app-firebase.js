@@ -21,7 +21,8 @@ function initFirebase(){
     // ═══ VERIFICAÇÃO DE VERSÃO (força update em iOS e todos os devices) ═══
     db.ref('config/appVersion').once('value').then(snap=>{
       const remoteVersion=snap.val();
-      if(remoteVersion===null){
+      if(remoteVersion===null||remoteVersion<APP_VERSION){
+        // Atualiza Firebase com versão mais nova — dispara reload nos outros devices via listener
         db.ref('config/appVersion').set(APP_VERSION);
       } else if(remoteVersion>APP_VERSION){
         console.log('🔄 Nova versão detectada:',remoteVersion,'> local:',APP_VERSION);
