@@ -44,13 +44,22 @@ function initFirebase(){
     db.ref('posicoes').on('value',snap=>{const d=snap.val();posicoes=d||{};updateMonitorMap();renderMonitoring();});
 
     // ═══ NOTIFICATIONS LISTENER ═══
+    const _notifListenerStart=Date.now();
     db.ref('notifications').limitToLast(30).on('value',snap=>{
       const d=snap.val();
       const fbNotifs=d?Object.entries(d).map(([k,v])=>({id:k,...v})).sort((a,b)=>(b.ts||0)-(a.ts||0)):[];
+      // IDs já conhecidos antes de mesclar (para detectar entradas realmente novas)
+      const prevIds=new Set(notifications.filter(n=>!n._local).map(n=>n.id));
       const localOnly=notifications.filter(n=>n._local&&!fbNotifs.some(fb=>Math.abs((fb.ts||0)-(n.ts||0))<5000));
       notifications=[...localOnly,...fbNotifs].sort((a,b)=>(b.ts||0)-(a.ts||0));
       _syncNotifsToLocal();renderNotifBadge();
       if(notifPanelOpen)renderNotifList();
+      // Mostrar notificação nativa para itens novos e recentes (criados após o listener iniciar)
+      if(typeof _maybeShowNative==='function'){
+        fbNotifs.forEach(n=>{
+          if(!prevIds.has(n.id)&&(n.ts||0)>_notifListenerStart)_maybeShowNative(n);
+        });
+      }
     },err=>{console.warn('Notif listener err:',err);});
 
   }catch(e){setSyncStatus('err','Erro Firebase');loadLocal();}
@@ -61,3 +70,4 @@ function saveToFirebase(){if(db&&firebaseReady){db.ref('rotogramas').set(routes)
 function loadLocal(){const c=localStorage.getItem('rotogramas_cache'),m=localStorage.getItem('rotogramas_data'),s=c||m;if(s){try{routes=JSON.parse(s);renderHome();return}catch(e){}}routes=JSON.parse(JSON.stringify(DEFAULTS));renderHome();}
 
 function setSyncStatus(t,txt){const el=document.getElementById('syncBar');if(!el)return;el.className='sync-bar'+(t==='on'?'':t==='off'?' off':' err');el.textContent=(t==='on'?'🟢':t==='off'?'🟡':'🔴')+' '+txt;if(IS_DESKTOP())setTimeout(dUpdateTopbar,50);}
+
