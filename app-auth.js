@@ -139,6 +139,7 @@ async function doAdminLogin(){
     await firebase.auth().signInWithEmailAndPassword(u,p);
     adminMode=true;
     document.querySelector('.login-overlay')?.remove();
+    if(typeof hideBottomNav==='function')hideBottomNav();
     renderAdmin();
     navPush('screenAdmin');
   }catch(err){
@@ -148,3 +149,4 @@ async function doAdminLogin(){
     if(btn){btn.disabled=false;btn.textContent='ENTRAR';}
   }
 }
+
