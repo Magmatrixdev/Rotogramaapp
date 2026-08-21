@@ -244,7 +244,7 @@
 
 <!-- ═══ ADMIN ═══ -->
 <div class="screen" id="screenAdmin">
-  <div class="admin-top"><button class="back-btn" onclick="showHome();if(adminMode&&!currentDriver)hideBottomNav()">‹</button><div class="admin-title">Administração</div></div>
+  <div class="admin-top"><button class="back-btn" onclick="showHome();if(adminMode&&!currentDriver)hideBottomNav()">‹</button><div class="admin-title">Administração</div><button class="logout-btn" onclick="promptLogoutAdmin()" title="Sair do admin"><i class="ti ti-logout" aria-hidden="true"></i><span class="mobile-btn-label">Sair</span></button></div>
   <div class="admin-tab-bar">
     <div class="admin-dsb-section">Painel Admin</div>
     <button class="admin-tab-btn active" onclick="switchAdminTab('routes',this)"><i class="ti ti-route" aria-hidden="true"></i> Rotas</button>
@@ -326,5 +326,6 @@
 <script src="app-main.js"></script>
 
 </html>
+
 
 
