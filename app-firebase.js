@@ -10,7 +10,11 @@ function initFirebase(){
       if(user&&!adminMode){
         adminMode=true;
         if(typeof hideBottomNav==='function')hideBottomNav();
-        navReset('screenAdmin',function(){if(typeof renderAdmin==='function')renderAdmin();});
+        // Usa home como base da pilha (permite voltar) e empilha admin por cima
+        navReset('screenHome',function(){
+          renderHome();
+          if(typeof renderAdmin==='function'){renderAdmin();navPush('screenAdmin');}
+        });
       }
     });
 
