@@ -5,16 +5,14 @@ function initFirebase(){
     firebase.initializeApp(FIREBASE_CONFIG);
     db=firebase.database();
 
-    // ═══ RESTAURA SESSÃO ADMIN APÓS REFRESH ═══
+    // ═══ AUTH STATE ═══
+    // Não restaura sessão admin automaticamente — Firebase Auth persiste em LOCAL por padrão,
+    // o que faz o app abrir sempre no admin após o primeiro login.
+    // Admin deve fazer login manual a cada abertura do app.
     firebase.auth().onAuthStateChanged(function(user){
       if(user&&!adminMode){
-        adminMode=true;
-        if(typeof hideBottomNav==='function')hideBottomNav();
-        // Usa home como base da pilha (permite voltar) e empilha admin por cima
-        navReset('screenHome',function(){
-          renderHome();
-          if(typeof renderAdmin==='function'){renderAdmin();navPush('screenAdmin');}
-        });
+        // Sessão persistida encontrada — desconectar silenciosamente
+        firebase.auth().signOut().catch(()=>{});
       }
     });
 
@@ -84,5 +82,6 @@ function saveToFirebase(){if(db&&firebaseReady){db.ref('rotogramas').set(routes)
 function loadLocal(){const c=localStorage.getItem('rotogramas_cache'),m=localStorage.getItem('rotogramas_data'),s=c||m;if(s){try{routes=JSON.parse(s);renderHome();return}catch(e){}}routes=JSON.parse(JSON.stringify(DEFAULTS));renderHome();}
 
 function setSyncStatus(t,txt){const el=document.getElementById('syncBar');if(!el)return;el.className='sync-bar'+(t==='on'?'':t==='off'?' off':' err');el.textContent=(t==='on'?'🟢':t==='off'?'🟡':'🔴')+' '+txt;if(IS_DESKTOP())setTimeout(dUpdateTopbar,50);}
+
 
 
