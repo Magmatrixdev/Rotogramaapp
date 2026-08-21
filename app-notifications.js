@@ -1,4 +1,25 @@
 // ═══ NOTIFICATION SYSTEM ═══
+
+// ─── Controle de notificações nativas já exibidas ───
+function _shownNativeIds(){try{return JSON.parse(localStorage.getItem('notif_native_shown')||'[]')}catch(e){return[]}}
+function _markNativeShown(id){
+  if(!id)return;
+  try{const a=_shownNativeIds();if(!a.includes(id)){a.push(id);if(a.length>200)a.splice(0,a.length-200);localStorage.setItem('notif_native_shown',JSON.stringify(a));}}catch(e){}
+}
+function _maybeShowNative(notif){
+  if(!notif||!notif.id)return;
+  if(_shownNativeIds().includes(notif.id))return;
+  _markNativeShown(notif.id);
+  if(!('serviceWorker' in navigator)||Notification.permission!=='granted')return;
+  const body=(notif.route||'')+': '+(notif.msg||'');
+  navigator.serviceWorker.ready.then(reg=>{
+    reg.showNotification('Rotogramas — Confiança',{
+      body,icon:'./icon-192.png',badge:'./icon-192.png',
+      tag:'rot-'+notif.id,data:{type:notif.type}
+    });
+  }).catch(()=>{});
+}
+
 function _getReadIds(){try{return JSON.parse(localStorage.getItem('notif_read')||'[]')}catch(e){return[]}}
 function _saveReadIds(ids){localStorage.setItem('notif_read',JSON.stringify(ids))}
 function _syncNotifsToLocal(){try{localStorage.setItem('notif_cache',JSON.stringify(notifications))}catch(e){}}
@@ -15,6 +36,10 @@ function renderNotifBadge(){
 }
 
 function toggleNotifPanel(){
+  // Solicitar permissão via gesto do usuário — funciona no Android Chrome
+  if('Notification' in window&&Notification.permission==='default'){
+    Notification.requestPermission().then(p=>{if(p==='granted')showToast('Notificações ativadas! 🔔','#1a7f37');});
+  }
   notifPanelOpen=!notifPanelOpen;
   const panel=document.getElementById('notifPanel');
   if(!panel)return;
@@ -87,6 +112,7 @@ function pushNotification(type,routeName,msg){
         const idx=notifications.findIndex(n=>n.id===localId);
         if(idx>=0){notifications[idx]={...notifications[idx],id:ref.key,_local:false};}
         _syncNotifsToLocal();
+        _markNativeShown(ref.key); // evita notificação duplicada quando o listener do Firebase disparar
         db.ref('notifications').once('value',snap=>{
           const all=snap.val();if(!all)return;
           const entries=Object.entries(all).sort((a,b)=>(a[1].ts||0)-(b[1].ts||0));
@@ -95,12 +121,8 @@ function pushNotification(type,routeName,msg){
       })
       .catch(()=>{});
   }
-  // 3) Push notification nativa via SW
-  if('serviceWorker' in navigator&&Notification.permission==='granted'){
-    navigator.serviceWorker.ready.then(reg=>{
-      reg.showNotification('Rotogramas — Confiança',{body:routeName+': '+msg,icon:'./icon-192.png',badge:'./icon-192.png',tag:'rot-'+ts,data:{type}});
-    }).catch(()=>{});
-  }
+  // 3) Push notification nativa via SW (no dispositivo que criou a notificação)
+  _maybeShowNative({id:localId,type,route:routeName,msg,ts});
 }
 
 function requestNotifPermission(){
@@ -124,3 +146,4 @@ document.addEventListener('click',e=>{
     if(IS_DESKTOP()) panel.style.display='none';
   }
 });
+
