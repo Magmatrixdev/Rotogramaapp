@@ -111,6 +111,19 @@ function promptLogout(){
   document.body.appendChild(ov);
 }
 
+function logoutAdmin(){
+  adminMode=false;
+  firebase.auth().signOut().catch(()=>{});
+  if(typeof hideBottomNav==='function')hideBottomNav();
+  navReset('screenDriverLogin');
+}
+
+function promptLogoutAdmin(){
+  const ov=document.createElement('div');ov.className='confirm-overlay';
+  ov.innerHTML=`<div class="confirm-box"><h3>Sair do modo admin?</h3><p>Você precisará fazer login novamente para acessar o painel.</p><div class="btns"><button style="background:#eae8e3;color:#1c1c1c;flex:1;padding:12px;border-radius:10px;border:none;font-weight:700;cursor:pointer" onclick="this.closest('.confirm-overlay').remove()">Cancelar</button><button style="background:#fe2627;color:#fff;flex:1;padding:12px;border-radius:10px;border:none;font-weight:700;cursor:pointer" onclick="logoutAdmin();this.closest('.confirm-overlay').remove()">Sair</button></div></div>`;
+  document.body.appendChild(ov);
+}
+
 function switchAuthTab(tab){
   const isLogin=tab==='login';
   document.getElementById('tabLoginBtn').classList.toggle('active',isLogin);
@@ -153,4 +166,5 @@ async function doAdminLogin(){
     if(btn){btn.disabled=false;btn.textContent='ENTRAR';}
   }
 }
+
 
