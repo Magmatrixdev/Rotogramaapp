@@ -125,7 +125,7 @@ function showAdminLogin(){
   const ov=document.createElement('div');ov.className='login-overlay';
   ov.innerHTML=`<div class="login-box"><div class="login-logo"><div class="lb"><span>C</span></div><span class="lt">CONFIANÇA</span></div><div class="login-title">Área Restrita</div><div class="login-sub">Credenciais de administrador</div><div class="login-field"><label>Usuário</label><input type="text" id="loginUser" placeholder="Usuário" autocomplete="off"></div><div class="login-field"><label>Senha</label><input type="password" id="loginPass" placeholder="Senha"></div><button class="login-btn" onclick="doAdminLogin()">ENTRAR</button><div class="login-error" id="loginError">Usuário ou senha incorretos</div><button class="login-cancel" onclick="this.closest('.login-overlay').remove()">Cancelar</button></div>`;
   document.body.appendChild(ov);setTimeout(()=>document.getElementById('loginUser')?.focus(),100);
-  ov.addEventListener('keydown',e=>{if(e.key==='Enter')doAdminLogin()});
+  ov.addEventListener('keydown',e=>{if(e.key==='Enter')doAdminLogin();});
 }
 
 async function doAdminLogin(){
@@ -141,7 +141,11 @@ async function doAdminLogin(){
     document.querySelector('.login-overlay')?.remove();
     if(typeof hideBottomNav==='function')hideBottomNav();
     renderAdmin();
-    navPush('screenAdmin');
+    // Guard: onAuthStateChanged pode ter feito navPush('screenAdmin') antes desta
+    // continuação (race condition com Firebase SDK). Só empurra se ainda não estiver na pilha.
+    if(!_navStack.includes('screenAdmin')){
+      navPush('screenAdmin');
+    }
   }catch(err){
     console.error('Admin login error:',err);
     if(errEl){errEl.textContent='Usuário ou senha incorretos';errEl.style.display='block';setTimeout(()=>errEl.style.display='none',3000);}
