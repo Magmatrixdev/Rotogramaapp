@@ -68,7 +68,7 @@ function renderStopEditor(s,si){
   <div class="field"><label>Nota / Estratégia</label><textarea oninput="updateStop(${si},'nota',this.value)">${esc(s.nota||'')}</textarea></div>
   <div class="field"><label>Litragem por marca</label>${mh}<button class="add-marca-btn" onclick="addMarca(${si})">＋ Adicionar marca</button></div>
   <button class="alt-toggle" onclick="toggleAlt(${si})"><span class="red">OU</span> ${hasAlt?'Remover alternativo':'Adicionar alternativo'}</button>
-  ${hasAlt?`<div class="alt-box"><div class="field"><label>Nome</label><input value="${esc(a.nome)}" oninput="updateAlt(${si},'nome',this.value)"></div><div class="field"><label>Cidade</label><input value="${esc(a.cidade)}" oninput="updateAlt(${si},'cidade',this.value)"></div><div class="field-row"><div class="field"><label>Litragem</label><input value="${esc(a.litragem)}" oninput="updateAlt(${si},'litragem',this.value)"></div><div class="field"><label>KM</label><input value="${esc(a.km)}" oninput="updateAlt(${si},'km',this.value)"></div></div><div class="field"><label>Tipo de pagamento</label><select onchange="updateAlt(${si},'cartao',this.value)"><option value="truckpag"${a.cartao==='truckpag'?' selected':''}>TruckPag</option><option value="shell"${a.cartao==='shell'?' selected':''}>Shell</option><option value="shell_expers"${a.cartao==='shell_expers'?' selected':''}>Shell Expers</option><option value="rede_frota"${a.cartao==='rede_frota'?' selected':''}>Rede Frota</option><option value="compra_antecipada"${a.cartao==='compra_antecipada'?' selected':''}>Compra Antecipada</option></select></div><div class="field"><label>Link Maps</label><input value="${esc(a.link||'')}" oninput="updateAlt(${si},'link',this.value)"></div><div class="field"><label>Nota</label><input value="${esc(a.nota||'')}" oninput="updateAlt(${si},'nota',this.value)"></div></div>`:''}</div>`
+  ${hasAlt?`<div class="alt-box"><div class="field stop-ac-wrap"><label>Nome</label><input id="alt_nome_${si}" value="${esc(a.nome)}" autocomplete="off" oninput="updateAlt(${si},'nome',this.value);altNameInput(${si},this.value)" onblur="setTimeout(()=>closeAltAC(${si}),200)"><div class="stop-ac-drop" id="alt_ac_${si}"></div></div><div class="field"><label>Cidade</label><input value="${esc(a.cidade)}" oninput="updateAlt(${si},'cidade',this.value)"></div><div class="field-row"><div class="field"><label>Litragem</label><input value="${esc(a.litragem)}" oninput="updateAlt(${si},'litragem',this.value)"></div><div class="field"><label>KM</label><input value="${esc(a.km)}" oninput="updateAlt(${si},'km',this.value)"></div></div><div class="field"><label>Tipo de pagamento</label><select onchange="updateAlt(${si},'cartao',this.value)"><option value="truckpag"${a.cartao==='truckpag'?' selected':''}>TruckPag</option><option value="shell"${a.cartao==='shell'?' selected':''}>Shell</option><option value="shell_expers"${a.cartao==='shell_expers'?' selected':''}>Shell Expers</option><option value="rede_frota"${a.cartao==='rede_frota'?' selected':''}>Rede Frota</option><option value="compra_antecipada"${a.cartao==='compra_antecipada'?' selected':''}>Compra Antecipada</option></select></div><div class="field"><label>Link Maps</label><input value="${esc(a.link||'')}" oninput="updateAlt(${si},'link',this.value)"></div><div class="field"><label>Nota</label><input value="${esc(a.nota||'')}" oninput="updateAlt(${si},'nota',this.value)"></div></div>`:''}</div>`
 }
 
 function getFuelStops(){return editData.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino')}
@@ -260,6 +260,39 @@ function selectPostoSuggestion(si,idx){
   },50);
 }
 
+function altNameInput(si,val){
+  const drop=document.getElementById('alt_ac_'+si);
+  if(!drop)return;
+  const q=(val||'').trim().toLowerCase();
+  if(q.length<2){drop.innerHTML='';drop.style.display='none';return;}
+  const results=getAllKnownPostos().filter(p=>(p.nome||'').toLowerCase().includes(q)).slice(0,8);
+  if(!results.length){drop.innerHTML='';drop.style.display='none';return;}
+  _currentACSuggestions['a'+si]=results;
+  drop.innerHTML=results.map((p,i)=>`<div class="stop-ac-item" onmousedown="selectAltSuggestion(${si},${i})"><div class="stop-ac-nome">${esc(p.nome)}</div><div class="stop-ac-cidade">${esc(p.cidade)}</div></div>`).join('');
+  drop.style.display='block';
+}
+
+function closeAltAC(si){
+  const drop=document.getElementById('alt_ac_'+si);
+  if(drop){drop.innerHTML='';drop.style.display='none';}
+}
+
+function selectAltSuggestion(si,idx){
+  const posto=(_currentACSuggestions['a'+si]||[])[idx];
+  if(!posto)return;
+  const fs=getFuelStops();
+  if(!fs[si]||!fs[si].alternativa)return;
+  fs[si].alternativa.nome=posto.nome;
+  fs[si].alternativa.cidade=posto.cidade;
+  fs[si].alternativa.cartao=posto.cartao;
+  fs[si].alternativa.link=posto.link||'';
+  renderEditor();
+  setTimeout(()=>{
+    const inp=document.getElementById('alt_nome_'+si);
+    if(inp){inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);}
+  },50);
+}
+
 // ─── Propagação de alterações entre rotas ───
 let _pendingPropagation=null;
 
@@ -305,6 +338,7 @@ function applyPropagation(){
   saveToFirebase();
   showToast('✅ '+affectedIdxs.length+' rota(s) atualizada(s) com os novos dados dos postos');
 }
+
 
 
 
