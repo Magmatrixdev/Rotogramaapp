@@ -25,6 +25,7 @@ function editRoute(i){
   if(draft&&draft.index===i){editData=draft.data;document.getElementById('editorTitle').textContent=i>=0?'Editar Rota (rascunho)':'Nova Rota (rascunho)';}
   else if(i>=0){editData=JSON.parse(JSON.stringify(routes[i]));document.getElementById('editorTitle').textContent='Editar Rota';}
   else{editData={id:'',nome:'',estados:'',numero:String(routes.length+1).padStart(2,'0'),regiao:'Centro-Oeste',subtitulo:'',linkRota:'',distancia:'',tempo:'',paradas:[{ordem:0,tipo:'origem',nome:'',cidade:'',km:'0',detalhe:''},{ordem:1,tipo:'destino',nome:'',cidade:'',km:''}]};document.getElementById('editorTitle').textContent='Nova Rota';}
+  if(typeof hideBottomNav==='function')hideBottomNav();
   renderEditor();navPush('screenEditor');
   if(window._draftInterval)clearInterval(window._draftInterval);
   window._draftInterval=setInterval(saveDraft,3000);
@@ -304,5 +305,6 @@ function applyPropagation(){
   saveToFirebase();
   showToast('✅ '+affectedIdxs.length+' rota(s) atualizada(s) com os novos dados dos postos');
 }
+
 
 
