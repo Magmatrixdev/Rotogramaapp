@@ -68,7 +68,7 @@ function renderHome(){
   const inp=document.getElementById('searchInput');if(inp&&inp.value.trim())filterRoutes(inp.value);
   verifyDriverSession();checkActiveTrip();updateActiveTripBanner();
   const logoutBtn=document.getElementById('logoutBtn');const greeting=document.getElementById('driverGreeting');
-  if(logoutBtn){if(currentDriver){logoutBtn.classList.add('show');}else{logoutBtn.classList.remove('show');}}
+  if(logoutBtn){logoutBtn.classList.add('show');}
   if(greeting){if(currentDriver){greeting.textContent='Olá, '+currentDriver.nome.split(' ')[0]+'!';}else if(adminMode){greeting.textContent='Modo administrador';}else{greeting.textContent='';}}
   if(IS_DESKTOP()){
     dUpdateSidebar();dUpdateTopbar();
@@ -78,3 +78,4 @@ function renderHome(){
     }
   }
 }
+
