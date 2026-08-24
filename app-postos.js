@@ -133,9 +133,10 @@ function buildPostoCard(p){
   const maps=p.link?`<a class="postos-maps-btn" href="${p.link}" target="_blank"><i class="ti ti-map-pin" aria-hidden="true"></i> Maps</a>`:'';
 
   const fotos=p._source==='avulso'?(p.fotos||[]):getFotosByNome(p.nome);
-  const editBtn=(adminMode&&p._source==='avulso')
-    ?`<button class="postos-edit-btn" onclick="showEditPostoFotos('${p.id}')" aria-label="Editar fotos"><i class="ti ti-photo-edit" aria-hidden="true"></i></button>`:'';
-  const del=(adminMode&&p._source==='avulso')
+  const _nEnc=encodeURIComponent(p.nome||'');const _cEnc=encodeURIComponent(p.cidade||'');
+  const editBtn=adminMode
+    ?`<button class="postos-edit-btn" onclick="editPostoFotosByKey('${_nEnc}','${_cEnc}')" aria-label="Editar fotos"><i class="ti ti-photo-edit" aria-hidden="true"></i></button>`:'';
+  const del=(adminMode&&p._source==='avulso'&&p.id)
     ?`<button class="postos-del-btn" onclick="deletePostoAvulso('${p.id}')" aria-label="Remover posto"><i class="ti ti-trash" aria-hidden="true"></i></button>`:'';
 
   // ── COM FOTO: layout hero ──────────────────────────────────────────────────
@@ -291,6 +292,23 @@ async function savePostoAvulso(){
     errEl.textContent='Erro ao salvar. Tente novamente.';errEl.style.display='block';
     if(btn){btn.disabled=false;btn.textContent='Salvar';}
   }
+}
+
+// ─── admin: editar fotos por nome/cidade (rotas + avulsos) ───
+async function editPostoFotosByKey(nomeEnc,cidadeEnc){
+  const nome=decodeURIComponent(nomeEnc);
+  const cidade=decodeURIComponent(cidadeEnc);
+  const normFn=s=>(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const n=normFn(nome),c=normFn(cidade);
+  let id=Object.entries(postosAvulsos).find(([,v])=>normFn(v.nome)===n&&normFn(v.cidade)===c)?.[0];
+  if(!id){
+    id='posto_'+Date.now();
+    const fromRoute=extractPostosFromRoutes().find(p=>normFn(p.nome)===n&&normFn(p.cidade)===c);
+    const newEntry={id,nome,cidade,cartao:fromRoute?.cartao||'truckpag',link:fromRoute?.link||'',criadoEm:Date.now()};
+    if(db)await db.ref('postos/'+id).set(newEntry);
+    postosAvulsos[id]=newEntry;
+  }
+  showEditPostoFotos(id);
 }
 
 // ─── admin: editar fotos de posto existente ───
