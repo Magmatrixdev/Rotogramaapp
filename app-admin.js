@@ -306,7 +306,7 @@ function _adminPostoCard(p,actionsHtml,mapsHtml){
 function renderAdminPostos(){
   const el=document.getElementById('adminPostosList');if(!el)return;
   let h=`<div class="admin-search"><span class="admin-search-icon">🔍</span><input id="adminPostoSearch" type="text" placeholder="Pesquisar posto..." value="${esc(_adminPostoFilter)}" oninput="_adminPostoFilter=this.value;renderAdminPostoCards()"><button class="admin-search-clear ${_adminPostoFilter?'visible':''}" onclick="_adminPostoFilter='';document.getElementById('adminPostoSearch').value='';renderAdminPostoCards()">✕</button></div>`;
-  h+=`<button class="admin-add" onclick="showAddPostoForm()">＋ NOVO POSTO AVULSO</button>`;
+  h+=`<button class="admin-add" onclick="showAddPostoForm()">＋ NOVO POSTO</button>`;
   h+=`<div id="adminPostoCards"></div>`;
   el.innerHTML=h;
   renderAdminPostoCards();
@@ -314,49 +314,25 @@ function renderAdminPostos(){
 
 function renderAdminPostoCards(){
   const container=document.getElementById('adminPostoCards');if(!container)return;
-  // --- Filtro ---
-  const q=_adminPostoFilter.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const normFn=s=>(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const q=normFn(_adminPostoFilter);
   const clearBtn=document.querySelector('#adminPostoSearch')?.parentElement?.querySelector('.admin-search-clear');
-  if(clearBtn)clearBtn.className='admin-search-clear'+(q?' visible':'');
-  // --- Postos em rotas ---
-  const routeStops=[];
-  routes.forEach((r,ri)=>{
-    (r.paradas||[]).forEach((p,pi)=>{
-      if(p.tipo==='origem'||p.tipo==='destino')return;
-      routeStops.push({...p,_routeIdx:ri,_paraIdx:pi,_routeName:r.nome,_routeNum:r.numero});
-    });
-  });
-  const filteredRoute=q?routeStops.filter(p=>{
-    const t=((p.nome||'')+' '+(p.cidade||'')+' '+(p._routeName||'')+' '+(p._routeNum||'')).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-    return t.includes(q);
-  }):routeStops;
-  // --- Postos avulsos ---
-  const avulsoList=Object.values(postosAvulsos||{}).sort((a,b)=>(a.nome||'').localeCompare(b.nome||''));
-  const filteredAvulso=q?avulsoList.filter(p=>{
-    const t=((p.nome||'')+' '+(p.cidade||'')).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-    return t.includes(q);
-  }):avulsoList;
-
+  if(clearBtn)clearBtn.className='admin-search-clear'+(_adminPostoFilter?' visible':'');
+  // Monta lista única deduplicada por nome|cidade (avulsos têm prioridade)
+  const dedup={};
+  routes.forEach(r=>{(r.paradas||[]).forEach(p=>{if(p.tipo==='origem'||p.tipo==='destino')return;const k=normFn(p.nome)+'|'+normFn(p.cidade);if(!dedup[k])dedup[k]={nome:p.nome,cidade:p.cidade,cartao:p.cartao,link:p.link||''};});});
+  Object.values(postosAvulsos||{}).forEach(p=>{const k=normFn(p.nome)+'|'+normFn(p.cidade);dedup[k]={...p};});
+  let unified=Object.values(dedup).sort((a,b)=>(a.nome||'').localeCompare(b.nome||'','pt'));
+  if(q)unified=unified.filter(p=>normFn((p.nome||'')+' '+(p.cidade||'')).includes(q));
   let h='';
-  // Seção rotas
-  h+=`<div style="font-family:'Barlow',sans-serif;font-weight:700;font-size:13px;color:#5a5854;text-transform:uppercase;letter-spacing:.5px;padding:16px 0 8px">⛽ Postos em Rotas <span style="font-weight:400;color:#9a9894">(${filteredRoute.length})</span></div>`;
-  if(filteredRoute.length===0){
-    h+=`<div style="text-align:center;padding:24px 20px;color:#9a9894;font-family:'Barlow',sans-serif;font-size:13px">${q?'Nenhum posto encontrado':'Nenhum posto cadastrado em rotas'}</div>`;
+  if(unified.length===0){
+    h=`<div style="text-align:center;padding:24px 20px;color:#9a9894;font-family:'Barlow',sans-serif;font-size:13px">${_adminPostoFilter?'Nenhum posto encontrado':'Nenhum posto cadastrado'}</div>`;
   }else{
-    filteredRoute.forEach(p=>{
+    unified.forEach(p=>{
+      const nEnc=encodeURIComponent(p.nome||'');const cEnc=encodeURIComponent(p.cidade||'');
       const maps=p.link?`<a href="${p.link}" target="_blank" style="color:#1a6fb5;font-size:12px;text-decoration:none">🗺️ Maps</a>`:'';
-      const acts=`<button class="admin-btn admin-btn-edit" onclick="showEditPostoRota(${p._routeIdx},${p._paraIdx})">✏️ Editar</button>`;
-      h+=_adminPostoCard(p,acts,maps);
-    });
-  }
-  // Seção avulsos
-  h+=`<div style="font-family:'Barlow',sans-serif;font-weight:700;font-size:13px;color:#5a5854;text-transform:uppercase;letter-spacing:.5px;padding:20px 0 8px">📋 Postos Avulsos <span style="font-weight:400;color:#9a9894">(${filteredAvulso.length})</span></div>`;
-  if(filteredAvulso.length===0){
-    h+=`<div style="text-align:center;padding:24px 20px;color:#9a9894;font-family:'Barlow',sans-serif;font-size:13px">${q?'Nenhum posto encontrado':'Nenhum posto avulso cadastrado'}</div>`;
-  }else{
-    filteredAvulso.forEach(p=>{
-      const maps=p.link?`<a href="${p.link}" target="_blank" style="color:#1a6fb5;font-size:12px;text-decoration:none">🗺️ Maps</a>`:'';
-      const acts=`<button class="admin-btn admin-btn-edit" onclick="showEditPostoAvulso('${p.id}')">✏️ Editar</button><button class="admin-btn admin-btn-del" onclick="deletePostoAvulso('${p.id}')">🗑️ Excluir</button>`;
+      const delBtn=p.id?`<button class="admin-btn admin-btn-del" onclick="deletePostoAvulso('${p.id}')">🗑️</button>`:'';
+      const acts=`<button class="admin-btn admin-btn-edit" onclick="showEditPostoUnified('${nEnc}','${cEnc}')">✏️ Editar</button><button class="admin-btn" style="background:#2d5a27;color:#fff" onclick="editPostoFotosByKey('${nEnc}','${cEnc}')">📷 Fotos</button>${delBtn}`;
       h+=_adminPostoCard(p,acts,maps);
     });
   }
@@ -384,6 +360,73 @@ function _postoRotaFormHTML(p,ri,pi,title,saveFn){
       <button class="postos-form-save" onclick="${saveFn}">Salvar</button>
     </div>
   </div>`;
+}
+
+function showEditPostoUnified(nomeEnc,cidadeEnc){
+  const nome=decodeURIComponent(nomeEnc);const cidade=decodeURIComponent(cidadeEnc);
+  const normFn=s=>(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const avulso=Object.values(postosAvulsos||{}).find(p=>normFn(p.nome)===normFn(nome)&&normFn(p.cidade)===normFn(cidade))||{};
+  const cartao=avulso.cartao||'truckpag';const link=avulso.link||'';
+  document.querySelector('.postos-form-ov')?.remove();
+  const ov=document.createElement('div');ov.className='postos-form-ov';
+  ov.innerHTML=`<div class="postos-form-box">
+    <div class="postos-form-title">Editar posto</div>
+    <div class="postos-form-field"><label>Nome do posto</label><input id="puNome" value="${esc(nome)}"></div>
+    <div class="postos-form-field"><label>Cidade — UF</label><input id="puCidade" value="${esc(cidade)}"></div>
+    <div class="postos-form-field"><label>Tipo de pagamento</label>
+      <select id="puCartao">
+        <option value="truckpag"${cartao==='truckpag'?' selected':''}>TruckPag</option>
+        <option value="shell"${cartao==='shell'?' selected':''}>Shell</option>
+        <option value="shell_expers"${cartao==='shell_expers'?' selected':''}>Shell Expers</option>
+        <option value="redefrota"${cartao==='redefrota'?' selected':''}>Rede Frota</option>
+        <option value="compra_antecipada"${cartao==='compra_antecipada'?' selected':''}>Compra Antecipada</option>
+      </select>
+    </div>
+    <div class="postos-form-field"><label>Link Google Maps</label><input id="puLink" value="${esc(link)}"></div>
+    <div class="postos-form-err" id="puError" style="display:none"></div>
+    <div class="postos-form-btns">
+      <button class="postos-form-cancel" onclick="this.closest('.postos-form-ov').remove()">Cancelar</button>
+      <button class="postos-form-save" onclick="saveEditPostoUnified('${nomeEnc}','${cidadeEnc}')">Salvar</button>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+  setTimeout(()=>document.getElementById('puNome')?.focus(),100);
+}
+
+async function saveEditPostoUnified(oldNomeEnc,oldCidadeEnc){
+  const oldNome=decodeURIComponent(oldNomeEnc);const oldCidade=decodeURIComponent(oldCidadeEnc);
+  const nome=(document.getElementById('puNome')?.value||'').trim();
+  const cidade=(document.getElementById('puCidade')?.value||'').trim();
+  const cartao=document.getElementById('puCartao')?.value||'truckpag';
+  const link=(document.getElementById('puLink')?.value||'').trim();
+  const errEl=document.getElementById('puError');
+  const btn=document.querySelector('.postos-form-ov .postos-form-save');
+  if(!nome||!cidade){errEl.textContent='Nome e cidade são obrigatórios';errEl.style.display='block';return;}
+  if(btn){btn.disabled=true;btn.textContent='Salvando...';}
+  const normFn=s=>(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const on=normFn(oldNome),oc=normFn(oldCidade);
+  try{
+    // 1. Atualizar/criar entrada em Firebase postos
+    const existingEntry=Object.entries(postosAvulsos||{}).find(([,v])=>normFn(v.nome)===on&&normFn(v.cidade)===oc);
+    const id=existingEntry?.[0]||('posto_'+Date.now());
+    const existing=existingEntry?.[1]||{};
+    const postoData={id,nome,cidade,cartao,link,criadoEm:existing.criadoEm||Date.now()};
+    if(existing.fotos&&existing.fotos.length)postoData.fotos=existing.fotos;
+    if(db)await db.ref('postos/'+id).set(postoData);
+    else{postosAvulsos[id]=postoData;}
+    // 2. Propagar para todas as rotas que usam este posto
+    let changed=false;
+    routes.forEach(r=>{
+      (r.paradas||[]).forEach(p=>{
+        if(normFn(p.nome)===on&&normFn(p.cidade)===oc){p.nome=nome;p.cidade=cidade;p.cartao=cartao;p.link=link;changed=true;}
+        if(p.alternativa&&normFn(p.alternativa.nome)===on&&normFn(p.alternativa.cidade)===oc){p.alternativa.nome=nome;p.alternativa.cidade=cidade;p.alternativa.cartao=cartao;p.alternativa.link=link;changed=true;}
+      });
+    });
+    if(changed)await saveToFirebase();
+    document.querySelector('.postos-form-ov')?.remove();
+    renderAdminPostos();
+    showToast('✅ Posto atualizado em todas as rotas');
+  }catch(e){errEl.textContent='Erro ao salvar.';errEl.style.display='block';if(btn){btn.disabled=false;btn.textContent='Salvar';}}
 }
 
 function showEditPostoRota(ri,pi){
@@ -454,4 +497,5 @@ async function saveEditPostoAvulso(id){
     renderAdminPostos();
   }catch(e){errEl.textContent='Erro ao salvar.';errEl.style.display='block';}
 }
+
 
