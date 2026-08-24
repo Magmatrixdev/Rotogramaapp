@@ -33,6 +33,8 @@
 .postos-maps-btn{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#185fa5;padding:5px 9px;border:1px solid #b5d4f4;border-radius:6px;cursor:pointer;white-space:nowrap;background:none;font-family:'Barlow',sans-serif;font-weight:600;text-decoration:none}
 .postos-del-btn{background:none;border:none;color:#c4c2b8;padding:4px;cursor:pointer;font-size:18px;line-height:1;display:flex;align-items:center}
 .postos-del-btn:hover{color:#fe2627}
+.postos-edit-btn{background:none;border:none;color:#c4c2b8;padding:4px;cursor:pointer;font-size:18px;line-height:1;display:flex;align-items:center}
+.postos-edit-btn:hover{color:#185fa5}
 
 /* tags cartão */
 .postos-tag{font-size:11px;padding:3px 9px;border-radius:6px;font-weight:600;display:inline-flex;align-items:center;gap:4px;font-family:'Barlow',sans-serif}
@@ -44,13 +46,23 @@
 .ptag-antecipada{background:#fef8e1;color:#8a6200;border:1px solid #f0d87a}
 .ptag-outro{background:#f1f0eb;color:#5f5e5a;border:1px solid #c4c2b8}
 
+/* ─── fotos nos cards ─── */
+.posto-fotos-strip{display:flex;gap:6px;overflow-x:auto;margin-top:10px;padding-bottom:2px}
+.posto-fotos-strip::-webkit-scrollbar{display:none}
+.posto-foto-thumb{width:72px;height:72px;object-fit:cover;border-radius:8px;cursor:pointer;flex-shrink:0;border:1px solid #eae8e3}
+
+/* ─── modal foto fullscreen ─── */
+.posto-foto-modal{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:500;display:flex;align-items:center;justify-content:center}
+.posto-foto-modal img{max-width:95vw;max-height:88vh;border-radius:10px;object-fit:contain}
+.posto-foto-modal button{position:absolute;top:20px;right:20px;background:rgba(255,255,255,.18);color:#fff;border:none;width:40px;height:40px;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+
 /* FAB admin */
 .postos-fab{position:fixed;bottom:74px;right:20px;width:52px;height:52px;background:#1c1c1c;color:#fff;border:none;border-radius:50%;font-size:24px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,.25)}
 .postos-fab:active{transform:scale(.95)}
 
 /* form overlay */
 .postos-form-ov{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;display:flex;align-items:flex-end}
-.postos-form-box{background:#fff;border-radius:20px 20px 0 0;padding:24px 20px 40px;width:100%;display:flex;flex-direction:column;gap:14px}
+.postos-form-box{background:#fff;border-radius:20px 20px 0 0;padding:24px 20px 40px;width:100%;display:flex;flex-direction:column;gap:14px;max-height:90vh;overflow-y:auto}
 .postos-form-title{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:#1c1c1c;text-transform:uppercase;letter-spacing:.3px}
 .postos-form-field{display:flex;flex-direction:column;gap:6px}
 .postos-form-field label{font-size:11px;font-weight:700;color:#6b6a66;text-transform:uppercase;letter-spacing:.4px}
@@ -60,6 +72,15 @@
 .postos-form-btns{display:flex;gap:10px;margin-top:4px}
 .postos-form-cancel{flex:1;padding:12px;background:#eae8e3;color:#1c1c1c;border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;font-family:'Barlow',sans-serif}
 .postos-form-save{flex:1;padding:12px;background:#1c1c1c;color:#fff;border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;font-family:'Barlow',sans-serif}
+
+/* ─── fotos form upload ─── */
+.pf-photos-wrap{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start}
+.pf-photos-add{display:flex;flex-direction:column;align-items:center;justify-content:center;width:80px;height:80px;border:2px dashed #d5d3cf;border-radius:10px;cursor:pointer;color:#9a9894;gap:4px;font-size:11px;font-weight:600;font-family:'Barlow',sans-serif;text-align:center}
+.pf-photos-add i{font-size:22px}
+.pf-photo-preview{position:relative;width:80px;height:80px}
+.pf-photo-preview img{width:80px;height:80px;object-fit:cover;border-radius:10px;display:block}
+.pf-photo-del{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:#fe2627;color:#fff;border:none;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;line-height:1;padding:0}
+.pf-edit-fotos-wrap{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start}
 
 /* ─── bottom nav ─── */
 #bottomNav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #eae8e3;display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom,0)}
