@@ -4,6 +4,7 @@ function initFirebase(){
   try{
     firebase.initializeApp(FIREBASE_CONFIG);
     db=firebase.database();
+    if(firebase.storage)storage=firebase.storage();
 
     // ═══ AUTH STATE ═══
     // Não restaura sessão admin automaticamente — Firebase Auth persiste em LOCAL por padrão,
@@ -82,6 +83,7 @@ function saveToFirebase(){if(db&&firebaseReady){db.ref('rotogramas').set(routes)
 function loadLocal(){const c=localStorage.getItem('rotogramas_cache'),m=localStorage.getItem('rotogramas_data'),s=c||m;if(s){try{routes=JSON.parse(s);renderHome();return}catch(e){}}routes=JSON.parse(JSON.stringify(DEFAULTS));renderHome();}
 
 function setSyncStatus(t,txt){const el=document.getElementById('syncBar');if(!el)return;el.className='sync-bar'+(t==='on'?'':t==='off'?' off':' err');el.textContent=(t==='on'?'🟢':t==='off'?'🟡':'🔴')+' '+txt;if(IS_DESKTOP())setTimeout(dUpdateTopbar,50);}
+
 
 
 
