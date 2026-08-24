@@ -57,6 +57,8 @@ function showPostos(){
   navPush('screenPostos');
   renderPostosList();
   updateBottomNav('Postos');
+  // Re-render garantido após Firebase responder (async) — cobre casos de cache frio
+  setTimeout(renderPostosList, 600);
 }
 
 // ─── bottom nav ───
@@ -400,5 +402,6 @@ function deletePostoAvulso(id){
     ov.remove();
   };
 }
+
 
 
