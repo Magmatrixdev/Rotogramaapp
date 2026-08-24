@@ -1,6 +1,7 @@
 // ═══ POSTOS ═══
 var postosAvulsos={};
 var _postosListenerInit=false;
+var pfSelectedFiles=[];
 
 // ─── helpers cartão ───
 function getCartaoLabel(cartao){
@@ -32,6 +33,15 @@ function extractPostosFromRoutes(){
   return list;
 }
 
+// ─── busca fotos de um posto pelo nome (cruza avulsos → rotas) ───
+function getFotosByNome(nome){
+  if(!nome)return[];
+  const norm=s=>(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const n=norm(nome);
+  const match=Object.values(postosAvulsos).find(p=>norm(p.nome)===n);
+  return(match&&match.fotos&&match.fotos.length>0)?match.fotos:[];
+}
+
 // ─── Firebase listener (lazy) ───
 function initPostosListener(){
   if(!db)return;
@@ -61,13 +71,13 @@ function updateBottomNav(active){
 }
 
 function bnavGoRotas(){
-  showHome(); // showHome() colapsa qualquer tela ativa (mapLive, postos, etc.) e vai para screenHome
+  showHome();
 }
 
 function bnavGoPostos(){
   const top=_navStack[_navStack.length-1];
   if(top==='screenPostos'){updateBottomNav('Postos');return;}
-  if(top!=='screenHome')showHome(); // garante que saímos de mapLive ou qualquer overlay
+  if(top!=='screenHome')showHome();
   showPostos();
 }
 
@@ -129,14 +139,22 @@ function buildPostoCard(p){
   const badge=p._source==='avulso'
     ?`<span class="postos-tag ptag-avulso">Avulso</span>`
     :`<span class="postos-tag ptag-rota">Rota ${p.rotaNumero}</span>`;
+  // fotos: avulso usa p.fotos, rota cruza pelo nome
+  const fotos=p._source==='avulso'?(p.fotos||[]):getFotosByNome(p.nome);
+  const fotoStrip=fotos.length>0
+    ?`<div class="posto-fotos-strip">${fotos.map(url=>`<img class="posto-foto-thumb" src="${url}" onclick="showPostoFotoViewer('${url}')" loading="lazy" alt="Foto do posto">`).join('')}</div>`
+    :'';
+  const editBtn=(adminMode&&p._source==='avulso')
+    ?`<button class="postos-edit-btn" onclick="showEditPostoFotos('${p.id}')" aria-label="Editar fotos"><i class="ti ti-photo-edit" aria-hidden="true"></i></button>`:'';
   const del=(adminMode&&p._source==='avulso')
     ?`<button class="postos-del-btn" onclick="deletePostoAvulso('${p.id}')" aria-label="Remover posto"><i class="ti ti-trash" aria-hidden="true"></i></button>`:'';
   return `<div class="postos-card">
     <div class="postos-card-top">
       <div><div class="postos-card-name">${p.nome}</div><div class="postos-card-city">${p.cidade}</div></div>
-      <div style="display:flex;align-items:center;gap:6px">${del}${maps}</div>
+      <div style="display:flex;align-items:center;gap:6px">${editBtn}${del}${maps}</div>
     </div>
     <div class="postos-card-tags">${badge}<span class="postos-tag ${cls}"><i class="ti ti-credit-card" style="font-size:11px" aria-hidden="true"></i> ${lbl}</span></div>
+    ${fotoStrip}
   </div>`;
 }
 
@@ -148,8 +166,47 @@ function setPostosFilter(el,filter){
   renderPostosList();
 }
 
+// ─── foto viewer fullscreen ───
+function showPostoFotoViewer(url){
+  const ov=document.createElement('div');
+  ov.className='posto-foto-modal';
+  ov.innerHTML=`<img src="${url}" alt="Foto do posto"><button onclick="this.parentElement.remove()" aria-label="Fechar">✕</button>`;
+  ov.onclick=e=>{if(e.target===ov)ov.remove();};
+  document.body.appendChild(ov);
+}
+
+// ─── foto form helpers ───
+function pfHandlePhotos(input){
+  const files=Array.from(input.files);
+  const remaining=3-pfSelectedFiles.length;
+  pfSelectedFiles=pfSelectedFiles.concat(files.slice(0,remaining));
+  _renderPfPhotoPreviews();
+  input.value='';
+}
+
+function pfRemovePhoto(i){
+  pfSelectedFiles.splice(i,1);
+  _renderPfPhotoPreviews();
+}
+
+function _renderPfPhotoPreviews(){
+  const wrap=document.getElementById('pfPhotosWrap');
+  if(!wrap)return;
+  wrap.querySelectorAll('.pf-photo-preview').forEach(el=>el.remove());
+  pfSelectedFiles.forEach((file,i)=>{
+    const url=URL.createObjectURL(file);
+    const div=document.createElement('div');
+    div.className='pf-photo-preview';
+    div.innerHTML=`<img src="${url}" alt="preview"><button class="pf-photo-del" onclick="pfRemovePhoto(${i})" type="button">✕</button>`;
+    wrap.insertBefore(div,document.getElementById('pfPhotosAdd'));
+  });
+  const addBtn=document.getElementById('pfPhotosAdd');
+  if(addBtn)addBtn.style.display=pfSelectedFiles.length>=3?'none':'flex';
+}
+
 // ─── admin: adicionar posto avulso ───
 function showAddPostoForm(){
+  pfSelectedFiles=[];
   document.querySelector('.postos-form-ov')?.remove();
   const ov=document.createElement('div');
   ov.className='postos-form-ov';
@@ -166,6 +223,15 @@ function showAddPostoForm(){
       </select>
     </div>
     <div class="postos-form-field"><label>Link Google Maps</label><input id="pfLink" placeholder="https://maps.app.goo.gl/..."></div>
+    <div class="postos-form-field"><label>Fotos (até 3)</label>
+      <div class="pf-photos-wrap" id="pfPhotosWrap">
+        <label class="pf-photos-add" id="pfPhotosAdd">
+          <i class="ti ti-camera" aria-hidden="true"></i>
+          <span>Adicionar</span>
+          <input type="file" accept="image/*" multiple style="display:none" onchange="pfHandlePhotos(this)">
+        </label>
+      </div>
+    </div>
     <div class="postos-form-err" id="pfError" style="display:none"></div>
     <div class="postos-form-btns">
       <button class="postos-form-cancel" onclick="this.closest('.postos-form-ov').remove()">Cancelar</button>
@@ -184,13 +250,27 @@ async function savePostoAvulso(){
   const errEl=document.getElementById('pfError');
   const btn=document.querySelector('.postos-form-ov .postos-form-save');
   if(!nome||!cidade){errEl.textContent='Nome e cidade são obrigatórios';errEl.style.display='block';return;}
-  // checagem de duplicata
   const norm=s=>(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
   const dup=Object.values(postosAvulsos).find(p=>norm(p.nome)===norm(nome)&&norm(p.cidade)===norm(cidade));
   if(dup){errEl.textContent='Posto já cadastrado com esse nome e cidade.';errEl.style.display='block';return;}
   if(btn){btn.disabled=true;btn.textContent='Salvando...';}
   const id='posto_'+Date.now();
   const posto={id,nome,cidade,cartao,link,criadoEm:Date.now()};
+  // Upload de fotos
+  if(storage&&pfSelectedFiles.length>0){
+    if(btn)btn.textContent='Enviando fotos...';
+    try{
+      const uploads=pfSelectedFiles.map((file,idx)=>{
+        const ref=storage.ref('postos/'+id+'/foto_'+(idx+1));
+        return ref.put(file).then(snap=>snap.ref.getDownloadURL());
+      });
+      posto.fotos=await Promise.all(uploads);
+    }catch(e){
+      errEl.textContent='Erro ao enviar fotos. Tente novamente.';errEl.style.display='block';
+      if(btn){btn.disabled=false;btn.textContent='Salvar';}
+      return;
+    }
+  }
   try{
     if(db)await db.ref('postos/'+id).set(posto);
     else{postosAvulsos[id]={...posto,_source:'avulso'};renderPostosList();}
@@ -199,6 +279,79 @@ async function savePostoAvulso(){
     errEl.textContent='Erro ao salvar. Tente novamente.';errEl.style.display='block';
     if(btn){btn.disabled=false;btn.textContent='Salvar';}
   }
+}
+
+// ─── admin: editar fotos de posto existente ───
+function showEditPostoFotos(id){
+  const posto=postosAvulsos[id];
+  if(!posto)return;
+  pfSelectedFiles=[];
+  document.querySelector('.postos-form-ov')?.remove();
+  const ov=document.createElement('div');
+  ov.className='postos-form-ov';
+  const fotosAtuais=(posto.fotos||[]);
+  const fotosHtml=fotosAtuais.length>0
+    ?`<div class="pf-edit-fotos-wrap" id="pfEditFotosWrap">${fotosAtuais.map((url,i)=>`<div class="pf-photo-preview"><img src="${url}" alt="foto"><button class="pf-photo-del" onclick="pfRemoveExistingFoto('${id}',${i})" type="button">✕</button></div>`).join('')}</div>`
+    :`<div class="pf-edit-fotos-wrap" id="pfEditFotosWrap"><p style="font-size:12px;color:#9a9894;margin:0">Nenhuma foto ainda</p></div>`;
+  ov.innerHTML=`<div class="postos-form-box">
+    <div class="postos-form-title">Fotos — ${posto.nome}</div>
+    <div class="postos-form-field"><label>Fotos atuais</label>${fotosHtml}</div>
+    <div class="postos-form-field" id="pfAddMoreWrap" style="${fotosAtuais.length>=3?'display:none':''}">
+      <label>Adicionar fotos</label>
+      <div class="pf-photos-wrap" id="pfPhotosWrap">
+        <label class="pf-photos-add" id="pfPhotosAdd">
+          <i class="ti ti-camera" aria-hidden="true"></i>
+          <span>Adicionar</span>
+          <input type="file" accept="image/*" multiple style="display:none" onchange="pfHandlePhotosEdit('${id}',this)">
+        </label>
+      </div>
+    </div>
+    <div class="postos-form-err" id="pfError" style="display:none"></div>
+    <div class="postos-form-btns">
+      <button class="postos-form-cancel" onclick="this.closest('.postos-form-ov').remove()">Fechar</button>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+}
+
+async function pfRemoveExistingFoto(postoId,idx){
+  const posto=postosAvulsos[postoId];
+  if(!posto||!posto.fotos)return;
+  const url=posto.fotos[idx];
+  try{
+    if(storage)await storage.refFromURL(url).delete().catch(()=>{});
+    const newFotos=posto.fotos.filter((_,i)=>i!==idx);
+    const update=newFotos.length>0?{...posto,fotos:newFotos}:{...posto};
+    if(newFotos.length===0)delete update.fotos;
+    await db.ref('postos/'+postoId).set(update);
+    showEditPostoFotos(postoId);
+  }catch(e){alert('Erro ao remover foto.');}
+}
+
+async function pfHandlePhotosEdit(postoId,input){
+  const posto=postosAvulsos[postoId];
+  if(!posto)return;
+  const existentes=(posto.fotos||[]).length;
+  const files=Array.from(input.files).slice(0,3-existentes);
+  if(!files.length)return;
+  const errEl=document.getElementById('pfError');
+  const addBtn=document.getElementById('pfPhotosAdd');
+  if(addBtn){addBtn.style.display='none';}
+  errEl.style.display='none';
+  try{
+    const uploads=files.map((file,idx)=>{
+      const ref=storage.ref('postos/'+postoId+'/foto_'+(existentes+idx+1)+'_'+Date.now());
+      return ref.put(file).then(snap=>snap.ref.getDownloadURL());
+    });
+    const newUrls=await Promise.all(uploads);
+    const updFotos=[...(posto.fotos||[]),...newUrls];
+    await db.ref('postos/'+postoId+'/fotos').set(updFotos);
+    showEditPostoFotos(postoId);
+  }catch(e){
+    errEl.textContent='Erro ao enviar fotos.';errEl.style.display='block';
+    if(addBtn)addBtn.style.display='flex';
+  }
+  input.value='';
 }
 
 function deletePostoAvulso(id){
@@ -214,4 +367,3 @@ function deletePostoAvulso(id){
     ov.remove();
   };
 }
-
