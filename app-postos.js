@@ -139,22 +139,34 @@ function buildPostoCard(p){
   const badge=p._source==='avulso'
     ?`<span class="postos-tag ptag-avulso">Avulso</span>`
     :`<span class="postos-tag ptag-rota">Rota ${p.rotaNumero}</span>`;
-  // fotos: avulso usa p.fotos, rota cruza pelo nome
   const fotos=p._source==='avulso'?(p.fotos||[]):getFotosByNome(p.nome);
-  const fotoStrip=fotos.length>0
-    ?`<div class="posto-fotos-strip">${fotos.map(url=>`<img class="posto-foto-thumb" src="${url}" onclick="showPostoFotoViewer('${url}')" loading="lazy" alt="Foto do posto">`).join('')}</div>`
-    :'';
   const editBtn=(adminMode&&p._source==='avulso')
     ?`<button class="postos-edit-btn" onclick="showEditPostoFotos('${p.id}')" aria-label="Editar fotos"><i class="ti ti-photo-edit" aria-hidden="true"></i></button>`:'';
   const del=(adminMode&&p._source==='avulso')
     ?`<button class="postos-del-btn" onclick="deletePostoAvulso('${p.id}')" aria-label="Remover posto"><i class="ti ti-trash" aria-hidden="true"></i></button>`:'';
+  // hero: primeira foto ou placeholder
+  const heroInner=fotos.length>0
+    ?`<img class="posto-hero-img" src="${fotos[0]}" loading="lazy" alt="${p.nome}" onclick="showPostoFotoViewer('${fotos[0]}')">`
+    :`<i class="ti ti-gas-station posto-hero-ph-icon" aria-hidden="true"></i>`;
+  // strip extra: fotos 2 e 3
+  const extraStrip=fotos.length>1
+    ?`<div class="posto-fotos-strip">${fotos.slice(1).map(url=>`<img class="posto-foto-thumb" src="${url}" onclick="showPostoFotoViewer('${url}')" loading="lazy" alt="Foto do posto">`).join('')}</div>`
+    :'';
   return `<div class="postos-card">
-    <div class="postos-card-top">
-      <div><div class="postos-card-name">${p.nome}</div><div class="postos-card-city">${p.cidade}</div></div>
-      <div style="display:flex;align-items:center;gap:6px">${editBtn}${del}${maps}</div>
+    <div class="posto-hero${fotos.length===0?' posto-hero--no-photo':''}">
+      ${heroInner}
+      <div class="posto-hero-overlay"></div>
+      <div class="posto-hero-badge-row">${badge}</div>
+      <div class="posto-hero-name">${p.nome}</div>
     </div>
-    <div class="postos-card-tags">${badge}<span class="postos-tag ${cls}"><i class="ti ti-credit-card" style="font-size:11px" aria-hidden="true"></i> ${lbl}</span></div>
-    ${fotoStrip}
+    <div class="posto-card-body">
+      <div class="posto-card-body-left">
+        <div class="postos-card-city"><i class="ti ti-map-pin" style="font-size:11px" aria-hidden="true"></i> ${p.cidade}</div>
+        <div class="postos-card-tags"><span class="postos-tag ${cls}"><i class="ti ti-credit-card" style="font-size:11px" aria-hidden="true"></i> ${lbl}</span></div>
+      </div>
+      <div class="posto-card-body-right">${editBtn}${del}${maps}</div>
+    </div>
+    ${extraStrip}
   </div>`;
 }
 
