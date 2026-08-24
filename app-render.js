@@ -6,16 +6,31 @@ function filterRoutes(q){const cards=document.querySelectorAll('.rcard'),regs=do
 function clearSearch(){const i=document.getElementById('searchInput');i.value='';filterRoutes('');i.focus()}
 
 // ═══ RENDER ROUTE ═══
-function renderStop(p){const ip=p.tipo==='parcial';let d='';if(p.litragem)d+=`<div class="scard-detail">⛽ <strong>${p.litragem}</strong></div>`;if(p.razaoSocial)d+=`<div class="scard-detail">📋 ${p.razaoSocial}</div>`;if(p.vantagem)d+=`<div class="scard-detail">💰 ${p.vantagem}</div>`;if(p.detalhe)d+=`<div class="scard-detail">🛣️ ${p.detalhe}</div>`;let note=p.nota?`<div class="scard-note"><strong>Estratégia:</strong> ${p.nota}</div>`:'';let bt='';if(p.marcas&&p.marcas.length){bt='<table class="brand-tbl"><thead><tr><th>Marca</th><th>Litragem</th></tr></thead><tbody>';for(const m of p.marcas){bt+=`<tr><td class="bname">${m.marca}</td><td class="${m.litros.toLowerCase().includes('não')?'bqty zero':'bqty'}">${m.litros}</td></tr>`}bt+='</tbody></table>'}
+function renderStop(p){
+  const ip=p.tipo==='parcial';
+  let d='';
+  if(p.litragem)d+=`<div class="scard-detail">⛽ <strong>${p.litragem}</strong></div>`;
+  if(p.razaoSocial)d+=`<div class="scard-detail">📋 ${p.razaoSocial}</div>`;
+  if(p.vantagem)d+=`<div class="scard-detail">💰 ${p.vantagem}</div>`;
+  if(p.detalhe)d+=`<div class="scard-detail">🛣️ ${p.detalhe}</div>`;
+  let note=p.nota?`<div class="scard-note"><strong>Estratégia:</strong> ${p.nota}</div>`:'';
+  let bt='';
+  if(p.marcas&&p.marcas.length){
+    bt='<table class="brand-tbl"><thead><tr><th>Marca</th><th>Litragem</th></tr></thead><tbody>';
+    for(const m of p.marcas){bt+=`<tr><td class="bname">${m.marca}</td><td class="${m.litros.toLowerCase().includes('não')?'bqty zero':'bqty'}">${m.litros}</td></tr>`}
+    bt+='</tbody></table>';
+  }
   let link=p.link?`<a class="rota-link" href="${p.link}" target="_blank" style="margin:12px 14px 14px;border-radius:10px">📍 ABRIR LOCALIZAÇÃO NO MAPS</a>`:'';
   const fotos=typeof getFotosByNome==='function'?getFotosByNome(p.nome):[];
   if(fotos.length>0){
-    const extraStrip=fotos.length>1?`<div class="posto-fotos-strip">${fotos.slice(1).map(url=>`<img class="posto-foto-thumb" src="${url}" onclick="showPostoFotoViewer('${url}')" loading="lazy" alt="Foto do posto">`).join('')}</div>`:'''\';
-    const abastLabel=ip?`${p.ordem}º Parcial`:`${p.ordem}º Abast.`;
-    return `<div class="stop"><div class="stop-node ${ip?'parcial':''}"><div class="stop-node-dot"></div></div><div class="stop-km ${ip?'parcial':''}">KM ${p.km}</div><div class="scard"><div class="posto-hero"><img class="posto-hero-img" src="${fotos[0]}" loading="lazy" alt="${p.nome}" onclick="showPostoFotoViewer('${fotos[0]}')"><div class="posto-hero-overlay"></div><div class="posto-hero-badge-row"><span class="scard-brand-name" style="color:#fff;background:rgba(0,0,0,.45);padding:3px 8px;border-radius:20px;font-size:10px">${abastLabel}</span></div><div class="posto-hero-name">${p.nome}</div></div><div class="scard-body"><div class="scard-cidade">${p.cidade}</div>${d?`<div class="scard-details">${d}</div>`:''}${bt}<div class="badge-row">${cartaoBadge(p.cartao)}</div>${note}</div>${extraStrip}${link}</div></div>`;
+    const q="'";
+    const extra=fotos.length>1?`<div class="posto-fotos-strip">${fotos.slice(1).map(u=>`<img class="posto-foto-thumb" src="${u}" onclick="showPostoFotoViewer(${q}${u}${q})" loading="lazy" alt="Foto do posto">`).join('')}</div>`:'';
+    const lbl=ip?`${p.ordem}º Parcial`:`${p.ordem}º Abast.`;
+    const heroHtml=`<div class="posto-hero"><img class="posto-hero-img" src="${fotos[0]}" loading="lazy" alt="${p.nome}" onclick="showPostoFotoViewer(${q}${fotos[0]}${q})"><div class="posto-hero-overlay"></div><div class="posto-hero-badge-row"><span class="scard-brand-name" style="color:#fff;background:rgba(0,0,0,.45);padding:3px 8px;border-radius:20px;font-size:10px">${lbl}</span></div><div class="posto-hero-name">${p.nome}</div></div>`;
+    return `<div class="stop"><div class="stop-node ${ip?'parcial':''}"><div class="stop-node-dot"></div></div><div class="stop-km ${ip?'parcial':''}">KM ${p.km}</div><div class="scard">${heroHtml}<div class="scard-body"><div class="scard-cidade">${p.cidade}</div>${d?`<div class="scard-details">${d}</div>`:''}${bt}<div class="badge-row">${cartaoBadge(p.cartao)}</div>${note}</div>${extra}${link}</div></div>`;
   }
-  return `<div class="stop"><div class="stop-node ${ip?'parcial':''}"><div class="stop-node-dot"></div></div><div class="stop-km ${ip?'parcial':''}">KM ${p.km}</div><div class="scard"><div class="scard-body"><div class="scard-brand-row"><div class="scard-brand-dot" style="background:${ip?'#e8a020':'#fe2627'}"></div><span class="scard-brand-name">${ip?p.ordem+'º Abast. · Parcial':p.ordem+'º Abastecimento'}</span></div><div class="scard-nome">${p.nome}</div><div class="scard-cidade">${p.cidade}</div>${d?`<div class="scard-details">${d}</div>`:''}${bt}<div class="badge-row">${cartaoBadge(p.cartao)}</div>${note}</div>${link}</div></div>`}
-
+  return `<div class="stop"><div class="stop-node ${ip?'parcial':''}"><div class="stop-node-dot"></div></div><div class="stop-km ${ip?'parcial':''}">KM ${p.km}</div><div class="scard"><div class="scard-body"><div class="scard-brand-row"><div class="scard-brand-dot" style="background:${ip?'#e8a020':'#fe2627'}"></div><span class="scard-brand-name">${ip?p.ordem+' Abast. · Parcial':p.ordem+' Abastecimento'}</span></div><div class="scard-nome">${p.nome}</div><div class="scard-cidade">${p.cidade}</div>${d?`<div class="scard-details">${d}</div>`:''}${bt}<div class="badge-row">${cartaoBadge(p.cartao)}</div>${note}</div>${link}</div></div>`;
+}
 function renderAlt(a){let d=a.litragem?`<div class="scard-details"><div class="scard-detail">⛽ <strong>${a.litragem}</strong></div></div>`:'';let n=a.nota?`<div class="scard-note"><strong>Estratégia:</strong> ${a.nota}</div>`:'';let l=a.link?`<a class="rota-link" href="${a.link}" target="_blank" style="margin:12px 14px 14px;border-radius:10px">📍 ABRIR LOCALIZAÇÃO NO MAPS</a>`:'';return `<div class="ou-div"><div class="ou-line"></div><div class="ou-pill">OU</div><div class="ou-line"></div></div><div class="stop"><div class="stop-node parcial"><div class="stop-node-dot"></div></div><div class="stop-km parcial">KM ${a.km}</div><div class="scard dashed"><div class="scard-body"><div class="scard-brand-row"><div class="scard-brand-dot" style="background:#e8a020"></div><span class="scard-brand-name">Opção B</span></div><div class="scard-nome">${a.nome}</div><div class="scard-cidade">${a.cidade}</div>${d}<div class="badge-row">${cartaoBadge(a.cartao)}</div>${n}</div>${l}</div></div>`}
 
 function _copyRouteInfo(btn){
