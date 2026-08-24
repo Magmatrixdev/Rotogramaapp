@@ -149,8 +149,8 @@ async function doAdminLogin(){
   if(!u||!p){if(errEl){errEl.textContent='Preencha usuário e senha';errEl.style.display='block';setTimeout(()=>errEl.style.display='none',3000);}return;}
   if(btn){btn.disabled=true;btn.textContent='Aguarde...';}
   try{
+    adminMode=true; // Seta ANTES do signIn para evitar race com onAuthStateChanged
     await firebase.auth().signInWithEmailAndPassword(u,p);
-    adminMode=true;
     document.querySelector('.login-overlay')?.remove();
     if(typeof hideBottomNav==='function')hideBottomNav();
     renderAdmin();
@@ -160,11 +160,13 @@ async function doAdminLogin(){
       navPush('screenAdmin');
     }
   }catch(err){
+    adminMode=false; // Reseta se o login falhou
     console.error('Admin login error:',err);
     if(errEl){errEl.textContent='Usuário ou senha incorretos';errEl.style.display='block';setTimeout(()=>errEl.style.display='none',3000);}
   }finally{
     if(btn){btn.disabled=false;btn.textContent='ENTRAR';}
   }
 }
+
 
 
