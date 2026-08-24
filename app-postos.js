@@ -47,7 +47,7 @@ function initPostosListener(){
   if(!db)return;
   db.ref('postos').on('value',snap=>{
     postosAvulsos=snap.val()||{};
-    if(document.getElementById('screenPostos')?.classList.contains('active'))renderPostosList();
+    renderPostosList(); // sempre re-renderiza; seguro mesmo com tela oculta
   });
 }
 
@@ -132,7 +132,7 @@ function buildPostoCard(p){
   const lbl=getCartaoLabel(p.cartao);
   const maps=p.link?`<a class="postos-maps-btn" href="${p.link}" target="_blank"><i class="ti ti-map-pin" aria-hidden="true"></i> Maps</a>`:'';
 
-  const fotos=p._source==='avulso'?(p.fotos||[]):getFotosByNome(p.nome);
+  const fotos=(Array.isArray(p.fotos)&&p.fotos.length)?p.fotos:getFotosByNome(p.nome);
   const _nEnc=encodeURIComponent(p.nome||'');const _cEnc=encodeURIComponent(p.cidade||'');
   const editFotosBtn=adminMode
     ?`<button class="postos-edit-btn" onclick="editPostoFotosByKey('${_nEnc}','${_cEnc}')" aria-label="Editar fotos"><i class="ti ti-photo-edit" aria-hidden="true"></i></button>`:'';
@@ -400,4 +400,5 @@ function deletePostoAvulso(id){
     ov.remove();
   };
 }
+
 
