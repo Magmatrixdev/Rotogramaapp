@@ -109,20 +109,15 @@ function renderPostosList(){
     return norm(p.nome).includes(queryNorm)||norm(p.cidade).includes(queryNorm);
   }
 
-  const rotaList=extractPostosFromRoutes().filter(p=>matchFilter(p.cartao)&&matchQuery(p));
-  const avulsoList=Object.values(postosAvulsos).map(p=>({...p,_source:'avulso'})).filter(p=>matchFilter(p.cartao)&&matchQuery(p));
+  const dedup={};
+  extractPostosFromRoutes().forEach(p=>{const k=norm(p.nome)+'|'+norm(p.cidade);if(!dedup[k])dedup[k]=p;});
+  Object.values(postosAvulsos).forEach(p=>{const k=norm(p.nome)+'|'+norm(p.cidade);dedup[k]={...p,_source:'avulso'};});
+  const unified=Object.values(dedup).filter(p=>matchFilter(p.cartao)&&matchQuery(p)).sort((a,b)=>(a.nome||'').localeCompare(b.nome||'','pt'));
 
   let html='';
-  if(rotaList.length>0){
-    html+=`<div class="postos-section-label">Das rotas</div>`;
-    rotaList.forEach(p=>{html+=buildPostoCard(p);});
-  }
-  if(avulsoList.length>0){
-    if(rotaList.length>0)html+=`<div class="postos-divider"></div>`;
-    html+=`<div class="postos-section-label">Cadastrados avulsos</div>`;
-    avulsoList.forEach(p=>{html+=buildPostoCard(p);});
-  }
-  if(!rotaList.length&&!avulsoList.length){
+  if(unified.length>0){
+    unified.forEach(p=>{html+=buildPostoCard(p);});
+  } else {
     html=`<div class="postos-empty"><i class="ti ti-gas-station" aria-hidden="true"></i><p>Nenhum posto encontrado</p></div>`;
   }
 
@@ -136,9 +131,7 @@ function buildPostoCard(p){
   const cls=getCartaoClass(p.cartao);
   const lbl=getCartaoLabel(p.cartao);
   const maps=p.link?`<a class="postos-maps-btn" href="${p.link}" target="_blank"><i class="ti ti-map-pin" aria-hidden="true"></i> Maps</a>`:'';
-  const badge=p._source==='avulso'
-    ?`<span class="postos-tag ptag-avulso">Avulso</span>`
-    :`<span class="postos-tag ptag-rota">Rota ${p.rotaNumero}</span>`;
+
   const fotos=p._source==='avulso'?(p.fotos||[]):getFotosByNome(p.nome);
   const editBtn=(adminMode&&p._source==='avulso')
     ?`<button class="postos-edit-btn" onclick="showEditPostoFotos('${p.id}')" aria-label="Editar fotos"><i class="ti ti-photo-edit" aria-hidden="true"></i></button>`:'';
@@ -154,7 +147,6 @@ function buildPostoCard(p){
       <div class="posto-hero">
         <img class="posto-hero-img" src="${fotos[0]}" loading="lazy" alt="${p.nome}" onclick="showPostoFotoViewer('${fotos[0]}')">
         <div class="posto-hero-overlay"></div>
-        <div class="posto-hero-badge-row">${badge}</div>
         <div class="posto-hero-name">${p.nome}</div>
       </div>
       <div class="posto-card-body">
@@ -174,7 +166,7 @@ function buildPostoCard(p){
       <div><div class="postos-card-name">${p.nome}</div><div class="postos-card-city"><i class="ti ti-map-pin" style="font-size:11px" aria-hidden="true"></i> ${p.cidade}</div></div>
       <div style="display:flex;align-items:center;gap:6px">${editBtn}${del}${maps}</div>
     </div>
-    <div class="postos-card-tags">${badge}<span class="postos-tag ${cls}"><i class="ti ti-credit-card" style="font-size:11px" aria-hidden="true"></i> ${lbl}</span></div>
+    <div class="postos-card-tags"><span class="postos-tag ${cls}"><i class="ti ti-credit-card" style="font-size:11px" aria-hidden="true"></i> ${lbl}</span></div>
   </div>`;
 }
 
@@ -387,3 +379,4 @@ function deletePostoAvulso(id){
     ov.remove();
   };
 }
+
