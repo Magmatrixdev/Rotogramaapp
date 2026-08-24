@@ -134,8 +134,11 @@ function buildPostoCard(p){
 
   const fotos=p._source==='avulso'?(p.fotos||[]):getFotosByNome(p.nome);
   const _nEnc=encodeURIComponent(p.nome||'');const _cEnc=encodeURIComponent(p.cidade||'');
-  const editBtn=adminMode
+  const editFotosBtn=adminMode
     ?`<button class="postos-edit-btn" onclick="editPostoFotosByKey('${_nEnc}','${_cEnc}')" aria-label="Editar fotos"><i class="ti ti-photo-edit" aria-hidden="true"></i></button>`:'';
+  const editDadosBtn=adminMode
+    ?`<button class="postos-edit-btn" onclick="showEditPostoUnified('${_nEnc}','${_cEnc}')" aria-label="Editar dados" style="background:#2d5a27"><i class="ti ti-pencil" aria-hidden="true"></i></button>`:'';
+  const editBtn=editDadosBtn+editFotosBtn;
   const del=(adminMode&&p._source==='avulso'&&p.id)
     ?`<button class="postos-del-btn" onclick="deletePostoAvulso('${p.id}')" aria-label="Remover posto"><i class="ti ti-trash" aria-hidden="true"></i></button>`:'';
 
