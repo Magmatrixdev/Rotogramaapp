@@ -74,14 +74,14 @@
 
 /* form overlay */
 .postos-form-ov{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;display:flex;align-items:flex-end}
-.postos-form-box{background:#fff;border-radius:20px 20px 0 0;padding:24px 20px 40px;width:100%;display:flex;flex-direction:column;gap:14px;max-height:90vh;overflow-y:auto}
+.postos-form-box{background:#fff;border-radius:20px 20px 0 0;padding:24px 20px 0;width:100%;display:flex;flex-direction:column;gap:14px;max-height:90vh;overflow-y:auto}
 .postos-form-title{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:#1c1c1c;text-transform:uppercase;letter-spacing:.3px}
 .postos-form-field{display:flex;flex-direction:column;gap:6px}
 .postos-form-field label{font-size:11px;font-weight:700;color:#6b6a66;text-transform:uppercase;letter-spacing:.4px}
 .postos-form-field input,.postos-form-field select{padding:10px 12px;border:1px solid #d5d3cf;border-radius:8px;font-size:14px;font-family:'Barlow',sans-serif;color:#1c1c1c;outline:none;background:#fff}
 .postos-form-field input:focus,.postos-form-field select:focus{border-color:#1c1c1c}
 .postos-form-err{font-size:13px;color:#b71c1c;font-family:'Barlow',sans-serif}
-.postos-form-btns{display:flex;gap:10px;margin-top:4px}
+.postos-form-btns{display:flex;gap:10px;margin-top:4px;position:sticky;bottom:0;background:#fff;padding:8px 0 calc(env(safe-area-inset-bottom,0px) + 24px);z-index:1}
 .postos-form-cancel{flex:1;padding:12px;background:#eae8e3;color:#1c1c1c;border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;font-family:'Barlow',sans-serif}
 .postos-form-save{flex:1;padding:12px;background:#1c1c1c;color:#fff;border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;font-family:'Barlow',sans-serif}
 
@@ -106,3 +106,4 @@ body.desktop-mode #bottomNav{display:none!important}
 
 /* padding-bottom nas telas que usam o bottom nav */
 #screenHome .d-list-col{padding-bottom:64px}
+
