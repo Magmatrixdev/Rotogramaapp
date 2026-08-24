@@ -7,6 +7,7 @@ let monitorMap=null, monitorMarkers={}, monitorMapInit=false;
 // Mapbox specific
 let _mbTruckMarker=null, _mbStopMarkers=[], _mbMap=null;
 let _routeGeometry=[], _routeLayerDone=null, _routeLayerRest=null;
-let db=null, firebaseReady=false, isEditing=false, editingIndex=-1, editData={};
+let db=null, storage=null, firebaseReady=false, isEditing=false, editingIndex=-1, editData={};
 let notifications=[], notifPanelOpen=false;
 let adminMode=false, _cryptoKey=null;
+
