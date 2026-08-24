@@ -66,6 +66,16 @@
 .posto-foto-modal img{max-width:95vw;max-height:88vh;border-radius:10px;object-fit:contain}
 .posto-foto-modal button{position:absolute;top:20px;right:20px;background:rgba(255,255,255,.18);color:#fff;border:none;width:40px;height:40px;border-radius:50%;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 
+
+/* ─── autocomplete form posto avulso ─── */
+.pf-ac-wrap{position:relative}
+.pf-ac-list{position:absolute;top:calc(100% + 3px);left:0;right:0;background:#fff;border:1px solid #d5d3cf;border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.13);z-index:400;max-height:210px;overflow-y:auto}
+.pf-ac-item{padding:10px 12px;cursor:pointer;display:flex;flex-direction:column;gap:2px;border-bottom:1px solid #f0eeea}
+.pf-ac-item:last-child{border-bottom:none}
+.pf-ac-item:hover,.pf-ac-item:active{background:#f8f7f4}
+.pf-ac-name{font-size:13px;font-weight:600;color:#1c1c1c;font-family:'Barlow',sans-serif}
+.pf-ac-city{font-size:11px;color:#9a9894}
+
 /* FAB admin */
 .postos-fab{position:fixed;bottom:74px;right:20px;width:52px;height:52px;background:#1c1c1c;color:#fff;border:none;border-radius:50%;font-size:24px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,.25)}
 .postos-fab:active{transform:scale(.95)}
