@@ -178,36 +178,6 @@ function buildPostoCard(p){
   </div>`;
 }
 
-// ─── autocomplete nome posto no form avulso ───
-function _pfShowAC(val){
-  const ac=document.getElementById('pfNomeAC');
-  if(!ac)return;
-  const norm=s=>(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-  const q=norm(val);
-  if(!q||q.length<2){ac.style.display='none';return;}
-  const postos=extractPostosFromRoutes();
-  const seen=new Set();
-  const matches=postos.filter(p=>{
-    if(seen.has(p.nome))return false;
-    if(norm(p.nome).includes(q)){seen.add(p.nome);return true;}
-    return false;
-  }).slice(0,7);
-  if(!matches.length){ac.style.display='none';return;}
-  ac.innerHTML=matches.map(p=>`<div class="pf-ac-item" onmousedown="_pfSelectPosto('${p.nome.replace(/'/g,"\\'")}','${(p.cidade||'').replace(/'/g,"\\'")}')"><span class="pf-ac-name">${p.nome}</span><span class="pf-ac-city">${p.cidade||''}</span></div>`).join('');
-  ac.style.display='block';
-}
-function _pfCloseAC(){
-  const ac=document.getElementById('pfNomeAC');
-  if(ac)ac.style.display='none';
-}
-function _pfSelectPosto(nome,cidade){
-  const n=document.getElementById('pfNome');
-  const c=document.getElementById('pfCidade');
-  if(n)n.value=nome;
-  if(c)c.value=cidade;
-  _pfCloseAC();
-}
-
 function filterPostos(){renderPostosList();}
 
 function setPostosFilter(el,filter){
@@ -262,7 +232,7 @@ function showAddPostoForm(){
   ov.className='postos-form-ov';
   ov.innerHTML=`<div class="postos-form-box">
     <div class="postos-form-title">Novo posto avulso</div>
-    <div class="postos-form-field"><label>Nome</label><div class="pf-ac-wrap"><input id="pfNome" placeholder="Ex: Posto Boa Viagem" oninput="_pfShowAC(this.value)" autocomplete="off"><div id="pfNomeAC" class="pf-ac-list" style="display:none"></div></div></div>
+    <div class="postos-form-field"><label>Nome</label><input id="pfNome" placeholder="Ex: Posto Boa Viagem"></div>
     <div class="postos-form-field"><label>Cidade</label><input id="pfCidade" placeholder="Ex: Goiânia — GO"></div>
     <div class="postos-form-field"><label>Cartão</label>
       <select id="pfCartao">
