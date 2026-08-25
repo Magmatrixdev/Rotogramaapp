@@ -53,7 +53,6 @@ function initPostosListener(){
 
 // ─── navegação ───
 function showPostos(){
-  if(!_postosListenerInit){initPostosListener();_postosListenerInit=true;}
   navPush('screenPostos');
   renderPostosList();
   updateBottomNav('Postos');
@@ -114,13 +113,7 @@ function renderPostosList(){
   const dedup={};
   extractPostosFromRoutes().forEach(p=>{const k=norm(p.nome)+'|'+norm(p.cidade);if(!dedup[k])dedup[k]=p;});
   Object.values(postosAvulsos).forEach(p=>{const k=norm(p.nome)+'|'+norm(p.cidade);dedup[k]={...p,_source:'avulso'};});
-  const unified=Object.values(dedup).filter(p=>matchFilter(p.cartao)&&matchQuery(p)).sort((a,b)=>{
-    const af=Array.isArray(a.fotos)&&a.fotos.length>0;
-    const bf=Array.isArray(b.fotos)&&b.fotos.length>0;
-    if(af&&!bf)return -1;
-    if(!af&&bf)return 1;
-    return(a.nome||'').localeCompare(b.nome||'','pt');
-  });
+  const unified=Object.values(dedup).filter(p=>matchFilter(p.cartao)&&matchQuery(p)).sort((a,b)=>(a.nome||'').localeCompare(b.nome||'','pt'));
 
   let html='';
   if(unified.length>0){
