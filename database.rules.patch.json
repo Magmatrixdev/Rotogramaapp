@@ -1,0 +1,39 @@
+NOTAS SOBRE AS MUDANÇAS NAS REGRAS DO BANCO:
+
+1. Em /motoristas: adicionar .indexOn para suportar query orderByChild('cpfHmac')
+2. Adicionar nó /motoristas-secure: leitura e escrita bloqueadas para clientes (apenas Cloud Functions via Admin SDK)
+3. Adicionar nó /rateLimits: idem — apenas Cloud Functions
+4. Adicionar nó /audit: escrita apenas Cloud Functions; leitura apenas admin
+
+Trecho a inserir em /motoristas (antes de "$id"):
+
+  "motoristas": {
+    ".indexOn": ["cpfHmac"],     ← NOVO
+    ...resto igual...
+  }
+
+Nós novos a adicionar após /config:
+
+    "motoristas-secure": {
+      ".read":  false,
+      ".write": false
+    },
+
+    "rateLimits": {
+      ".read":  false,
+      ".write": false
+    },
+
+    "audit": {
+      ".read":  "auth !== null && auth.token.admin === true",
+      ".write": false,
+      "$uid": {
+        "$entry": {
+          ".validate": "newData.hasChildren(['action','byUid','ts'])",
+          "action":  { ".validate": "newData.isString() && newData.val().length <= 50" },
+          "byUid":   { ".validate": "newData.isString() && newData.val().length <= 128" },
+          "ts":      { ".validate": "newData.isNumber() && newData.val() > 0" },
+          "$outros": { ".validate": false }
+        }
+      }
+    }
