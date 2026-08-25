@@ -55,6 +55,7 @@ function initFirebase(){
 
     db.ref('viagens').on('value',snap=>{const d=snap.val();viagens=d||{};checkActiveTrip();renderMonitoring();renderBI();});
     db.ref('posicoes').on('value',snap=>{const d=snap.val();posicoes=d||{};updateMonitorMap();renderMonitoring();});
+    db.ref('postos').on('value',snap=>{postosAvulsos=snap.val()||{};if(typeof renderPostosList==='function')renderPostosList();});
 
     // ═══ NOTIFICATIONS LISTENER ═══
     const _notifListenerStart=Date.now();
