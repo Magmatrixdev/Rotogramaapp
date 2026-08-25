@@ -56,8 +56,11 @@ function showPostos(){
   navPush('screenPostos');
   renderPostosList();
   updateBottomNav('Postos');
+  // Reseta scroll do container interno para garantir que cards com foto (topo da lista) fiquem visíveis
+  const _resetListScroll=()=>{const l=document.querySelector('#screenPostos .postos-list');if(l)l.scrollTop=0;};
+  _resetListScroll();
   // Re-render garantido após Firebase responder (async) — cobre casos de cache frio
-  setTimeout(renderPostosList, 600);
+  setTimeout(()=>{renderPostosList();_resetListScroll();},600);
 }
 
 // ─── bottom nav ───
@@ -417,6 +420,7 @@ function deletePostoAvulso(id){
     ov.remove();
   };
 }
+
 
 
 
