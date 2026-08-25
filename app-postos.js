@@ -168,7 +168,7 @@ function buildPostoCard(p){
       ?`<div class="posto-fotos-strip">${fotos.slice(1).map(url=>`<img class="posto-foto-thumb" src="${url}" onclick="showPostoFotoViewer('${url}')" loading="lazy" alt="Foto do posto">`).join('')}</div>`
       :'';
     return `<div class="postos-card postos-card--hero">
-      <div class="posto-hero">
+      <div class="posto-hero" style="height:130px;min-height:130px">
         <img class="posto-hero-img" src="${fotos[0]}" loading="eager" alt="${p.nome}" onclick="showPostoFotoViewer('${fotos[0]}')">
         <div class="posto-hero-overlay"></div>
         <div class="posto-hero-name">${p.nome}</div>
