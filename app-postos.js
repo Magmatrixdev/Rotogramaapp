@@ -113,7 +113,13 @@ function renderPostosList(){
   const dedup={};
   extractPostosFromRoutes().forEach(p=>{const k=norm(p.nome)+'|'+norm(p.cidade);if(!dedup[k])dedup[k]=p;});
   Object.values(postosAvulsos).forEach(p=>{const k=norm(p.nome)+'|'+norm(p.cidade);dedup[k]={...p,_source:'avulso'};});
-  const unified=Object.values(dedup).filter(p=>matchFilter(p.cartao)&&matchQuery(p)).sort((a,b)=>(a.nome||'').localeCompare(b.nome||'','pt'));
+  const unified=Object.values(dedup).filter(p=>matchFilter(p.cartao)&&matchQuery(p)).sort((a,b)=>{
+    const af=Array.isArray(a.fotos)&&a.fotos.filter(Boolean).length>0;
+    const bf=Array.isArray(b.fotos)&&b.fotos.filter(Boolean).length>0;
+    if(af&&!bf)return -1;
+    if(!af&&bf)return 1;
+    return(a.nome||'').localeCompare(b.nome||'','pt');
+  });
 
   let html='';
   if(unified.length>0){
@@ -133,7 +139,8 @@ function buildPostoCard(p){
   const lbl=getCartaoLabel(p.cartao);
   const maps=p.link?`<a class="postos-maps-btn" href="${p.link}" target="_blank"><i class="ti ti-map-pin" aria-hidden="true"></i> Maps</a>`:'';
 
-  const fotos=(Array.isArray(p.fotos)&&p.fotos.length)?p.fotos:getFotosByNome(p.nome);
+  const _rawFotos=Array.isArray(p.fotos)?p.fotos.filter(Boolean):[];
+  const fotos=_rawFotos.length>0?_rawFotos:getFotosByNome(p.nome).filter(Boolean);
   const _nEnc=encodeURIComponent(p.nome||'');const _cEnc=encodeURIComponent(p.cidade||'');
   const editFotosBtn=adminMode
     ?`<button class="postos-edit-btn" onclick="editPostoFotosByKey('${_nEnc}','${_cEnc}')" aria-label="Editar fotos"><i class="ti ti-photo-edit" aria-hidden="true"></i></button>`:'';
@@ -150,7 +157,7 @@ function buildPostoCard(p){
       :'';
     return `<div class="postos-card postos-card--hero">
       <div class="posto-hero">
-        <img class="posto-hero-img" src="${fotos[0]}" loading="lazy" alt="${p.nome}" onclick="showPostoFotoViewer('${fotos[0]}')">
+        <img class="posto-hero-img" src="${fotos[0]}" loading="eager" alt="${p.nome}" onclick="showPostoFotoViewer('${fotos[0]}')">
         <div class="posto-hero-overlay"></div>
         <div class="posto-hero-name">${p.nome}</div>
       </div>
