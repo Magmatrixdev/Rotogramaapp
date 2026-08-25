@@ -113,11 +113,21 @@ function renderPostosList(){
     return norm(p.nome).includes(queryNorm)||norm(p.cidade).includes(queryNorm);
   }
 
+  // Dedup por NOME apenas — evita duplicatas de postos com mesma nome mas
+  // cidade levemente diferente entre rotas (ex: "Goiânia - GO" vs "Goiânia—GO")
   const dedup={};
-  extractPostosFromRoutes().forEach(p=>{const k=norm(p.nome)+'|'+norm(p.cidade);if(!dedup[k])dedup[k]=p;});
-  Object.values(postosAvulsos).forEach(p=>{const k=norm(p.nome)+'|'+norm(p.cidade);dedup[k]={...p,_source:'avulso'};});
-  // Enriquece entradas de rota sem fotos buscando avulso pelo nome (fallback para quando cidade difere)
-  // Garante que o sort e o render usem fotos consistentemente na listagem completa
+  // Pass 1: postos das rotas — nome como chave, primeiro encontrado vence
+  extractPostosFromRoutes().forEach(p=>{
+    const k=norm(p.nome);
+    if(!dedup[k])dedup[k]=p;
+  });
+  // Pass 2: avulsos do Firebase — têm prioridade (podem ter fotos e dados ricos)
+  Object.values(postosAvulsos).forEach(p=>{
+    const k=norm(p.nome);
+    // Mescla: avulso sobrescreve campos definidos; campos da rota servem de fallback
+    dedup[k]={...(dedup[k]||{}),...p,_source:'avulso'};
+  });
+  // Pass 3: enriquece entradas de rota sem fotos usando avulso de mesmo nome
   Object.keys(dedup).forEach(k=>{
     const entry=dedup[k];
     if(entry._source==='rota'&&(!Array.isArray(entry.fotos)||!entry.fotos.filter(Boolean).length)){
@@ -282,8 +292,9 @@ async function savePostoAvulso(){
   const btn=document.querySelector('.postos-form-ov .postos-form-save');
   if(!nome||!cidade){errEl.textContent='Nome e cidade são obrigatórios';errEl.style.display='block';return;}
   const norm=s=>(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-  const dup=Object.values(postosAvulsos).find(p=>norm(p.nome)===norm(nome)&&norm(p.cidade)===norm(cidade));
-  if(dup){errEl.textContent='Posto já cadastrado com esse nome e cidade.';errEl.style.display='block';return;}
+  // Checa duplicata por nome apenas (consistente com dedup do frontend)
+  const dup=Object.values(postosAvulsos).find(p=>norm(p.nome)===norm(nome));
+  if(dup){errEl.textContent='Já existe um posto com este nome ('+dup.cidade+').';errEl.style.display='block';return;}
   if(btn){btn.disabled=true;btn.textContent='Salvando...';}
   const id='posto_'+Date.now();
   const posto={id,nome,cidade,cartao,link,criadoEm:Date.now()};
