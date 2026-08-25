@@ -7,14 +7,35 @@ function initFirebase(){
     if(firebase.storage)storage=firebase.storage();
 
     // ═══ AUTH STATE ═══
-    // Não restaura sessão admin automaticamente — Firebase Auth persiste em LOCAL por padrão,
-    // o que faz o app abrir sempre no admin após o primeiro login.
-    // Admin deve fazer login manual a cada abertura do app.
-    firebase.auth().onAuthStateChanged(function(user){
-      if(user&&!adminMode){
-        // Sessão persistida encontrada — desconectar silenciosamente
-        firebase.auth().signOut().catch(()=>{});
+    firebase.auth().onAuthStateChanged(async function(user){
+      if(!USE_NEW_AUTH){
+        // Legado: derruba qualquer sessão Firebase Auth que não seja do admin
+        if(user&&!adminMode){firebase.auth().signOut().catch(()=>{});}
+        return;
       }
+      // ── USE_NEW_AUTH = true ────────────────────────────────────────────
+      if(!user){
+        // Sessão encerrada — limpa motorista; admin gerencia próprio estado
+        if(!adminMode)currentDriver=null;
+        return;
+      }
+      // Verifica claim admin
+      const tok=await user.getIdTokenResult().catch(()=>null);
+      if(tok?.claims?.admin){
+        adminMode=true; // já setado em doAdminLogin, mas garante aqui
+        return;
+      }
+      // ── Motorista autenticado via custom token ─────────────────────────
+      currentDriver={uid:user.uid,nome:user.displayName||''};
+      if(db){
+        // Ouve apenas o próprio nó — não acessa a coleção inteira
+        db.ref('motoristas/'+user.uid).on('value',snap=>{
+          const d=snap.val();
+          if(d)currentDriver={uid:user.uid,...d};
+        });
+      }
+      // Navega para home se ainda estiver na tela de login
+      if(!_navStack.length||_navStack[_navStack.length-1]==='screenDriverLogin'){showHome();}
     });
 
     // ═══ VERIFICAÇÃO DE VERSÃO (força update em iOS e todos os devices) ═══
@@ -45,6 +66,8 @@ function initFirebase(){
     },err=>{setSyncStatus('err','Erro Firebase — dados locais');loadLocal()});
 
     db.ref('motoristas').on('value',snap=>{
+      // USE_NEW_AUTH: motoristas não-admin não têm acesso à coleção inteira
+      if(USE_NEW_AUTH&&!adminMode)return;
       const fbData=snap.val()||{};
       const localPending=JSON.parse(localStorage.getItem('drivers_local')||'{}');
       drivers={...fbData};

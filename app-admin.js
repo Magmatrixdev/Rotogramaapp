@@ -61,6 +61,22 @@ async function doAddDriverAdmin(){
   if(cpfRaw.length!==11){showErr('CPF inválido');return;}
   if(pin.length!==4||!/^\d{4}$/.test(pin)){showErr('PIN deve ter 4 dígitos numéricos');return;}
   if(btn){btn.disabled=true;btn.textContent='Salvando...';}
+  // ── USE_NEW_AUTH: cadastro via Cloud Function ─────────────────────────
+  if(USE_NEW_AUTH){
+    try{
+      const fn=firebase.functions().httpsCallable('registerDriver');
+      await fn({nome,cpf:cpfRaw,pin});
+      document.querySelector('.driver-modal-overlay')?.remove();
+      showToast('✅ Motorista cadastrado com sucesso');
+      renderDriverManager();
+    }catch(err){
+      const code=err.code||'';
+      if(code==='functions/already-exists'){showErr('CPF já cadastrado');}
+      else{showErr('Erro: '+(err.message||'tente novamente'));}
+    }finally{if(btn){btn.disabled=false;btn.textContent='Cadastrar';}}
+    return;
+  }
+  // ── Fluxo legado ─────────────────────────────────────────────────────
   try{
     const hashFn=(!window.crypto||!window.crypto.subtle)?sha256Fallback:sha256;
     const cpfHash=await hashFn(cpfRaw);
@@ -154,8 +170,8 @@ async function renderDriverCards(){
     let statusClass='status-active',statusTxt='Ativo';
     if(d.bloqueado){statusClass='status-blocked';statusTxt='Bloqueado';}
     else if(isOnTrip){statusClass='status-traveling';statusTxt='🚛 Em viagem';}
-    let cpfMask='***.***.***-**';
-    try{const cpf=await decryptCPF(d.cpfEnc);if(cpf&&cpf.length===11)cpfMask=cpf.slice(0,3)+'.'+cpf.slice(3,6)+'.'+cpf.slice(6,9)+'-'+cpf.slice(9);}catch(e){}
+    const cpfMask='***.***.***-**'; // CPF nunca decifrado no cliente — use botão Ver CPF
+    const driverId=d.id||d.uid||'';
     h+=`<div class="driver-card ${d.bloqueado?'blocked':''}">
       <div class="driver-card-head">
         <div class="driver-card-avatar">${initials}</div>
@@ -167,9 +183,10 @@ async function renderDriverCards(){
       </div>
       <div class="driver-card-meta">Último acesso: ${lastAccess}</div>
       <div class="driver-card-actions">
-        <button class="driver-btn driver-btn-edit" onclick="showEditDriverModal('${d.id}')">✏️ Editar</button>
-        <button class="driver-btn ${d.bloqueado?'driver-btn-unblock':'driver-btn-block'}" onclick="toggleBlockDriver('${d.id}',${d.bloqueado})">${d.bloqueado?'🔓 Desbloquear':'🔒 Bloquear'}</button>
-        <button class="driver-btn driver-btn-del" onclick="deleteDriver('${d.id}')">🗑️ Excluir</button>
+        <button class="driver-btn driver-btn-edit" onclick="showEditDriverModal('${driverId}')">✏️ Editar</button>
+        <button class="driver-btn driver-btn-cpf" onclick="viewDriverCPF('${driverId}','${esc(d.nome)}')">👁 Ver CPF</button>
+        <button class="driver-btn ${d.bloqueado?'driver-btn-unblock':'driver-btn-block'}" onclick="toggleBlockDriver('${driverId}',${d.bloqueado})">${d.bloqueado?'🔓 Desbloquear':'🔒 Bloquear'}</button>
+        <button class="driver-btn driver-btn-del" onclick="deleteDriver('${driverId}')">🗑️ Excluir</button>
       </div>
     </div>`;
   }
