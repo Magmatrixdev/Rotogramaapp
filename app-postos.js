@@ -113,6 +113,15 @@ function renderPostosList(){
   const dedup={};
   extractPostosFromRoutes().forEach(p=>{const k=norm(p.nome)+'|'+norm(p.cidade);if(!dedup[k])dedup[k]=p;});
   Object.values(postosAvulsos).forEach(p=>{const k=norm(p.nome)+'|'+norm(p.cidade);dedup[k]={...p,_source:'avulso'};});
+  // Enriquece entradas de rota sem fotos buscando avulso pelo nome (fallback para quando cidade difere)
+  // Garante que o sort e o render usem fotos consistentemente na listagem completa
+  Object.keys(dedup).forEach(k=>{
+    const entry=dedup[k];
+    if(entry._source==='rota'&&(!Array.isArray(entry.fotos)||!entry.fotos.filter(Boolean).length)){
+      const fotos=getFotosByNome(entry.nome);
+      if(fotos.length>0)dedup[k]={...entry,fotos};
+    }
+  });
   const unified=Object.values(dedup).filter(p=>matchFilter(p.cartao)&&matchQuery(p)).sort((a,b)=>{
     const af=Array.isArray(a.fotos)&&a.fotos.filter(Boolean).length>0;
     const bf=Array.isArray(b.fotos)&&b.fotos.filter(Boolean).length>0;
@@ -408,6 +417,7 @@ function deletePostoAvulso(id){
     ov.remove();
   };
 }
+
 
 
 
