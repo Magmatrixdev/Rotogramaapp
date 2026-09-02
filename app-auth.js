@@ -1,5 +1,5 @@
 // ═══ DRIVER AUTH ═══
-const SESSION_EXPIRY_MS=30*24*60*60*1000; // 30 dias
+const SESSION_EXPIRY_MS=30*60*1000; // 30 minutos
 async function doDriverRegister(){
   const nome=(document.getElementById('dRegNome')?.value||'').trim();
   const cpfRaw=cleanCPF(document.getElementById('dRegCPF')?.value||'');
