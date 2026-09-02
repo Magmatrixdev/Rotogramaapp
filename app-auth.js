@@ -1,4 +1,5 @@
 // ═══ DRIVER AUTH ═══
+const SESSION_EXPIRY_MS=30*24*60*60*1000; // 30 dias
 async function doDriverRegister(){
   const nome=(document.getElementById('dRegNome')?.value||'').trim();
   const cpfRaw=cleanCPF(document.getElementById('dRegCPF')?.value||'');
@@ -38,9 +39,11 @@ async function doDriverRegister(){
       const pinHash=await sha256Fallback(pin);
       const id='drv_'+Date.now();
       const driver={id,nome,cpfHash,cpfEnc:btoa(cpfRaw),pinHash,bloqueado:false,criadoEm:Date.now(),ultimoAcesso:Date.now()};
-      if(db)await db.ref('motoristas/'+id).set(driver);
-      currentDriver=driver;
-      localStorage.setItem('drv_session',JSON.stringify({id,nome,pinHash}));
+      if(!db){showErr('Sem conexão com o servidor. Verifique sua internet e tente novamente.');return;}
+      await db.ref('motoristas/'+id).set(driver);
+      drivers[id]=driver;
+      currentDriver={id,nome};
+      localStorage.setItem('drv_session',JSON.stringify({id,nome,loginAt:Date.now()}));
       showHome();return;
     }
     const cpfHash=await sha256(cpfRaw);
@@ -50,11 +53,11 @@ async function doDriverRegister(){
     const cpfEnc=await encryptCPF(cpfRaw);
     const id='drv_'+Date.now();
     const driver={id,nome,cpfHash,cpfEnc,pinHash,bloqueado:false,criadoEm:Date.now(),ultimoAcesso:Date.now()};
+    if(!db){showErr('Sem conexão com o servidor. Verifique sua internet e tente novamente.');return;}
+    await db.ref('motoristas/'+id).set(driver);
     drivers[id]=driver;
-    localStorage.setItem('drivers_local',JSON.stringify(Object.assign(JSON.parse(localStorage.getItem('drivers_local')||'{}'),{[id]:driver})));
-    currentDriver=driver;
-    localStorage.setItem('drv_session',JSON.stringify({id,nome,pinHash}));
-    if(db){db.ref('motoristas/'+id).set(driver).catch(e=>console.warn('Firebase sync pending:',e));}
+    currentDriver={id,nome};
+    localStorage.setItem('drv_session',JSON.stringify({id,nome,loginAt:Date.now()}));
     showSuccessMessage(nome);
   }catch(err){
     console.error('Erro no cadastro:',err);
@@ -100,7 +103,7 @@ async function doDriverLogin(){
     if(driver.bloqueado){showErr('Conta bloqueada. Contate o administrador.');return;}
     currentDriver=driver;
     if(db)db.ref('motoristas/'+driver.id+'/ultimoAcesso').set(Date.now());
-    if(document.getElementById('saveCreds')?.checked){localStorage.setItem('drv_session',JSON.stringify({id:driver.id,nome:driver.nome,pinHash}));}
+    if(document.getElementById('saveCreds')?.checked){localStorage.setItem('drv_session',JSON.stringify({id:driver.id,nome:driver.nome,loginAt:Date.now()}));}
     showHome();
   }catch(err){
     console.error('Erro no login:',err);
@@ -112,9 +115,13 @@ async function doDriverLogin(){
 
 function loadDriverSession(){
   try{
+    if(USE_NEW_AUTH)return false; // Firebase Auth gerencia sessão via onAuthStateChanged
     const s=JSON.parse(localStorage.getItem('drv_session'));
     if(!s||!s.id)return false;
-    currentDriver={id:s.id,nome:s.nome,pinHash:s.pinHash,_fromSession:true};
+    if(s.loginAt&&Date.now()-s.loginAt>SESSION_EXPIRY_MS){
+      localStorage.removeItem('drv_session');return false;
+    }
+    currentDriver={id:s.id,nome:s.nome,_fromSession:true};
     return true;
   }catch(e){return false;}
 }
@@ -126,15 +133,16 @@ function verifyDriverSession(){
     setTimeout(verifyDriverSession,1500);
     return;
   }
-  if(!d||d.bloqueado||d.pinHash!==currentDriver.pinHash){
+  if(!d||d.bloqueado){
     currentDriver=null;localStorage.removeItem('drv_session');showDriverLogin();return;
   }
-  currentDriver=d;
+  currentDriver={...d,_fromSession:false};
 }
 
 function logoutDriver(){
   currentDriver=null;adminMode=false;
   localStorage.removeItem('drv_session');
+  localStorage.removeItem('drivers_local'); // limpa cache legado com dados sensíveis
   firebase.auth().signOut().catch(()=>{});
   if(typeof hideBottomNav==='function')hideBottomNav();
   navReset('screenDriverLogin');
