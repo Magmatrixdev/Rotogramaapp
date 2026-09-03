@@ -360,3 +360,45 @@ export const changePIN = onCall(
     return { success: true };
   }
 );
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// bootstrapAdminClaim
+// Callable: {} (sem parâmetros)
+// Requer: caller autenticado com email === ADMIN_EMAIL
+// Seta admin=true no próprio UID — idempotente, seguro para chamar múltiplas vezes
+// ─────────────────────────────────────────────────────────────────────────────
+const ADMIN_EMAIL = 'pedrosgj@gmail.com';
+
+export const bootstrapAdminClaim = onCall(
+  { region: 'us-central1' },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError('unauthenticated', 'Login necessário.');
+    }
+
+    const email = request.auth.token['email'] as string | undefined;
+    if (email !== ADMIN_EMAIL) {
+      throw new HttpsError('permission-denied', 'Não autorizado.');
+    }
+
+    const uid = request.auth.uid;
+
+    // Idempotente: se claim já existe, apenas confirma
+    const userRecord = await admin.auth().getUser(uid);
+    if ((userRecord.customClaims as Record<string, unknown> | null)?.['admin']) {
+      return { success: true, alreadySet: true };
+    }
+
+    await admin.auth().setCustomUserClaims(uid, { admin: true });
+
+    // Auditoria
+    await admin.database().ref(`audit/${uid}`).push({
+      action: 'bootstrapAdminClaim',
+      byUid: uid,
+      ts: Date.now(),
+    });
+
+    return { success: true, alreadySet: false };
+  }
+);
