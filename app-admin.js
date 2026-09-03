@@ -295,7 +295,18 @@ function switchAdminTab(tab,el){
   const paneMap={routes:'adminTabRoutes',drivers:'adminTabDrivers',monitor:'adminTabMonitor',bi:'adminTabBI',postos:'adminTabPostos'};
   const pane=document.getElementById(paneMap[tab]);if(pane)pane.classList.add('active');
   if(tab==='routes')renderAdmin();
-  else if(tab==='drivers')renderDriverManager();
+  else if(tab==='drivers'){
+    // Fallback: se drivers ainda vazio (listener disparou antes de adminMode=true),
+    // re-busca do Firebase antes de renderizar
+    if(db&&adminMode&&Object.keys(drivers).length===0){
+      db.ref('motoristas').once('value',snap=>{
+        drivers=snap.val()||{};
+        renderDriverManager();
+      }).catch(()=>renderDriverManager());
+    }else{
+      renderDriverManager();
+    }
+  }
   else if(tab==='monitor'){renderMonitoring();}
   else if(tab==='bi')renderBI();
   else if(tab==='postos'){if(!_postosListenerInit){initPostosListener();_postosListenerInit=true;}renderAdminPostos();}
