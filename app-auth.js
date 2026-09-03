@@ -244,8 +244,15 @@ async function doAdminLogin(){
   try{
     adminMode=true; // Seta ANTES do signIn para evitar race com onAuthStateChanged
     await firebase.auth().signInWithEmailAndPassword(u,p);
-    // Força refresh do token para garantir que custom claim admin=true
-    // esteja presente mesmo que a sessão anterior fosse de antes do claim ser setado
+    // Seta o custom claim admin=true (idempotente: seguro chamar sempre).
+    // bootstrapAdminClaim verifica que o caller tem email=ADMIN_EMAIL antes de setar.
+    // Após setar, força refresh do token para o claim aparecer imediatamente.
+    try{
+      const bsFn=firebase.functions().httpsCallable('bootstrapAdminClaim');
+      await bsFn({});
+      console.log('[admin] bootstrapAdminClaim ok');
+    }catch(bsErr){console.warn('[admin] bootstrapAdminClaim:',bsErr);}
+    // Força refresh do token (com ou sem bootstrapAdminClaim) para capturar o claim
     try{await firebase.auth().currentUser?.getIdToken(true);}catch(_){}
     document.querySelector('.login-overlay')?.remove();
     if(typeof hideBottomNav==='function')hideBottomNav();
