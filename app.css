@@ -401,6 +401,50 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .d-body-row{display:contents}/* sem layout proprio — só agrupa HTML */
 .d-content{display:contents}
 
+
+/* ── Admin Postos Cards ── */
+.ap-topbar{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.ap-search-box{flex:1;display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid #e4e2dd;border-radius:10px;padding:0 14px;height:42px;transition:border-color .2s}
+.ap-search-box:focus-within{border-color:#1B6B3A}
+.ap-search-input{flex:1;border:none;outline:none;font-family:'Barlow',sans-serif;font-size:14px;background:transparent;color:#1c1c1c}
+.ap-search-input::placeholder{color:#b5b3af}
+.ap-search-icon{font-size:16px;color:#9a9894;flex-shrink:0}
+.ap-search-clear{background:none;border:none;font-size:16px;color:#9a9894;cursor:pointer;padding:4px;display:none}
+.ap-search-clear.visible{display:block}
+.ap-add-btn{display:flex;align-items:center;gap:7px;background:#1B6B3A;color:#fff;border:none;border-radius:10px;padding:0 18px;height:42px;font-family:'Barlow',sans-serif;font-size:13px;font-weight:700;white-space:nowrap;cursor:pointer;flex-shrink:0}
+.ap-add-btn:active{background:#165730}
+.ap-add-btn i{font-size:16px}
+.ap-list{display:flex;flex-direction:column;gap:8px}
+.ap-card{background:#fff;border:1.5px solid #e8e6e1;border-radius:12px;display:flex;align-items:stretch;overflow:hidden}
+.ap-thumb{width:80px;min-height:72px;flex-shrink:0;background:#e8f5e9;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.ap-thumb--blue{background:#e3f2fd}
+.ap-thumb-img{width:100%;height:100%;object-fit:cover;display:block;position:absolute;top:0;left:0}
+.ap-thumb-icon{display:flex;align-items:center;justify-content:center;width:100%;height:100%}
+.ap-thumb-icon i{font-size:28px;color:#4CAF50}
+.ap-thumb--blue .ap-thumb-icon i{color:#1565C0}
+.ap-photo-badge{position:absolute;bottom:4px;right:4px;background:rgba(0,0,0,0.55);color:#fff;font-size:10px;border-radius:5px;padding:2px 5px;display:flex;align-items:center;gap:2px;z-index:1}
+.ap-photo-badge i{font-size:11px}
+.ap-body{flex:1;padding:10px 14px;min-width:0;display:flex;flex-direction:column;justify-content:center}
+.ap-name{font-weight:700;font-size:14px;color:#1c1c1c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:5px}
+.ap-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.ap-loc{font-family:'Barlow',sans-serif;font-size:12px;color:#8a8886;display:flex;align-items:center;gap:3px}
+.ap-loc i{font-size:13px}
+.ap-route-tag{font-size:11px;color:#9a9894;background:#f0efeb;padding:2px 7px;border-radius:8px}
+.ap-actions{display:flex;align-items:center;gap:4px;padding:10px 12px;flex-shrink:0}
+.ap-btn{display:flex;align-items:center;gap:5px;border:1.5px solid #e8e6e1;border-radius:7px;padding:6px 10px;font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;color:#555;cursor:pointer;background:#fff;white-space:nowrap;text-decoration:none}
+.ap-btn i{font-size:13px}
+.ap-btn:active{background:#f0efeb}
+.ap-btn--maps{color:#1565C0;border-color:#bbdefb}
+.ap-btn--maps:active{background:#e3f2fd}
+.ap-btn--green{background:#1B6B3A;border-color:#1B6B3A;color:#fff}
+.ap-btn--green:active{background:#165730}
+.ap-btn--danger{color:#c62828;border-color:rgba(198,40,40,0.2)}
+.ap-btn--danger:active{background:#fbe9e7}
+.ap-sep{width:1px;height:30px;background:#e8e6e1;flex-shrink:0;margin:0 2px}
+body.desktop-mode .ap-card{border-radius:10px;transition:border-color .15s}
+body.desktop-mode .ap-card:hover{border-color:#9a9894}
+body.desktop-mode .ap-topbar{margin-bottom:12px}
+
 /* Botão alternância desktop/mobile — só visível em desktop (≥ 1024px) */
 #btnToggleDesktop{
   display:none;
