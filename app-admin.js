@@ -302,7 +302,7 @@ function switchAdminTab(tab,el){
       db.ref('motoristas').once('value',snap=>{
         drivers=snap.val()||{};
         renderDriverManager();
-      }).catch(e=>{console.error('[admin-diag] switchTab motoristas FALHOU:',e.code,e.message);renderDriverManager();});
+      }).catch(()=>renderDriverManager());
     }else{
       renderDriverManager();
     }
