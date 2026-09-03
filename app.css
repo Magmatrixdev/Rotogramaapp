@@ -574,38 +574,48 @@ body.desktop-mode .admin-tab-btn.active i{opacity:1}
 body.desktop-mode .admin-tab-content{grid-column:2;grid-row:2;overflow:hidden!important;display:flex!important;flex-direction:column!important;background:#f4f4f2}
 body.desktop-mode .admin-tab-pane.active{overflow-y:auto!important;padding:20px 24px!important}
 body.desktop-mode .admin-scroll{padding:0!important}
-body.desktop-mode #adminRouteCards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
 body.desktop-mode .admin-stats-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
 body.desktop-mode #adminDriversStats{grid-template-columns:repeat(4,1fr)}
 .admin-stat-card{background:#fff;border-radius:10px;padding:16px 18px;border:1px solid #e8e6e1}
 .admin-stat-val{font-size:26px;font-weight:800;color:#1c1c1c;line-height:1}
 .admin-stat-lbl{font-size:12px;color:#9a9894;margin-top:4px;font-family:'Barlow',sans-serif}
-/* ═══ DESKTOP — ABA ROTAS ═══ */
+/* ═══ DESKTOP — ABA ROTAS (lista fina) ═══ */
 body.desktop-mode #adminList{display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto 1fr;column-gap:12px;row-gap:0;align-items:center}
 body.desktop-mode #adminList .admin-stats-bar{grid-column:1/-1;grid-row:1}
 body.desktop-mode #adminList .admin-search{grid-column:1;grid-row:2;margin-bottom:0}
 body.desktop-mode #adminList .admin-add{grid-column:2;grid-row:2;width:auto;min-width:160px;padding:0 22px;height:44px;font-size:13px;margin-bottom:0;border-radius:10px}
-body.desktop-mode #adminList #adminRouteCards{grid-column:1/-1;grid-row:3;margin-top:16px}
-body.desktop-mode .admin-rcard{border-radius:10px;padding:14px 18px;margin-bottom:0;transition:box-shadow .15s,border-color .15s}
-body.desktop-mode .admin-rcard:hover{border-color:#fe2627;box-shadow:0 4px 16px rgba(254,38,39,.1)}
-body.desktop-mode .admin-rcard-actions{margin-top:8px;gap:8px}
-body.desktop-mode .admin-btn{min-height:34px;font-size:12px;padding:0 12px;border-radius:7px}
-body.desktop-mode .admin-btn-del{flex:none;width:36px;padding:0}
-body.desktop-mode .admin-btn-del .admin-btn-label{display:none}
+body.desktop-mode #adminList #adminRouteCards{grid-column:1/-1;grid-row:3;margin-top:16px;display:block;background:#fff;border:1px solid #e8e6e1;border-radius:12px;overflow:hidden}
+body.desktop-mode .admin-rcard{display:flex;align-items:center;gap:14px;padding:10px 16px;border:none;border-radius:0;border-bottom:1px solid #efeee9;box-shadow:none;margin-bottom:0;background:transparent;transition:background .1s}
+body.desktop-mode .admin-rcard:last-child{border-bottom:none}
+body.desktop-mode .admin-rcard:hover{background:#faf9f7;border-color:#fe2627 transparent #efeee9 transparent;box-shadow:none}
+body.desktop-mode .admin-rcard-head{display:contents}
+body.desktop-mode .admin-rcard-info{display:contents}
+body.desktop-mode .admin-rcard-num{order:1;flex-shrink:0;width:30px;height:30px;font-size:12px;border-radius:8px}
+body.desktop-mode .admin-rcard-name{order:2;width:210px;flex-shrink:0;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.desktop-mode .admin-rcard-sub{order:3;flex:1;min-width:0;margin-top:0;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.desktop-mode .admin-rcard-actions{order:4;margin-top:0;flex-shrink:0;gap:6px}
+body.desktop-mode .admin-btn{width:30px;height:30px;min-height:30px;flex:none;padding:0;border-radius:7px;display:flex;align-items:center;justify-content:center}
+body.desktop-mode .admin-btn-label{display:none}
 
-/* ═══ DESKTOP — ABA MOTORISTAS ═══ */
+/* ═══ DESKTOP — ABA MOTORISTAS (lista fina) ═══ */
 body.desktop-mode #adminDriversList{display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto 1fr;column-gap:12px;row-gap:0;align-items:center}
 body.desktop-mode #adminDriversList .admin-stats-bar{grid-column:1/-1;grid-row:1}
 body.desktop-mode #adminDriversList .admin-search{grid-column:1;grid-row:2;margin-bottom:0}
 body.desktop-mode #adminDriversList .admin-add{grid-column:2;grid-row:2;width:auto;min-width:190px;height:44px;font-size:13px;padding:0 22px;margin-bottom:0;border-radius:10px}
-body.desktop-mode #adminDriversList #driverCardsContainer{grid-column:1/-1;grid-row:3;margin-top:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;align-content:start}
-body.desktop-mode #driverCardsContainer .driver-card{margin-bottom:0}
-body.desktop-mode .driver-card{border-radius:12px;padding:14px 16px;margin-bottom:0;transition:box-shadow .15s,border-color .15s}
-body.desktop-mode .driver-card:hover{border-color:#fe2627;box-shadow:0 4px 16px rgba(254,38,39,.1)}
-body.desktop-mode .driver-card.blocked:hover{border-color:rgba(254,38,39,.5)}
-body.desktop-mode .driver-card-avatar{width:48px;height:48px;border-radius:14px;font-size:17px}
-body.desktop-mode .driver-card-actions{margin-top:10px;gap:6px}
-body.desktop-mode .driver-btn{min-height:34px;font-size:12px;padding:0}
+body.desktop-mode #adminDriversList #driverCardsContainer{grid-column:1/-1;grid-row:3;margin-top:16px;display:block;background:#fff;border:1px solid #e8e6e1;border-radius:12px;overflow:hidden}
+body.desktop-mode .driver-card{display:flex;align-items:center;gap:14px;padding:9px 16px;border:none;border-radius:0;border-bottom:1px solid #efeee9;box-shadow:none;margin-bottom:0;background:transparent;transition:background .1s}
+body.desktop-mode .driver-card:last-child{border-bottom:none}
+body.desktop-mode .driver-card:hover{background:#faf9f7}
+body.desktop-mode .driver-card.blocked{background:rgba(254,38,39,.02)}
+body.desktop-mode .driver-card-head{display:contents}
+body.desktop-mode .driver-card-info{display:contents}
+body.desktop-mode .driver-card-avatar{order:1;flex-shrink:0;width:32px;height:32px;font-size:11px;border-radius:9px}
+body.desktop-mode .driver-card-name{order:2;width:220px;flex-shrink:0;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.desktop-mode .driver-card-cpf{display:none}
+body.desktop-mode .driver-card-meta{order:3;flex:1;min-width:0;margin-top:0;font-size:12px}
+body.desktop-mode .driver-card-status{order:4;flex-shrink:0}
+body.desktop-mode .driver-card-actions{order:5;margin-top:0;flex-shrink:0;gap:6px}
+body.desktop-mode .driver-btn{width:30px;height:30px;min-height:30px;flex:none;padding:0;border-radius:7px;display:flex;align-items:center;justify-content:center}
 body.desktop-mode .driver-btn-label{display:none}
 
 /* ═══ DESKTOP — ABA MONITOR ═══ */
