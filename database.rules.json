@@ -29,15 +29,12 @@
           ".validate": "newData.isString() && newData.val().length >= 2 && newData.val().length <= 100"
         },
         "cpfHmac": {
-          // HMAC-SHA256 do CPF — 64 hex chars; nunca armazena CPF em claro
           ".validate": "newData.isString() && newData.val().length === 64"
         },
         "pinHash": {
-          // Hash scrypt do PIN — 128 hex chars (64 bytes)
           ".validate": "newData.isString() && newData.val().length === 128"
         },
         "pinSalt": {
-          // Salt aleatório — 32 hex chars (16 bytes)
           ".validate": "newData.isString() && newData.val().length === 32"
         },
         "pinResetRequired": {
@@ -61,17 +58,13 @@
         "migradoDe": {
           ".validate": "newData.isString() && newData.val().length <= 128"
         },
-        // bloqueia campos não declarados
         "$outrosCampos": { ".validate": false }
       }
     },
 
     // ─────────────────────────────────────────────────────────────
     // /motoristas-secure
-    //   • CPF cifrado com AES-256-GCM (chave no Secret Manager)
-    //   • Clientes NUNCA leem/escrevem — apenas Cloud Functions via Admin SDK
-    //   • .read/.write false garante que as regras bloqueiam qualquer acesso
-    //     de client SDK; Admin SDK as bypassa intencionalmente.
+    //   • Apenas Cloud Functions via Admin SDK
     // ─────────────────────────────────────────────────────────────
     "motoristas-secure": {
       ".read":  false,
@@ -79,9 +72,7 @@
     },
 
     // ─────────────────────────────────────────────────────────────
-    // /rateLimits
-    //   • Contadores de tentativas de login por cpfHmac
-    //   • Gerenciados exclusivamente pelas Cloud Functions
+    // /rateLimits — apenas Cloud Functions
     // ─────────────────────────────────────────────────────────────
     "rateLimits": {
       ".read":  false,
@@ -89,10 +80,7 @@
     },
 
     // ─────────────────────────────────────────────────────────────
-    // /audit
-    //   • Log de auditoria: quem pediu getDriverCPF, setAdminClaim, etc.
-    //   • Escrito apenas pelas Cloud Functions (Admin SDK)
-    //   • Leitura: apenas admin
+    // /audit — escrito apenas por Cloud Functions; lido apenas por admin
     // ─────────────────────────────────────────────────────────────
     "audit": {
       ".read":  "auth !== null && (auth.token.admin === true || auth.token.email === 'pedrosgj@gmail.com')",
@@ -112,9 +100,7 @@
     // ─────────────────────────────────────────────────────────────
     // /viagens
     //   • Listagem da coleção: apenas admin
-    //   • Nó individual:  admin  OU  motorista dono (motoristaId === uid)
-    //   • Criação:        admin  OU  motorista autenticado (motoristaId deve === uid)
-    //   • Atualização:    admin  OU  motorista dono
+    //   • Nó individual:  admin  OU  motorista dono
     // ─────────────────────────────────────────────────────────────
     "viagens": {
       ".read":  "auth !== null && (auth.token.admin === true || auth.token.email === 'pedrosgj@gmail.com')",
@@ -164,8 +150,6 @@
 
     // ─────────────────────────────────────────────────────────────
     // /posicoes/$id   (id === uid do motorista)
-    //   • Escrita: apenas o próprio motorista (auth.uid === $id)
-    //   • Leitura: apenas admin
     // ─────────────────────────────────────────────────────────────
     "posicoes": {
       ".read":  "auth !== null && (auth.token.admin === true || auth.token.email === 'pedrosgj@gmail.com')",
@@ -203,49 +187,20 @@
     // /rotogramas
     //   • Leitura: qualquer usuário autenticado
     //   • Escrita: apenas admin
+    //   NOTA: rotogramas são arrays com estrutura variável (id, nome, paradas,
+    //   estados, numero, regiao, subtitulo, linkRota, distancia, tempo, etc.)
+    //   Validação granular não é aplicada pois só admin escreve.
     // ─────────────────────────────────────────────────────────────
     "rotogramas": {
       ".read":  "auth !== null",
-      ".write": "auth !== null && (auth.token.admin === true || auth.token.email === 'pedrosgj@gmail.com')",
-
-      "$rotId": {
-        ".validate": "newData.hasChildren(['titulo'])",
-
-        "titulo": {
-          ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 200"
-        },
-        "descricao": {
-          ".validate": "newData.isString() && newData.val().length <= 3000"
-        },
-        "ativo": {
-          ".validate": "newData.isBoolean()"
-        },
-        "versao": {
-          ".validate": "newData.isNumber() && newData.val() >= 0"
-        },
-        "totalKm": {
-          ".validate": "newData.isNumber() && newData.val() >= 0"
-        },
-        "postos": {
-          "$postoRef": {
-            ".validate": "newData.isString() && newData.val().length <= 128 || newData.isBoolean()"
-          }
-        },
-        "createdAt": {
-          ".validate": "newData.isNumber() && newData.val() > 0"
-        },
-        "updatedAt": {
-          ".validate": "newData.isNumber() && newData.val() > 0"
-        },
-        "$outrosCampos": { ".validate": false }
-      }
+      ".write": "auth !== null && (auth.token.admin === true || auth.token.email === 'pedrosgj@gmail.com')"
     },
 
     // ─────────────────────────────────────────────────────────────
     // /postos
     //   • Leitura: qualquer usuário autenticado
     //   • Escrita: apenas admin
-    //   Schema real do app: id, nome, cidade, cartao, link, criadoEm, fotos
+    //   Schema: id, nome, cidade, cartao, link, criadoEm, fotos
     // ─────────────────────────────────────────────────────────────
     "postos": {
       ".read":  "auth !== null",
@@ -343,11 +298,15 @@
     // /config
     //   • Leitura: pública (sem autenticação)
     //   • Escrita: apenas admin
+    //   NOTA: appVersion é usado pelo app para detecção de versão
     // ─────────────────────────────────────────────────────────────
     "config": {
       ".read":  true,
       ".write": "auth !== null && (auth.token.admin === true || auth.token.email === 'pedrosgj@gmail.com')",
 
+      "appVersion": {
+        ".validate": "newData.isNumber() && newData.val() >= 0"
+      },
       "versaoApp": {
         ".validate": "newData.isString() && newData.val().length <= 20"
       },
