@@ -43,8 +43,9 @@ function initFirebase(){
     db.ref('config/appVersion').once('value').then(snap=>{
       const remoteVersion=snap.val();
       if(remoteVersion===null||remoteVersion<APP_VERSION){
-        // Atualiza Firebase com versão mais nova — dispara reload nos outros devices via listener
-        db.ref('config/appVersion').set(APP_VERSION);
+        // Só escreve se autenticado — regras exigem auth para escrever /config
+        const u=firebase.auth().currentUser;
+        if(u){db.ref('config/appVersion').set(APP_VERSION).catch(()=>{});}
       } else if(remoteVersion>APP_VERSION){
         console.log('🔄 Nova versão detectada:',remoteVersion,'> local:',APP_VERSION);
         _forceCleanReload();
@@ -63,7 +64,7 @@ function initFirebase(){
     db.ref('rotogramas').on('value',snap=>{
       const data=snap.val();
       if(data&&Array.isArray(data)){routes=data;firebaseReady=true;localStorage.setItem('rotogramas_cache',JSON.stringify(routes));setSyncStatus('on','Sincronizado');if(!isEditing)renderHome();if(typeof renderPostosList==='function'&&document.getElementById('screenPostos')?.classList.contains('active'))renderPostosList();_handleDeepLink();if(typeof _restoreDesktopIfNeeded==='function')_restoreDesktopIfNeeded();}
-      else if(!data){db.ref('rotogramas').set(DEFAULTS).then(()=>{routes=DEFAULTS;firebaseReady=true;setSyncStatus('on','Sincronizado');renderHome()})}
+      else if(!data&&firebase.auth().currentUser){db.ref('rotogramas').set(DEFAULTS).then(()=>{routes=DEFAULTS;firebaseReady=true;setSyncStatus('on','Sincronizado');renderHome()}).catch(()=>{})}
     },err=>{setSyncStatus('err','Erro Firebase — dados locais');loadLocal()});
 
     db.ref('motoristas').on('value',snap=>{
@@ -108,6 +109,7 @@ function saveToFirebase(){if(db&&firebaseReady){db.ref('rotogramas').set(routes)
 function loadLocal(){const c=localStorage.getItem('rotogramas_cache'),m=localStorage.getItem('rotogramas_data'),s=c||m;if(s){try{routes=JSON.parse(s);renderHome();return}catch(e){}}routes=JSON.parse(JSON.stringify(DEFAULTS));renderHome();}
 
 function setSyncStatus(t,txt){const el=document.getElementById('syncBar');if(!el)return;el.className='sync-bar'+(t==='on'?'':t==='off'?' off':' err');el.textContent=(t==='on'?'🟢':t==='off'?'🟡':'🔴')+' '+txt;if(IS_DESKTOP())setTimeout(dUpdateTopbar,50);}
+
 
 
 
