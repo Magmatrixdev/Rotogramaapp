@@ -50,7 +50,7 @@ if (DRY_RUN) console.log('🔍 MODO DRY-RUN — nenhuma alteração será gravad
 // ── Chave antiga (hardcoded no app) ────────────────────────────────────────
 const LEGACY_KEY_STRING = 'rotograma-confianca-2026';
 
-admin.initializeApp();
+admin.initializeApp({ databaseURL: 'https://rotogramas-confianca-default-rtdb.firebaseio.com' });
 const db = getDatabase();
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
