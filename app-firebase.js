@@ -19,8 +19,9 @@ function initFirebase(){
         if(!adminMode)currentDriver=null;
         return;
       }
-      // Verifica claim admin
-      const tok=await user.getIdTokenResult().catch(()=>null);
+      // Verifica claim admin — forceRefresh=true garante que claims atualizados
+      // (setados via Admin SDK/Cloud Function) sejam refletidos mesmo em sessões ativas
+      const tok=await user.getIdTokenResult(true).catch(()=>null);
       if(tok?.claims?.admin){
         adminMode=true; // já setado em doAdminLogin, mas garante aqui
         return;
