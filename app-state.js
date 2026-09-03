@@ -10,5 +10,3 @@ let _routeGeometry=[], _routeLayerDone=null, _routeLayerRest=null;
 let db=null, storage=null, firebaseReady=false, isEditing=false, editingIndex=-1, editData={};
 let notifications=[], notifPanelOpen=false;
 let adminMode=false, _cryptoKey=null;
-let postosAvulsos={};
-
