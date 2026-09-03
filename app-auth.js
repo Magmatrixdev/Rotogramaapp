@@ -250,24 +250,13 @@ async function doAdminLogin(){
     // antes de adminMode=true (na inicialização do app) e o guard
     // if(USE_NEW_AUTH && !adminMode) return; descartou os dados naquele momento.
     // Firebase não re-dispara o listener automaticamente se os dados não mudaram.
-    // 1. Garante que o claim admin=true está setado (idempotente)
-    // 2. Força refresh do token para incluir o claim recém-setado
-    // 3. Busca os motoristas (agora com claim no token)
-    try{
-      const bootstrapFn=firebase.functions().httpsCallable('bootstrapAdminClaim');
-      await bootstrapFn({});
-      // Força o SDK a buscar token novo com o claim incluído
-      if(firebase.auth().currentUser){
-        await firebase.auth().currentUser.getIdToken(true);
-      }
-    }catch(bootstrapErr){
-      console.warn('[admin] bootstrap claim:', bootstrapErr.message);
-    }
+    // Re-carrega motoristas: o listener .on() pode ter disparado antes
+    // de adminMode=true e o guard descartou os dados naquele momento.
     if(db){
       db.ref('motoristas').once('value',snap=>{
         const fbData=snap.val()||{};
         drivers={...fbData};
-      }).catch(e=>console.warn('[admin] motoristas load:', e.message));
+      }).catch(()=>{});
     }
     renderAdmin();
     // Guard: onAuthStateChanged pode ter feito navPush('screenAdmin') antes desta
