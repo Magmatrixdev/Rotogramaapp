@@ -448,6 +448,12 @@ async function saveEditPostoUnified(oldNomeEnc,oldCidadeEnc){
   const btn=document.querySelector('.postos-form-ov .postos-form-save');
   if(!nome||!cidade){errEl.textContent='Nome e cidade são obrigatórios';errEl.style.display='block';return;}
   if(btn){btn.disabled=true;btn.textContent='Salvando...';}
+  // ── diagnóstico de auth ─────────────────────────────────────────────────
+  const _cu=firebase.auth().currentUser;
+  const _tok=_cu?await _cu.getIdTokenResult().catch(()=>null):null;
+  console.log('[saveEditPostoUnified] currentUser:',_cu?.email||'null','| uid:',_cu?.uid||'null','| admin claim:',_tok?.claims?.admin||false);
+  if(!_cu){const errMsg='Sessão expirada — faça logout e login novamente';errEl.textContent=errMsg;errEl.style.display='block';if(btn){btn.disabled=false;btn.textContent='Salvar';}return;}
+  // ───────────────────────────────────────────────────────────────────────
   const normFn=s=>(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
   const on=normFn(oldNome),oc=normFn(oldCidade);
   try{
