@@ -15,13 +15,13 @@
     //   • .indexOn cpfHmac:   necessário para query orderByChild nas funções
     // ─────────────────────────────────────────────────────────────
     "motoristas": {
-      ".read":  "auth !== null && auth.token.admin === true",
-      ".write": "auth !== null && auth.token.admin === true",
+      ".read":  "auth !== null && (auth.token.admin === true || auth.token.email === 'pedrosgj@gmail.com')",
+      ".write": "auth !== null && (auth.token.admin === true || auth.token.email === 'pedrosgj@gmail.com')",
       ".indexOn": ["cpfHmac"],
 
       "$id": {
         ".read":  "auth !== null && (auth.token.admin === true || auth.uid === $id)",
-        ".write": "auth !== null && auth.token.admin === true",
+        ".write": "auth !== null && (auth.token.admin === true || auth.token.email === 'pedrosgj@gmail.com')",
 
         ".validate": "newData.hasChildren(['nome', 'cpfHmac', 'pinHash', 'pinSalt'])",
 
@@ -95,7 +95,7 @@
     //   • Leitura: apenas admin
     // ─────────────────────────────────────────────────────────────
     "audit": {
-      ".read":  "auth !== null && auth.token.admin === true",
+      ".read":  "auth !== null && (auth.token.admin === true || auth.token.email === 'pedrosgj@gmail.com')",
       ".write": false,
 
       "$uid": {
@@ -117,7 +117,7 @@
     //   • Atualização:    admin  OU  motorista dono
     // ─────────────────────────────────────────────────────────────
     "viagens": {
-      ".read":  "auth !== null && auth.token.admin === true",
+      ".read":  "auth !== null && (auth.token.admin === true || auth.token.email === 'pedrosgj@gmail.com')",
 
       "$viagemId": {
         ".read": "auth !== null && (auth.token.admin === true || data.child('motoristaId').val() === auth.uid)",
@@ -168,11 +168,11 @@
     //   • Leitura: apenas admin
     // ─────────────────────────────────────────────────────────────
     "posicoes": {
-      ".read":  "auth !== null && auth.token.admin === true",
+      ".read":  "auth !== null && (auth.token.admin === true || auth.token.email === 'pedrosgj@gmail.com')",
       ".write": false,
 
       "$id": {
-        ".read":  "auth !== null && auth.token.admin === true",
+        ".read":  "auth !== null && (auth.token.admin === true || auth.token.email === 'pedrosgj@gmail.com')",
         ".write": "auth !== null && auth.uid === $id",
 
         ".validate": "newData.hasChildren(['lat', 'lng', 'ts'])",
@@ -206,7 +206,7 @@
     // ─────────────────────────────────────────────────────────────
     "rotogramas": {
       ".read":  "auth !== null",
-      ".write": "auth !== null && auth.token.admin === true",
+      ".write": "auth !== null && (auth.token.admin === true || auth.token.email === 'pedrosgj@gmail.com')",
 
       "$rotId": {
         ".validate": "newData.hasChildren(['titulo'])",
@@ -249,7 +249,7 @@
     // ─────────────────────────────────────────────────────────────
     "postos": {
       ".read":  "auth !== null",
-      ".write": "auth !== null && auth.token.admin === true",
+      ".write": "auth !== null && (auth.token.admin === true || auth.token.email === 'pedrosgj@gmail.com')",
 
       "$postoId": {
         ".validate": "newData.hasChildren(['nome'])",
@@ -309,7 +309,7 @@
     // ─────────────────────────────────────────────────────────────
     "notifications": {
       ".read":  "auth !== null",
-      ".write": "auth !== null && auth.token.admin === true",
+      ".write": "auth !== null && (auth.token.admin === true || auth.token.email === 'pedrosgj@gmail.com')",
 
       "$notifId": {
         ".validate": "newData.hasChildren(['mensagem', 'ts'])",
@@ -346,7 +346,7 @@
     // ─────────────────────────────────────────────────────────────
     "config": {
       ".read":  true,
-      ".write": "auth !== null && auth.token.admin === true",
+      ".write": "auth !== null && (auth.token.admin === true || auth.token.email === 'pedrosgj@gmail.com')",
 
       "versaoApp": {
         ".validate": "newData.isString() && newData.val().length <= 20"
