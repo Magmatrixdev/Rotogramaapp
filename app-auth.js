@@ -246,6 +246,16 @@ async function doAdminLogin(){
     await firebase.auth().signInWithEmailAndPassword(u,p);
     document.querySelector('.login-overlay')?.remove();
     if(typeof hideBottomNav==='function')hideBottomNav();
+    // Re-carrega motoristas explicitamente: o listener .on() pode ter disparado
+    // antes de adminMode=true (na inicialização do app) e o guard
+    // if(USE_NEW_AUTH && !adminMode) return; descartou os dados naquele momento.
+    // Firebase não re-dispara o listener automaticamente se os dados não mudaram.
+    if(db){
+      db.ref('motoristas').once('value',snap=>{
+        const fbData=snap.val()||{};
+        drivers={...fbData};
+      }).catch(()=>{});
+    }
     renderAdmin();
     // Guard: onAuthStateChanged pode ter feito navPush('screenAdmin') antes desta
     // continuação (race condition com Firebase SDK). Só empurra se ainda não estiver na pilha.
