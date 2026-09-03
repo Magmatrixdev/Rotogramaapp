@@ -245,6 +245,7 @@
     // /postos
     //   • Leitura: qualquer usuário autenticado
     //   • Escrita: apenas admin
+    //   Schema real do app: id, nome, cidade, cartao, link, criadoEm, fotos
     // ─────────────────────────────────────────────────────────────
     "postos": {
       ".read":  "auth !== null",
@@ -253,17 +254,34 @@
       "$postoId": {
         ".validate": "newData.hasChildren(['nome'])",
 
+        "id": {
+          ".validate": "newData.isString() && newData.val().length <= 128"
+        },
         "nome": {
           ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 200"
+        },
+        "cidade": {
+          ".validate": "newData.isString() && newData.val().length <= 150"
+        },
+        "cartao": {
+          ".validate": "newData.isString() && newData.val().length <= 50"
+        },
+        "link": {
+          ".validate": "newData.isString() && newData.val().length <= 500"
+        },
+        "criadoEm": {
+          ".validate": "newData.isNumber() && newData.val() >= 0"
+        },
+        "fotos": {
+          "$idx": {
+            ".validate": "newData.isString() && newData.val().length <= 500"
+          }
         },
         "endereco": {
           ".validate": "newData.isString() && newData.val().length <= 300"
         },
-        "cidade": {
-          ".validate": "newData.isString() && newData.val().length <= 100"
-        },
         "estado": {
-          ".validate": "newData.isString() && newData.val().length === 2"
+          ".validate": "newData.isString() && newData.val().length <= 2"
         },
         "lat": {
           ".validate": "newData.isNumber() && newData.val() >= -90 && newData.val() <= 90"
