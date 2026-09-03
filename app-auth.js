@@ -72,7 +72,8 @@ async function doDriverLogin(){
   const pin=(document.getElementById('dLoginPIN')?.value||'').trim();
   const errEl=document.getElementById('dLoginError');
   const btn=document.querySelector('#dauthLoginForm .dauth-btn');
-  function showErr(msg){errEl.textContent=msg||'CPF ou PIN incorretos';errEl.style.display='block';setTimeout(()=>errEl.style.display='none',4000);}
+  function showErr(msg,isBlock=false){errEl.textContent=msg||'CPF ou PIN incorretos';errEl.style.display='block';errEl.style.background=isBlock?'#fee2e2':'';errEl.style.color=isBlock?'#b91c1c':'';errEl.style.borderLeft=isBlock?'4px solid #ef4444':'';if(!isBlock)setTimeout(()=>{errEl.style.display='none';errEl.style.background='';errEl.style.color='';errEl.style.borderLeft='';},4000);}
+  function showWarn(msg){errEl.textContent=msg;errEl.style.display='block';errEl.style.background='#fff7ed';errEl.style.color='#c2410c';errEl.style.borderLeft='4px solid #f97316';setTimeout(()=>{errEl.style.display='none';errEl.style.background='';errEl.style.color='';errEl.style.borderLeft='';},6000);}
   if(cpfRaw.length!==11){showErr('CPF inválido — digite os 11 dígitos');return;}
   if(pin.length!==4){showErr('PIN deve ter 4 dígitos');return;}
   if(btn){btn.disabled=true;btn.textContent='Verificando...';}
@@ -87,9 +88,16 @@ async function doDriverLogin(){
       else{showHome();}
     }catch(err){
       const code=err.code||'';
-      if(code==='functions/resource-exhausted'){showErr(err.message||'Muitas tentativas. Aguarde e tente novamente.');}
-      else if(code==='functions/permission-denied'){showErr('Conta bloqueada. Contate o administrador.');}
-      else{showErr('CPF ou PIN incorretos');}
+      const msg=err.message||'';
+      if(code==='functions/resource-exhausted'){
+        showErr(msg||'Conta bloqueada temporariamente. Tente novamente em 15 minutos.',true);
+      }else if(code==='functions/unauthenticated'&&msg.includes('tentativa')){
+        showWarn(msg);
+      }else if(code==='functions/permission-denied'){
+        showErr('Conta bloqueada. Contate o administrador.',true);
+      }else{
+        showErr('CPF ou PIN incorretos');
+      }
     }finally{if(btn){btn.disabled=false;btn.textContent='ENTRAR';}}
     return;
   }
