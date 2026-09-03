@@ -26,6 +26,7 @@
 
 const admin = require('firebase-admin');
 const { getDatabase } = require('firebase-admin/database');
+const { getAuth } = require('firebase-admin/auth');
 const crypto = require('crypto');
 
 // ── Verificar variáveis de ambiente ────────────────────────────────────────
@@ -157,7 +158,7 @@ async function run() {
 
     // Verificar se o ID antigo já é um UID do Firebase Auth
     try {
-      await admin.auth().getUser(oldId);
+      await getAuth().getUser(oldId);
       uid = oldId;
       authUserExists = true;
       console.log('(Auth já existe)');
@@ -171,7 +172,7 @@ async function run() {
         console.log(`(dry-run: criaria Auth user, uid seria ${uid})`);
       } else {
         try {
-          const userRecord = await admin.auth().createUser({ displayName: nome || 'Motorista' });
+          const userRecord = await getAuth().createUser({ displayName: nome || 'Motorista' });
           uid = userRecord.uid;
           console.log(`(novo uid: ${uid})`);
         } catch (err) {
