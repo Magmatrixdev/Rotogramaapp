@@ -250,17 +250,24 @@ async function doAdminLogin(){
     // antes de adminMode=true (na inicialização do app) e o guard
     // if(USE_NEW_AUTH && !adminMode) return; descartou os dados naquele momento.
     // Firebase não re-dispara o listener automaticamente se os dados não mudaram.
+    // 1. Garante que o claim admin=true está setado (idempotente)
+    // 2. Força refresh do token para incluir o claim recém-setado
+    // 3. Busca os motoristas (agora com claim no token)
+    try{
+      const bootstrapFn=firebase.functions().httpsCallable('bootstrapAdminClaim');
+      await bootstrapFn({});
+      // Força o SDK a buscar token novo com o claim incluído
+      if(firebase.auth().currentUser){
+        await firebase.auth().currentUser.getIdToken(true);
+      }
+    }catch(bootstrapErr){
+      console.warn('[admin] bootstrap claim:', bootstrapErr.message);
+    }
     if(db){
-      // Diagnóstico: loga token claims e resultado do fetch
-      firebase.auth().currentUser?.getIdTokenResult().then(tok=>{
-        console.log('[admin-diag] token claims:', JSON.stringify(tok.claims));
-        console.log('[admin-diag] token email:', tok.claims.email);
-      });
       db.ref('motoristas').once('value',snap=>{
         const fbData=snap.val()||{};
-        console.log('[admin-diag] motoristas once() ok, drivers:', Object.keys(fbData).length);
         drivers={...fbData};
-      }).catch(e=>console.error('[admin-diag] motoristas once() FALHOU:', e.code, e.message));
+      }).catch(e=>console.warn('[admin] motoristas load:', e.message));
     }
     renderAdmin();
     // Guard: onAuthStateChanged pode ter feito navPush('screenAdmin') antes desta
