@@ -251,10 +251,16 @@ async function doAdminLogin(){
     // if(USE_NEW_AUTH && !adminMode) return; descartou os dados naquele momento.
     // Firebase não re-dispara o listener automaticamente se os dados não mudaram.
     if(db){
+      // Diagnóstico: loga token claims e resultado do fetch
+      firebase.auth().currentUser?.getIdTokenResult().then(tok=>{
+        console.log('[admin-diag] token claims:', JSON.stringify(tok.claims));
+        console.log('[admin-diag] token email:', tok.claims.email);
+      });
       db.ref('motoristas').once('value',snap=>{
         const fbData=snap.val()||{};
+        console.log('[admin-diag] motoristas once() ok, drivers:', Object.keys(fbData).length);
         drivers={...fbData};
-      }).catch(()=>{});
+      }).catch(e=>console.error('[admin-diag] motoristas once() FALHOU:', e.code, e.message));
     }
     renderAdmin();
     // Guard: onAuthStateChanged pode ter feito navPush('screenAdmin') antes desta
