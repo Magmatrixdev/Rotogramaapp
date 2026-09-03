@@ -151,9 +151,9 @@ export const loginDriver = onCall(
       .equalTo(cpfHmac)
       .once('value');
 
-    // CPF não encontrado — rata limit já foi incrementado acima
+    // CPF não encontrado — rate limit já foi incrementado acima
     if (!snap.exists()) {
-      throw new HttpsError('unauthenticated', 'CPF ou PIN incorretos.');
+      throw new HttpsError('not-found', 'CPF não cadastrado. Acesse a aba Criar conta para se registrar.');
     }
 
     // Extrair primeiro (e único esperado) resultado
