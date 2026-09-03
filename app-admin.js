@@ -317,25 +317,43 @@ let _adminPostoFilter='';
 
 function _adminPostoCard(p,actionsHtml,mapsHtml){
   const cls=getCartaoClass(p.cartao);const lbl=getCartaoLabel(p.cartao);
-  return `<div class="admin-rcard">
-    <div class="admin-rcard-head">
-      <div class="admin-rcard-num" style="background:#2d5a27;font-size:14px">⛽</div>
-      <div class="admin-rcard-info">
-        <div class="admin-rcard-name">${esc(p.nome||'—')}</div>
-        <div class="admin-rcard-sub">${esc(p.cidade||'')} · <span class="postos-tag ${cls}" style="font-size:11px;padding:2px 6px;border-radius:4px;display:inline-block">${lbl}</span></div>
-        ${p._routeName?`<div class="admin-rcard-sub" style="font-size:11px;color:#9a9894;margin-top:1px">Rota ${esc(p._routeNum)} · ${esc(p._routeName)}</div>`:''}
+  const isTruck=(p.cartao==='truckpag');
+  const fotos=Array.isArray(p.fotos)?p.fotos.filter(Boolean):[];
+  const allFotos=fotos.length>0?fotos:(typeof getFotosByNome==='function'?getFotosByNome(p.nome).filter(Boolean):[]);
+  let thumbHtml;
+  if(allFotos.length>0){
+    const badge=allFotos.length>1?`<div class="ap-photo-badge"><i class="ti ti-photo" aria-hidden="true"></i>${allFotos.length}</div>`:'';
+    thumbHtml=`<img class="ap-thumb-img" src="${allFotos[0]}" alt="${esc(p.nome)}">${badge}`;
+  }else{
+    thumbHtml=`<div class="ap-thumb-icon"><i class="ti ti-gas-station" aria-hidden="true"></i></div>`;
+  }
+  const routeTag=p._routeName?`<span class="ap-route-tag">Rota ${esc(p._routeNum)}</span>`:'';
+  const mapsBtn=p.link?`<a href="${p.link}" target="_blank" class="ap-btn ap-btn--maps"><i class="ti ti-map" aria-hidden="true"></i>Maps</a><div class="ap-sep"></div>`:'';
+  return `<div class="ap-card">
+    <div class="ap-thumb${isTruck?' ap-thumb--blue':''}">${thumbHtml}</div>
+    <div class="ap-body">
+      <div class="ap-name">${esc(p.nome||'—')}</div>
+      <div class="ap-meta">
+        <span class="ap-loc"><i class="ti ti-map-pin" aria-hidden="true"></i>${esc(p.cidade||'')}</span>
+        <span class="postos-tag ${cls}" style="font-size:11px;padding:2px 8px;border-radius:10px">${lbl}</span>
+        ${routeTag}
       </div>
-      <div style="margin-left:auto;padding-right:4px">${mapsHtml}</div>
     </div>
-    <div class="admin-rcard-actions">${actionsHtml}</div>
+    <div class="ap-actions">${mapsBtn}${actionsHtml}</div>
   </div>`;
 }
 
 function renderAdminPostos(){
   const el=document.getElementById('adminPostosList');if(!el)return;
-  let h=`<div class="admin-search"><span class="admin-search-icon">🔍</span><input id="adminPostoSearch" type="text" placeholder="Pesquisar posto..." value="${esc(_adminPostoFilter)}" oninput="_adminPostoFilter=this.value;renderAdminPostoCards()"><button class="admin-search-clear ${_adminPostoFilter?'visible':''}" onclick="_adminPostoFilter='';document.getElementById('adminPostoSearch').value='';renderAdminPostoCards()">✕</button></div>`;
-  h+=`<button class="admin-add" onclick="showAddPostoForm()">＋ NOVO POSTO</button>`;
-  h+=`<div id="adminPostoCards"></div>`;
+  let h=`<div class="ap-topbar">
+    <div class="ap-search-box">
+      <i class="ti ti-search ap-search-icon" aria-hidden="true"></i>
+      <input id="adminPostoSearch" type="text" class="ap-search-input" placeholder="Pesquisar posto, cidade…" value="${esc(_adminPostoFilter)}" oninput="_adminPostoFilter=this.value;renderAdminPostoCards()">
+      <button class="ap-search-clear${_adminPostoFilter?' visible':''}" onclick="_adminPostoFilter='';document.getElementById('adminPostoSearch').value='';renderAdminPostoCards()">✕</button>
+    </div>
+    <button class="ap-add-btn" onclick="showAddPostoForm()"><i class="ti ti-plus" aria-hidden="true"></i>Novo posto</button>
+  </div>`;
+  h+=`<div id="adminPostoCards" class="ap-list"></div>`;
   el.innerHTML=h;
   renderAdminPostoCards();
 }
@@ -344,8 +362,8 @@ function renderAdminPostoCards(){
   const container=document.getElementById('adminPostoCards');if(!container)return;
   const normFn=s=>(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
   const q=normFn(_adminPostoFilter);
-  const clearBtn=document.querySelector('#adminPostoSearch')?.parentElement?.querySelector('.admin-search-clear');
-  if(clearBtn)clearBtn.className='admin-search-clear'+(_adminPostoFilter?' visible':'');
+  const clearBtn=document.querySelector('.ap-search-clear');
+  if(clearBtn)clearBtn.className='ap-search-clear'+(_adminPostoFilter?' visible':'');
   // Monta lista única deduplicada por nome|cidade (avulsos têm prioridade)
   const dedup={};
   routes.forEach(r=>{(r.paradas||[]).forEach(p=>{if(p.tipo==='origem'||p.tipo==='destino')return;const k=normFn(p.nome)+'|'+normFn(p.cidade);if(!dedup[k])dedup[k]={nome:p.nome,cidade:p.cidade,cartao:p.cartao,link:p.link||''};});});
@@ -358,10 +376,9 @@ function renderAdminPostoCards(){
   }else{
     unified.forEach(p=>{
       const nEnc=encodeURIComponent(p.nome||'');const cEnc=encodeURIComponent(p.cidade||'');
-      const maps=p.link?`<a href="${p.link}" target="_blank" style="color:#1a6fb5;font-size:12px;text-decoration:none">🗺️ Maps</a>`:'';
-      const delBtn=p.id?`<button class="admin-btn admin-btn-del" onclick="deletePostoAvulso('${p.id}')">🗑️</button>`:'';
-      const acts=`<button class="admin-btn admin-btn-edit" onclick="showEditPostoUnified('${nEnc}','${cEnc}')">✏️ Editar</button><button class="admin-btn" style="background:#2d5a27;color:#fff" onclick="editPostoFotosByKey('${nEnc}','${cEnc}')">📷 Fotos</button>${delBtn}`;
-      h+=_adminPostoCard(p,acts,maps);
+      const delBtn=p.id?`<button class="ap-btn ap-btn--danger" onclick="deletePostoAvulso('${p.id}')"><i class="ti ti-trash" aria-hidden="true"></i></button>`:'';
+      const acts=`<button class="ap-btn" onclick="showEditPostoUnified('${nEnc}','${cEnc}')"><i class="ti ti-pencil" aria-hidden="true"></i>Editar</button><button class="ap-btn ap-btn--green" onclick="editPostoFotosByKey('${nEnc}','${cEnc}')"><i class="ti ti-photo" aria-hidden="true"></i>Fotos</button>${delBtn}`;
+      h+=_adminPostoCard(p,acts,'');
     });
   }
   container.innerHTML=h;
