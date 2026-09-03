@@ -74,6 +74,7 @@ async function doDriverLogin(){
   const btn=document.querySelector('#dauthLoginForm .dauth-btn');
   function showErr(msg,isBlock=false){errEl.textContent=msg||'CPF ou PIN incorretos';errEl.style.display='block';errEl.style.background=isBlock?'#fee2e2':'';errEl.style.color=isBlock?'#b91c1c':'';errEl.style.borderLeft=isBlock?'4px solid #ef4444':'';if(!isBlock)setTimeout(()=>{errEl.style.display='none';errEl.style.background='';errEl.style.color='';errEl.style.borderLeft='';},4000);}
   function showWarn(msg){errEl.textContent=msg;errEl.style.display='block';errEl.style.background='#fff7ed';errEl.style.color='#c2410c';errEl.style.borderLeft='4px solid #f97316';setTimeout(()=>{errEl.style.display='none';errEl.style.background='';errEl.style.color='';errEl.style.borderLeft='';},6000);}
+  function showInfo(msg,onAction){errEl.innerHTML=msg+(onAction?'<br><button onclick="switchAuthTab('+String.fromCharCode(39)+'register'+String.fromCharCode(39)+')" style="margin-top:6px;background:#1d4ed8;color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer">Ir para Criar conta</button>':'');errEl.style.display='block';errEl.style.background='#eff6ff';errEl.style.color='#1e40af';errEl.style.borderLeft='4px solid #3b82f6';setTimeout(()=>{errEl.style.display='none';errEl.style.background='';errEl.style.color='';errEl.style.borderLeft='';errEl.innerHTML='';},8000);}
   if(cpfRaw.length!==11){showErr('CPF inválido — digite os 11 dígitos');return;}
   if(pin.length!==4){showErr('PIN deve ter 4 dígitos');return;}
   if(btn){btn.disabled=true;btn.textContent='Verificando...';}
@@ -91,6 +92,8 @@ async function doDriverLogin(){
       const msg=err.message||'';
       if(code==='functions/resource-exhausted'){
         showErr(msg||'Conta bloqueada temporariamente. Tente novamente em 15 minutos.',true);
+      }else if(code==='functions/not-found'){
+        showInfo('CPF não cadastrado. Acesse a aba Criar conta para se registrar.',true);
       }else if(code==='functions/unauthenticated'&&msg.includes('tentativa')){
         showWarn(msg);
       }else if(code==='functions/permission-denied'){
