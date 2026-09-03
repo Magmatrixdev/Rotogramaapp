@@ -25,7 +25,7 @@ import * as admin from 'firebase-admin';
 
 import { cleanCPF, validateCPF } from './helpers/cpf';
 import { computeHmac, hashPin, verifyPin, encryptData, decryptData } from './helpers/crypto';
-import { checkAndIncrementRateLimit, clearRateLimit } from './helpers/rateLimit';
+import { checkAndIncrementRateLimit, clearRateLimit, WARNING_FROM, RateLimitResult } from './helpers/rateLimit';
 
 admin.initializeApp();
 
@@ -128,15 +128,16 @@ export const loginDriver = onCall(
     const cpfHmac = computeHmac(cpfClean, HMAC_SECRET.value());
 
     // ── Rate limit — incrementa ANTES da consulta ao banco ───────────────
+    let rlResult: RateLimitResult;
     try {
-      await checkAndIncrementRateLimit(cpfHmac);
+      rlResult = await checkAndIncrementRateLimit(cpfHmac);
     } catch (e: unknown) {
       const msg = (e as Error).message ?? '';
       if (msg.startsWith('RATE_LIMIT:')) {
         const min = msg.split(':')[1] ?? '15';
         throw new HttpsError(
           'resource-exhausted',
-          `Muitas tentativas. Aguarde ${min} minuto(s) e tente novamente.`
+          `Conta bloqueada por excesso de tentativas. Aguarde ${min} minuto(s) e tente novamente.`
         );
       }
       throw e;
@@ -175,7 +176,20 @@ export const loginDriver = onCall(
     );
 
     if (!pinOk) {
-      // Rate limit já incrementado — não incrementa de novo
+      // Rate limit já foi incrementado — gera aviso progressivo a partir de WARNING_FROM
+      if (rlResult.attemptsUsed >= WARNING_FROM) {
+        const rem = rlResult.attemptsRemaining;
+        if (rem === 0) {
+          throw new HttpsError(
+            'unauthenticated',
+            'PIN incorreto. Esta foi sua última tentativa — qualquer nova tentativa bloqueará o acesso por 15 minutos.'
+          );
+        }
+        throw new HttpsError(
+          'unauthenticated',
+          `PIN incorreto. Você ainda tem ${rem} tentativa${rem > 1 ? 's' : ''} antes do bloqueio de 15 minutos.`
+        );
+      }
       throw new HttpsError('unauthenticated', 'CPF ou PIN incorretos.');
     }
 
