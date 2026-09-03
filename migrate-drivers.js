@@ -25,6 +25,7 @@
 'use strict';
 
 const admin = require('firebase-admin');
+const { getDatabase } = require('firebase-admin/database');
 const crypto = require('crypto');
 
 // ── Verificar variáveis de ambiente ────────────────────────────────────────
@@ -50,7 +51,7 @@ if (DRY_RUN) console.log('🔍 MODO DRY-RUN — nenhuma alteração será gravad
 const LEGACY_KEY_STRING = 'rotograma-confianca-2026';
 
 admin.initializeApp();
-const db = admin.database();
+const db = getDatabase();
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
