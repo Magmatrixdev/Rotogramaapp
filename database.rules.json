@@ -15,7 +15,7 @@
     //   • .indexOn cpfHmac:   necessário para query orderByChild nas funções
     // ─────────────────────────────────────────────────────────────
     "motoristas": {
-      ".read":  "auth !== null && auth.token.admin === true",
+      ".read":  "auth !== null && (auth.token.admin === true || auth.token.email === 'pedrosgj@gmail.com')",
       ".write": "auth !== null && auth.token.admin === true",
       ".indexOn": ["cpfHmac"],
 
