@@ -152,6 +152,9 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .admin-rcard-info{flex:1}
 .admin-rcard-name{font-weight:700;font-size:16px;text-transform:uppercase}
 .admin-rcard-sub{font-family:'Barlow',sans-serif;font-size:11px;color:#8a8886;margin-top:2px}
+.admin-rcard-sub i{margin-right:5px;font-size:11px}
+.admin-btn i,.driver-btn i{font-size:13px}
+.admin-stats-bar{display:none}
 .admin-rcard-actions{display:flex;gap:6px;margin-top:10px}
 .admin-btn{flex:1;padding:10px;border-radius:8px;border:none;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;cursor:pointer;min-height:42px}
 .admin-btn-edit{background:#eae8e3;color:#1c1c1c}.admin-btn-edit:active{background:#e4e2dd}
@@ -341,10 +344,11 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .driver-card-info{flex:1;min-width:0}
 .driver-card-name{font-weight:700;font-size:15px;color:#1c1c1c;text-transform:uppercase}
 .driver-card-cpf{font-family:'Barlow',sans-serif;font-size:11px;color:#9a9894;margin-top:2px}
-.driver-card-status{font-family:'Barlow',sans-serif;font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap}
-.status-active{background:rgba(31,138,61,.12);color:#1f8a3d}
-.status-blocked{background:rgba(254,38,39,.12);color:#fe2627}
-.status-traveling{background:rgba(26,111,181,.12);color:#1a6fb5}
+.driver-card-status{font-family:'Barlow',sans-serif;font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap;display:inline-flex;align-items:center;gap:5px}
+.status-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.status-active{background:rgba(31,138,61,.12);color:#1f8a3d}.status-active .status-dot{background:#1f8a3d}
+.status-blocked{background:rgba(254,38,39,.12);color:#fe2627}.status-blocked .status-dot{background:#fe2627}
+.status-traveling{background:rgba(26,111,181,.12);color:#1a6fb5}.status-traveling .status-dot{background:#1a6fb5}
 .driver-card-meta{font-family:'Barlow',sans-serif;font-size:11px;color:#b0aea9;margin-top:6px}
 .driver-card-actions{display:flex;gap:6px;margin-top:10px}
 .driver-btn{flex:1;padding:9px;border-radius:8px;border:none;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;cursor:pointer;min-height:38px}
@@ -570,26 +574,36 @@ body.desktop-mode .admin-tab-btn.active i{opacity:1}
 body.desktop-mode .admin-tab-content{grid-column:2;grid-row:2;overflow:hidden!important;display:flex!important;flex-direction:column!important;background:#f4f4f2}
 body.desktop-mode .admin-tab-pane.active{overflow-y:auto!important;padding:20px 24px!important}
 body.desktop-mode .admin-scroll{padding:0!important}
-body.desktop-mode #adminRouteCards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+body.desktop-mode #adminRouteCards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
 body.desktop-mode #adminDriversList .driver-card{margin-bottom:0}
-body.desktop-mode #adminDriversList{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-content:start}
+body.desktop-mode #adminDriversList{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;align-content:start}
+body.desktop-mode .admin-stats-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
+body.desktop-mode #adminDriversStats{grid-template-columns:repeat(4,1fr)}
+.admin-stat-card{background:#fff;border-radius:10px;padding:16px 18px;border:1px solid #e8e6e1}
+.admin-stat-val{font-size:26px;font-weight:800;color:#1c1c1c;line-height:1}
+.admin-stat-lbl{font-size:12px;color:#9a9894;margin-top:4px;font-family:'Barlow',sans-serif}
 /* ═══ DESKTOP — ABA ROTAS ═══ */
-body.desktop-mode #adminList{display:grid;grid-template-columns:1fr auto;grid-template-rows:auto 1fr;column-gap:12px;row-gap:0;align-items:center}
-body.desktop-mode #adminList .admin-search{grid-column:1;grid-row:1;margin-bottom:0}
-body.desktop-mode #adminList .admin-add{grid-column:2;grid-row:1;width:auto;min-width:160px;padding:0 22px;height:44px;font-size:13px;margin-bottom:0;border-radius:10px}
-body.desktop-mode #adminList #adminRouteCards{grid-column:1/-1;grid-row:2;margin-top:16px}
+body.desktop-mode #adminList{display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto 1fr;column-gap:12px;row-gap:0;align-items:center}
+body.desktop-mode #adminList .admin-stats-bar{grid-column:1/-1;grid-row:1}
+body.desktop-mode #adminList .admin-search{grid-column:1;grid-row:2;margin-bottom:0}
+body.desktop-mode #adminList .admin-add{grid-column:2;grid-row:2;width:auto;min-width:160px;padding:0 22px;height:44px;font-size:13px;margin-bottom:0;border-radius:10px}
+body.desktop-mode #adminList #adminRouteCards{grid-column:1/-1;grid-row:3;margin-top:16px}
 body.desktop-mode .admin-rcard{border-radius:10px;padding:14px 18px;margin-bottom:0;transition:box-shadow .15s,border-color .15s}
 body.desktop-mode .admin-rcard:hover{border-color:#fe2627;box-shadow:0 4px 16px rgba(254,38,39,.1)}
 body.desktop-mode .admin-rcard-actions{margin-top:8px;gap:8px}
 body.desktop-mode .admin-btn{min-height:34px;font-size:12px;padding:0 12px;border-radius:7px}
+body.desktop-mode .admin-btn-del{flex:none;width:36px;padding:0}
+body.desktop-mode .admin-btn-del .admin-btn-label{display:none}
 
 /* ═══ DESKTOP — ABA MOTORISTAS ═══ */
 body.desktop-mode #adminDriversList .admin-add{grid-column:1/-1;width:auto;height:40px;font-size:13px;padding:0 22px;justify-self:start;border-radius:10px;margin-bottom:4px}
 body.desktop-mode .driver-card{border-radius:12px;padding:14px 16px;margin-bottom:0;transition:box-shadow .15s,border-color .15s}
 body.desktop-mode .driver-card:hover{border-color:#fe2627;box-shadow:0 4px 16px rgba(254,38,39,.1)}
+body.desktop-mode .driver-card.blocked:hover{border-color:rgba(254,38,39,.5)}
 body.desktop-mode .driver-card-avatar{width:48px;height:48px;border-radius:14px;font-size:17px}
-body.desktop-mode .driver-card-actions{margin-top:10px;gap:8px}
-body.desktop-mode .driver-btn{min-height:34px;font-size:12px;padding:0 12px}
+body.desktop-mode .driver-card-actions{margin-top:10px;gap:6px}
+body.desktop-mode .driver-btn{min-height:34px;font-size:12px;padding:0}
+body.desktop-mode .driver-btn-label{display:none}
 
 /* ═══ DESKTOP — ABA MONITOR ═══ */
 body.desktop-mode #monitorStats{display:grid!important;grid-template-columns:repeat(3,1fr)!important;gap:14px!important;padding:0 0 16px!important}
