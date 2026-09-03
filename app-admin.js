@@ -471,7 +471,7 @@ async function saveEditPostoUnified(oldNomeEnc,oldCidadeEnc){
     document.querySelector('.postos-form-ov')?.remove();
     renderAdminPostos();
     showToast('✅ Posto atualizado em todas as rotas');
-  }catch(e){errEl.textContent='Erro ao salvar.';errEl.style.display='block';if(btn){btn.disabled=false;btn.textContent='Salvar';}}
+  }catch(e){console.error('[saveEditPostoUnified]',e);errEl.textContent='Erro ao salvar: '+(e?.message||e);errEl.style.display='block';if(btn){btn.disabled=false;btn.textContent='Salvar';}}
 }
 
 function showEditPostoRota(ri,pi){
