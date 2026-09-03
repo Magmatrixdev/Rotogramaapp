@@ -3,11 +3,21 @@ let _adminRouteFilter='';
 
 function renderAdmin(){
   const el=document.getElementById('adminList');if(!el)return;
-  let h=`<div class="admin-search"><span class="admin-search-icon">🔍</span><input id="adminRouteSearch" type="text" placeholder="Pesquisar rota..." value="${esc(_adminRouteFilter)}" oninput="_adminRouteFilter=this.value;renderAdminRoutes()"><button class="admin-search-clear ${_adminRouteFilter?'visible':''}" onclick="_adminRouteFilter='';document.getElementById('adminRouteSearch').value='';renderAdminRoutes()">✕</button></div>`;
+  let h=`<div class="admin-stats-bar" id="adminRoutesStats"></div>`;
+  h+=`<div class="admin-search"><span class="admin-search-icon">🔍</span><input id="adminRouteSearch" type="text" placeholder="Pesquisar rota..." value="${esc(_adminRouteFilter)}" oninput="_adminRouteFilter=this.value;renderAdminRoutes()"><button class="admin-search-clear ${_adminRouteFilter?'visible':''}" onclick="_adminRouteFilter='';document.getElementById('adminRouteSearch').value='';renderAdminRoutes()">✕</button></div>`;
   h+=`<button class="admin-add" onclick="editRoute(-1)">＋ NOVA ROTA</button>`;
   h+=`<div id="adminRouteCards"></div>`;
   el.innerHTML=h;
   renderAdminRoutes();
+  renderAdminRoutesStats();
+}
+
+function renderAdminRoutesStats(){
+  const el=document.getElementById('adminRoutesStats');if(!el)return;
+  const totalRoutes=routes.length;
+  const totalStops=routes.reduce((sum,r)=>sum+r.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino').length,0);
+  const avg=totalRoutes?(totalStops/totalRoutes).toFixed(1):'0';
+  el.innerHTML=`<div class="admin-stat-card"><div class="admin-stat-val">${totalRoutes}</div><div class="admin-stat-lbl">Rotas cadastradas</div></div><div class="admin-stat-card"><div class="admin-stat-val">${totalStops}</div><div class="admin-stat-lbl">Paradas no total</div></div><div class="admin-stat-card"><div class="admin-stat-val">${avg}</div><div class="admin-stat-lbl">Média de paradas/rota</div></div>`;
 }
 
 function renderAdminRoutes(){
@@ -20,7 +30,7 @@ function renderAdminRoutes(){
     const searchText=(r.nome+' '+r.numero+' '+(r.regiao||'')+' '+(r.estados||'')+' '+(r.distancia||'')).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
     if(q&&!searchText.includes(q))return;
     count++;const stops=r.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino').length;
-    h+=`<div class="admin-rcard"><div class="admin-rcard-head"><div class="admin-rcard-num">${r.numero}</div><div class="admin-rcard-info"><div class="admin-rcard-name">${r.nome}</div><div class="admin-rcard-sub">${r.regiao} · ${stops} postos · ${r.distancia}</div></div></div><div class="admin-rcard-actions"><button class="admin-btn admin-btn-edit" onclick="editRoute(${i})">✏️ Editar</button><button class="admin-btn admin-btn-del" onclick="deleteRoute(${i})">🗑️ Excluir</button></div></div>`});
+    h+=`<div class="admin-rcard"><div class="admin-rcard-head"><div class="admin-rcard-num">${r.numero}</div><div class="admin-rcard-info"><div class="admin-rcard-name">${r.nome}</div><div class="admin-rcard-sub"><i class="ti ti-map-pin" aria-hidden="true"></i>${r.regiao} · ${stops} postos · ${r.distancia}</div></div></div><div class="admin-rcard-actions"><button class="admin-btn admin-btn-edit" onclick="editRoute(${i})"><i class="ti ti-edit" aria-hidden="true"></i><span class="admin-btn-label"> Editar</span></button><button class="admin-btn admin-btn-del" onclick="deleteRoute(${i})"><i class="ti ti-trash" aria-hidden="true"></i><span class="admin-btn-label"> Excluir</span></button></div></div>`});
   if(q&&count===0)h=`<div class="admin-no-results"><span>🔍</span>Nenhuma rota encontrada para "<strong>${esc(_adminRouteFilter)}</strong>"</div>`;
   container.innerHTML=h;
 }
@@ -143,11 +153,23 @@ async function doEditDriver(id){
 
 async function renderDriverManager(){
   const el=document.getElementById('adminDriversList');if(!el)return;
-  let h=`<div class="admin-search"><span class="admin-search-icon">🔍</span><input id="driverSearch" type="text" placeholder="Pesquisar motorista..." value="${esc(_driverFilter)}" oninput="_driverFilter=this.value;renderDriverCards()"><button class="admin-search-clear ${_driverFilter?'visible':''}" onclick="_driverFilter='';document.getElementById('driverSearch').value='';renderDriverCards()">✕</button></div>`;
+  let h=`<div class="admin-stats-bar" id="adminDriversStats"></div>`;
+  h+=`<div class="admin-search"><span class="admin-search-icon">🔍</span><input id="driverSearch" type="text" placeholder="Pesquisar motorista..." value="${esc(_driverFilter)}" oninput="_driverFilter=this.value;renderDriverCards()"><button class="admin-search-clear ${_driverFilter?'visible':''}" onclick="_driverFilter='';document.getElementById('driverSearch').value='';renderDriverCards()">✕</button></div>`;
   h+=`<button class="admin-add" onclick="showAddDriverModal()">＋ CADASTRAR MOTORISTA</button>`;
   h+=`<div id="driverCardsContainer"></div>`;
   el.innerHTML=h;
   await renderDriverCards();
+  renderDriverStats();
+}
+
+function renderDriverStats(){
+  const el=document.getElementById('adminDriversStats');if(!el)return;
+  const list=Object.values(drivers);
+  const total=list.length;
+  const blocked=list.filter(d=>d.bloqueado).length;
+  const traveling=list.filter(d=>!d.bloqueado&&Object.values(viagens).some(v=>v.motoristaId===d.id&&v.status==='em_viagem')).length;
+  const active=total-blocked-traveling;
+  el.innerHTML=`<div class="admin-stat-card"><div class="admin-stat-val">${total}</div><div class="admin-stat-lbl">Motoristas</div></div><div class="admin-stat-card"><div class="admin-stat-val" style="color:#1f8a3d">${active}</div><div class="admin-stat-lbl">Ativos</div></div><div class="admin-stat-card"><div class="admin-stat-val" style="color:#1a6fb5">${traveling}</div><div class="admin-stat-lbl">Em viagem</div></div><div class="admin-stat-card"><div class="admin-stat-val" style="color:#fe2627">${blocked}</div><div class="admin-stat-lbl">Bloqueados</div></div>`;
 }
 
 async function renderDriverCards(){
@@ -169,7 +191,7 @@ async function renderDriverCards(){
     const lastAccess=d.ultimoAcesso?new Date(d.ultimoAcesso).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'Nunca';
     let statusClass='status-active',statusTxt='Ativo';
     if(d.bloqueado){statusClass='status-blocked';statusTxt='Bloqueado';}
-    else if(isOnTrip){statusClass='status-traveling';statusTxt='🚛 Em viagem';}
+    else if(isOnTrip){statusClass='status-traveling';statusTxt='Em viagem';}
     const cpfMask='***.***.***-**'; // CPF nunca decifrado no cliente — use botão Ver CPF
     const driverId=d.id||d.uid||'';
     h+=`<div class="driver-card ${d.bloqueado?'blocked':''}">
@@ -179,14 +201,14 @@ async function renderDriverCards(){
           <div class="driver-card-name">${d.nome}</div>
           <div class="driver-card-cpf">CPF: ${cpfMask}</div>
         </div>
-        <span class="driver-card-status ${statusClass}">${statusTxt}</span>
+        <span class="driver-card-status ${statusClass}"><span class="status-dot" aria-hidden="true"></span>${statusTxt}</span>
       </div>
       <div class="driver-card-meta">Último acesso: ${lastAccess}</div>
       <div class="driver-card-actions">
-        <button class="driver-btn driver-btn-edit" onclick="showEditDriverModal('${driverId}')">✏️ Editar</button>
-        <button class="driver-btn driver-btn-cpf" onclick="viewDriverCPF('${driverId}','${esc(d.nome)}')">👁 Ver CPF</button>
-        <button class="driver-btn ${d.bloqueado?'driver-btn-unblock':'driver-btn-block'}" onclick="toggleBlockDriver('${driverId}',${d.bloqueado})">${d.bloqueado?'🔓 Desbloquear':'🔒 Bloquear'}</button>
-        <button class="driver-btn driver-btn-del" onclick="deleteDriver('${driverId}')">🗑️ Excluir</button>
+        <button class="driver-btn driver-btn-edit" onclick="showEditDriverModal('${driverId}')"><i class="ti ti-edit" aria-hidden="true"></i><span class="driver-btn-label"> Editar</span></button>
+        <button class="driver-btn driver-btn-cpf" onclick="viewDriverCPF('${driverId}','${esc(d.nome)}')"><i class="ti ti-eye" aria-hidden="true"></i><span class="driver-btn-label"> Ver CPF</span></button>
+        <button class="driver-btn ${d.bloqueado?'driver-btn-unblock':'driver-btn-block'}" onclick="toggleBlockDriver('${driverId}',${d.bloqueado})"><i class="ti ti-${d.bloqueado?'lock-open':'lock'}" aria-hidden="true"></i><span class="driver-btn-label"> ${d.bloqueado?'Desbloquear':'Bloquear'}</span></button>
+        <button class="driver-btn driver-btn-del" onclick="deleteDriver('${driverId}')"><i class="ti ti-trash" aria-hidden="true"></i><span class="driver-btn-label"> Excluir</span></button>
       </div>
     </div>`;
   }
