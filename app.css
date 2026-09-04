@@ -599,11 +599,12 @@ body.desktop-mode .admin-btn{width:30px;height:30px;min-height:30px;flex:none;pa
 body.desktop-mode .admin-btn-label{display:none}
 
 /* ═══ DESKTOP — ABA MOTORISTAS (lista fina) ═══ */
-body.desktop-mode #adminDriversList{display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto 1fr;column-gap:12px;row-gap:0;align-items:center}
-body.desktop-mode #adminDriversList .admin-stats-bar{grid-column:1/-1;grid-row:1}
-body.desktop-mode #adminDriversList .admin-search{grid-column:1;grid-row:2;margin-bottom:0}
-body.desktop-mode #adminDriversList .admin-add{grid-column:2;grid-row:2;width:auto;min-width:190px;height:44px;font-size:13px;padding:0 22px;margin-bottom:0;border-radius:10px}
-body.desktop-mode #adminDriversList #driverCardsContainer{grid-column:1/-1;grid-row:3;margin-top:16px;display:block;background:#fff;border:1px solid #e8e6e1;border-radius:12px;overflow:hidden}
+body.desktop-mode #adminDriversList{display:flex;flex-direction:column;overflow:visible}
+body.desktop-mode #adminDriversList .admin-stats-bar{flex-shrink:0}
+body.desktop-mode #adminDriversList .admin-toolbar-row{display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-shrink:0}
+body.desktop-mode #adminDriversList .admin-search{flex:1;margin-bottom:0}
+body.desktop-mode #adminDriversList .admin-add{flex-shrink:0;width:auto;min-width:190px;height:44px;font-size:13px;padding:0 22px;margin-bottom:0;border-radius:10px}
+body.desktop-mode #adminDriversList #driverCardsContainer{margin-top:0;display:block;background:#fff;border:1px solid #e8e6e1;border-radius:12px;overflow:hidden}
 body.desktop-mode .driver-card{display:flex;align-items:center;gap:14px;padding:9px 16px;border:none;border-radius:0;border-bottom:1px solid #efeee9;box-shadow:none;margin-bottom:0;background:transparent;transition:background .1s}
 body.desktop-mode .driver-card:last-child{border-bottom:none}
 body.desktop-mode .driver-card:hover{background:#faf9f7}
