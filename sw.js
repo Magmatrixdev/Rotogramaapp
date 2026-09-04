@@ -1,4 +1,4 @@
-const CACHE = 'rotograma-v10';
+const CACHE = 'rotograma-v11';
 const STATIC = [
   './manifest.json',
   './icon-192.png',
@@ -46,7 +46,23 @@ self.addEventListener('fetch', e => {
     return; // sem respondWith = comportamento padrão do browser
   }
 
-  // Ícones e manifest: cache-first
+  // JS e CSS: network-first (sempre tenta buscar a versão mais nova;
+  // só cai pro cache se estiver offline). Evita ficar preso em versão
+  // antiga de app-*.js mesmo depois de bump de APP_VERSION + hard refresh,
+  // já que o Service Worker intercepta o fetch antes do cache HTTP do navegador.
+  if (p.endsWith('.js') || p.endsWith('.css')) {
+    e.respondWith(
+      fetch(e.request).then(res => {
+        caches.open(CACHE).then(c => c.put(e.request, res.clone()));
+        return res;
+      }).catch(() =>
+        caches.match(e.request).then(cached => cached || new Response('Offline', { status: 503, statusText: 'Service Unavailable' }))
+      )
+    );
+    return;
+  }
+
+  // Ícones e manifest: cache-first (raramente mudam, prioriza uso offline)
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;
