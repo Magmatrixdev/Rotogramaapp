@@ -267,6 +267,20 @@ async function doAdminLogin(){
         const fbData=snap.val()||{};
         drivers={...fbData};
       }).catch(()=>{});
+      // Recarrega rotogramas explicitamente: o listener .on('value') registrado em
+      // initFirebase() pode ter falhado (permission_denied) antes do login, e o RTDB
+      // não reativa um listener .on() sozinho depois que ele já deu erro uma vez.
+      // Sem isso, o admin renderiza com dados velhos/DEFAULTS mesmo após logar.
+      try{
+        const snap=await db.ref('rotogramas').once('value');
+        const data=snap.val();
+        if(data&&Array.isArray(data)){
+          routes=data;
+          firebaseReady=true;
+          localStorage.setItem('rotogramas_cache',JSON.stringify(routes));
+          setSyncStatus('on','Sincronizado');
+        }
+      }catch(rErr){console.warn('[admin] reload rotogramas falhou:',rErr);}
     }
     renderAdmin();
     // Guard: onAuthStateChanged pode ter feito navPush('screenAdmin') antes desta
