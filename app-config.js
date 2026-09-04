@@ -8,7 +8,7 @@ var IS_DESKTOP = function(){ return document.body.classList.contains('desktop-mo
 const USE_NEW_AUTH = true;
 
 // ═══ FIREBASE CONFIG ═══
-const APP_VERSION = 40; // Incrementar a cada deploy para forçar update em todos os devices
+const APP_VERSION = 41; // Incrementar a cada deploy para forçar update em todos os devices
 const FIREBASE_CONFIG={apiKey:"AIzaSyAbYd2RulYeBr-_IQ8G4ccmzxKf8gAjLPQ",authDomain:"rotogramas-confianca.firebaseapp.com",databaseURL:"https://rotogramas-confianca-default-rtdb.firebaseio.com",projectId:"rotogramas-confianca",storageBucket:"rotogramas-confianca.firebasestorage.app",messagingSenderId:"156398881281",appId:"1:156398881281:web:a67f3e2ee02b969ab78e00"};
 // Admin auth via Firebase Authentication (credenciais gerenciadas no Console do Firebase)
 const MAPBOX_TOKEN='pk.eyJ1IjoibWFnbWF0cml4IiwiYSI6ImNtc2VzMnVmeDAzcG0yd3EzZ29sZ3B0bXAifQ.0GE2l_Phleota_jEOqnRMQ';
