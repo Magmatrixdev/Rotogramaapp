@@ -86,7 +86,7 @@ function initFirebase(){
     const _notifListenerStart=Date.now();
     db.ref('notifications').limitToLast(30).on('value',snap=>{
       const d=snap.val();
-      const fbNotifs=d?Object.entries(d).map(([k,v])=>({id:k,...v})).sort((a,b)=>(b.ts||0)-(a.ts||0)):[];
+      const fbNotifs=d?Object.entries(d).map(([k,v])=>({id:k,type:v.tipo,route:v.titulo,msg:v.mensagem,ts:v.ts})).sort((a,b)=>(b.ts||0)-(a.ts||0)):[];
       // IDs já conhecidos antes de mesclar (para detectar entradas realmente novas)
       const prevIds=new Set(notifications.filter(n=>!n._local).map(n=>n.id));
       const localOnly=notifications.filter(n=>n._local&&!fbNotifs.some(fb=>Math.abs((fb.ts||0)-(n.ts||0))<5000));
