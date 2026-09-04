@@ -107,7 +107,7 @@ function pushNotification(type,routeName,msg){
   if(notifPanelOpen)renderNotifList();
   // 2) Salvar no Firebase em paralelo
   if(db&&firebaseReady){
-    db.ref('notifications').push({type:type,route:routeName,msg:msg,ts:ts})
+    db.ref('notifications').push({tipo:type,titulo:routeName,mensagem:msg,ts:ts})
       .then(ref=>{
         const idx=notifications.findIndex(n=>n.id===localId);
         if(idx>=0){notifications[idx]={...notifications[idx],id:ref.key,_local:false};}
