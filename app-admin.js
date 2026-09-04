@@ -153,8 +153,7 @@ async function doEditDriver(id){
 async function renderDriverManager(){
   const el=document.getElementById('adminDriversList');if(!el)return;
   let h=`<div class="admin-stats-bar" id="adminDriversStats"></div>`;
-  h+=`<div class="admin-search"><span class="admin-search-icon">🔍</span><input id="driverSearch" type="text" placeholder="Pesquisar motorista..." value="${esc(_driverFilter)}" oninput="_driverFilter=this.value;renderDriverCards()"><button class="admin-search-clear ${_driverFilter?'visible':''}" onclick="_driverFilter='';document.getElementById('driverSearch').value='';renderDriverCards()">✕</button></div>`;
-  h+=`<button class="admin-add" onclick="showAddDriverModal()">＋ CADASTRAR MOTORISTA</button>`;
+  h+=`<div class="admin-toolbar-row"><div class="admin-search"><span class="admin-search-icon">🔍</span><input id="driverSearch" type="text" placeholder="Pesquisar motorista..." value="${esc(_driverFilter)}" oninput="_driverFilter=this.value;renderDriverCards()"><button class="admin-search-clear ${_driverFilter?'visible':''}" onclick="_driverFilter='';document.getElementById('driverSearch').value='';renderDriverCards()">✕</button></div><button class="admin-add" onclick="showAddDriverModal()">＋ CADASTRAR MOTORISTA</button></div>`;
   h+=`<div id="driverCardsContainer"></div>`;
   el.innerHTML=h;
   await renderDriverCards();
