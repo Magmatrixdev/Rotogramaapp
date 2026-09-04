@@ -4,8 +4,7 @@ let _adminRouteFilter='';
 function renderAdmin(){
   const el=document.getElementById('adminList');if(!el)return;
   let h=`<div class="admin-stats-bar" id="adminRoutesStats"></div>`;
-  h+=`<div class="admin-search"><span class="admin-search-icon">🔍</span><input id="adminRouteSearch" type="text" placeholder="Pesquisar rota..." value="${esc(_adminRouteFilter)}" oninput="_adminRouteFilter=this.value;renderAdminRoutes()"><button class="admin-search-clear ${_adminRouteFilter?'visible':''}" onclick="_adminRouteFilter='';document.getElementById('adminRouteSearch').value='';renderAdminRoutes()">✕</button></div>`;
-  h+=`<button class="admin-add" onclick="editRoute(-1)">＋ NOVA ROTA</button>`;
+  h+=`<div class="admin-toolbar-row"><div class="admin-search"><span class="admin-search-icon">🔍</span><input id="adminRouteSearch" type="text" placeholder="Pesquisar rota..." value="${esc(_adminRouteFilter)}" oninput="_adminRouteFilter=this.value;renderAdminRoutes()"><button class="admin-search-clear ${_adminRouteFilter?'visible':''}" onclick="_adminRouteFilter='';document.getElementById('adminRouteSearch').value='';renderAdminRoutes()">✕</button></div><button class="admin-add" onclick="editRoute(-1)">＋ NOVA ROTA</button></div>`;
   h+=`<div id="adminRouteCards"></div>`;
   el.innerHTML=h;
   renderAdminRoutes();
