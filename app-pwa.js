@@ -81,7 +81,7 @@ function showUpdateBanner(reg){
 
 if('serviceWorker' in navigator){
   let _swRefreshing=false;
-  navigator.serviceWorker.register('./sw.js?v=10').then(reg=>{
+  navigator.serviceWorker.register('./sw.js?v=11').then(reg=>{
     reg.addEventListener('updatefound',()=>{
       const newWorker=reg.installing;
       newWorker.addEventListener('statechange',()=>{
