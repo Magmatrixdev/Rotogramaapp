@@ -24,6 +24,7 @@ function initFirebase(){
       const tok=await user.getIdTokenResult(true).catch(()=>null);
       if(tok?.claims?.admin){
         adminMode=true; // já setado em doAdminLogin, mas garante aqui
+        if(typeof initPushMessaging==='function')initPushMessaging();
         return;
       }
       // ── Motorista autenticado via custom token ─────────────────────────
@@ -35,6 +36,8 @@ function initFirebase(){
           if(d)currentDriver={uid:user.uid,...d};
         });
       }
+      // Registra o aparelho no FCM para receber push com o app fechado
+      if(typeof initPushMessaging==='function')initPushMessaging();
       // Navega para home se ainda estiver na tela de login
       if(!_navStack.length||_navStack[_navStack.length-1]==='screenDriverLogin'){showHome();}
     });
