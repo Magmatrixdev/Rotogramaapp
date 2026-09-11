@@ -8,6 +8,7 @@
  *   setAdminClaim   — seta custom claim admin=true (requer admin caller)
  *   getDriverCPF    — retorna CPF formatado para admin + auditoria
  *   changePIN       — motorista autenticado troca o próprio PIN
+ *   onNotificationCreated — envia push FCM ao criar aviso em /notifications
  *
  * Secrets (Secret Manager):
  *   HMAC_SECRET  — chave HMAC para deduplicação do CPF (32+ bytes aleatórios)
@@ -20,6 +21,7 @@
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
+import { onValueCreated } from 'firebase-functions/v2/database';
 import { defineSecret } from 'firebase-functions/params';
 import * as admin from 'firebase-admin';
 
@@ -400,5 +402,123 @@ export const bootstrapAdminClaim = onCall(
     });
 
     return { success: true, alreadySet: false };
+  }
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// onNotificationCreated
+// Gatilho: criação de nó em /notifications/{notifId}
+// Envia push via FCM para os tokens em /fcmTokens, permitindo que o aviso
+// chegue ao motorista mesmo com o app fechado.
+// Payload data-only: quem monta a notificação é o Service Worker (sw.js),
+// garantindo tag/ícone/deep-link consistentes.
+// ─────────────────────────────────────────────────────────────────────────────
+export const onNotificationCreated = onValueCreated(
+  { ref: '/notifications/{notifId}', region: 'us-central1' },
+  async (event) => {
+    const n = event.data.val() as Record<string, unknown> | null;
+    if (!n) return;
+
+    const notifId = event.params['notifId'];
+    const ts = typeof n['ts'] === 'number' ? (n['ts'] as number) : Date.now();
+
+    // Ignora entradas antigas (backfill/migração) — evita avalanche de push
+    if (Date.now() - ts > 10 * 60 * 1000) return;
+
+    const titulo = String(n['titulo'] ?? n['route'] ?? 'Rotogramas — Confiança').slice(0, 100);
+    const mensagem = String(n['mensagem'] ?? n['msg'] ?? '').slice(0, 300);
+    const tipo = String(n['tipo'] ?? n['type'] ?? '');
+    const destinatarioId = n['destinatarioId'] ? String(n['destinatarioId']) : null;
+    const rota = n['rotaId'] ? String(n['rotaId']) : '';
+
+    const db = admin.database();
+
+    // ── Coleta de tokens ────────────────────────────────────────────────────
+    // Com destinatarioId: só aquele motorista. Sem: todos os aparelhos.
+    const snap = destinatarioId
+      ? await db.ref(`fcmTokens/${destinatarioId}`).once('value')
+      : await db.ref('fcmTokens').once('value');
+
+    if (!snap.exists()) return;
+
+    type Entry = { path: string; token: string };
+    const entries: Entry[] = [];
+
+    if (destinatarioId) {
+      snap.forEach((child) => {
+        const t = child.val()?.token;
+        if (typeof t === 'string' && t.length > 20) {
+          entries.push({ path: `fcmTokens/${destinatarioId}/${child.key}`, token: t });
+        }
+        return false;
+      });
+    } else {
+      snap.forEach((userNode) => {
+        userNode.forEach((child) => {
+          const t = child.val()?.token;
+          if (typeof t === 'string' && t.length > 20) {
+            entries.push({ path: `fcmTokens/${userNode.key}/${child.key}`, token: t });
+          }
+          return false;
+        });
+        return false;
+      });
+    }
+
+    if (entries.length === 0) return;
+
+    // Deduplica: o mesmo token pode ter sido salvo sob uids diferentes se o
+    // motorista trocou de login no mesmo aparelho.
+    const vistos = new Set<string>();
+    const unicos = entries.filter((e) => {
+      if (vistos.has(e.token)) return false;
+      vistos.add(e.token);
+      return true;
+    });
+
+    const data = {
+      id: String(notifId),
+      titulo,
+      mensagem,
+      tipo,
+      rota,
+      ts: String(ts),
+    };
+
+    // ── Envio em lotes de 500 (limite do sendEachForMulticast) ──────────────
+    const invalidos: string[] = [];
+    const messaging = admin.messaging();
+
+    for (let i = 0; i < unicos.length; i += 500) {
+      const lote = unicos.slice(i, i + 500);
+      const resp = await messaging.sendEachForMulticast({
+        tokens: lote.map((e) => e.token),
+        data,
+        webpush: {
+          headers: { Urgency: 'high', TTL: '86400' },
+        },
+        android: { priority: 'high' },
+      });
+
+      resp.responses.forEach((r, idx) => {
+        if (r.success) return;
+        const code = r.error?.code ?? '';
+        if (
+          code === 'messaging/registration-token-not-registered' ||
+          code === 'messaging/invalid-registration-token' ||
+          code === 'messaging/invalid-argument'
+        ) {
+          invalidos.push(lote[idx].path);
+        }
+      });
+    }
+
+    // ── Limpeza de tokens mortos ────────────────────────────────────────────
+    // Sem isso a lista só cresce e cada envio fica mais lento.
+    if (invalidos.length > 0) {
+      const updates: Record<string, null> = {};
+      invalidos.forEach((p) => { updates[p] = null; });
+      await db.ref().update(updates).catch(() => undefined);
+    }
   }
 );
