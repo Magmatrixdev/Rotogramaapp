@@ -295,6 +295,35 @@
     },
 
     // ─────────────────────────────────────────────────────────────
+    // /fcmTokens — tokens de push por aparelho
+    //   • Coleção inteira: fechada (só Cloud Functions via Admin SDK leem)
+    //   • Nó do usuário:   próprio uid ou admin
+    // ─────────────────────────────────────────────────────────────
+    "fcmTokens": {
+      ".read":  false,
+      ".write": false,
+
+      "$uid": {
+        ".read":  "auth !== null && (auth.uid === $uid || auth.token.admin === true)",
+        ".write": "auth !== null && (auth.uid === $uid || auth.token.admin === true)",
+
+        "$tokenKey": {
+          ".validate": "newData.hasChildren(['token', 'ts'])",
+          "token": {
+            ".validate": "newData.isString() && newData.val().length >= 20 && newData.val().length <= 400"
+          },
+          "ts": {
+            ".validate": "newData.isNumber() && newData.val() > 0"
+          },
+          "plataforma": {
+            ".validate": "newData.isString() && newData.val().length <= 200"
+          },
+          "$outrosCampos": { ".validate": false }
+        }
+      }
+    },
+
+    // ─────────────────────────────────────────────────────────────
     // /config
     //   • Leitura: pública (sem autenticação)
     //   • Escrita: apenas admin
