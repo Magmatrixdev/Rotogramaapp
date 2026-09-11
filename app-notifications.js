@@ -38,7 +38,7 @@ function renderNotifBadge(){
 function toggleNotifPanel(){
   // Solicitar permissão via gesto do usuário — funciona no Android Chrome
   if('Notification' in window&&Notification.permission==='default'){
-    Notification.requestPermission().then(p=>{if(p==='granted')showToast('Notificações ativadas! 🔔','#1a7f37');});
+    Notification.requestPermission().then(p=>{if(p==='granted'){showToast('Notificações ativadas! 🔔','#1a7f37');if(typeof initPushMessaging==='function')initPushMessaging();}});
   }
   notifPanelOpen=!notifPanelOpen;
   const panel=document.getElementById('notifPanel');
@@ -129,8 +129,10 @@ function requestNotifPermission(){
   if(!('Notification' in window))return;
   if(Notification.permission==='default'){
     Notification.requestPermission().then(p=>{
-      if(p==='granted')showToast('Notificações ativadas!','#1a7f37');
+      if(p==='granted'){showToast('Notificações ativadas!','#1a7f37');if(typeof initPushMessaging==='function')initPushMessaging();}
     });
+  } else if(Notification.permission==='granted'){
+    if(typeof initPushMessaging==='function')initPushMessaging();
   }
 }
 
@@ -147,3 +149,37 @@ document.addEventListener('click',e=>{
   }
 });
 
+// ═══ FCM — PUSH COM O APP FECHADO ═══
+// Obtém o token FCM deste aparelho e salva em /fcmTokens/{uid}/{chave}.
+// A Cloud Function onNotificationCreated lê esse nó e envia o push.
+let _fcmInitDone=false;
+async function initPushMessaging(){
+  if(_fcmInitDone)return;
+  if(!('serviceWorker' in navigator))return;
+  if(!('Notification' in window)||Notification.permission!=='granted')return;
+  if(typeof firebase==='undefined'||!firebase.messaging)return;
+  try{ if(firebase.messaging.isSupported&&!firebase.messaging.isSupported())return; }catch(e){return;}
+  const user=firebase.auth().currentUser;
+  if(!user||!db)return;
+  _fcmInitDone=true;
+  try{
+    const reg=await navigator.serviceWorker.ready;
+    const messaging=firebase.messaging();
+    const token=await messaging.getToken({vapidKey:VAPID_KEY,serviceWorkerRegistration:reg});
+    if(!token){_fcmInitDone=false;return;}
+    // Chave estável por aparelho: últimos 32 chars do token, sem caracteres
+    // proibidos em chaves do Realtime Database
+    const chave=token.slice(-32).replace(/[.#$/\[\]]/g,'_');
+    await db.ref('fcmTokens/'+user.uid+'/'+chave).set({
+      token:token,
+      ts:Date.now(),
+      plataforma:(navigator.userAgent||'').slice(0,200)
+    });
+    // App em primeiro plano: o listener de /notifications já exibe o aviso,
+    // então aqui não fazemos nada para não duplicar.
+    messaging.onMessage(()=>{});
+  }catch(e){
+    _fcmInitDone=false;
+    console.warn('FCM indisponível:',e&&e.message);
+  }
+}
