@@ -1,4 +1,4 @@
-const CACHE = 'rotograma-v11';
+const CACHE = 'rotograma-v12';
 const STATIC = [
   './manifest.json',
   './icon-192.png',
@@ -6,6 +6,42 @@ const STATIC = [
   './icon-512.png',
   './icon-512-maskable.png'
 ];
+
+// ═══ FIREBASE CLOUD MESSAGING (push com o app fechado) ═══
+// Envolvido em try/catch: se o dispositivo estiver offline no momento em que o
+// SW inicia, o importScripts falha — sem o catch isso quebraria TODO o Service
+// Worker (cache e fetch inclusive), deixando o app sem funcionamento offline.
+try {
+  importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
+  importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js');
+  firebase.initializeApp({
+    apiKey: 'AIzaSyAbYd2RulYeBr-_IQ8G4ccmzxKf8gAjLPQ',
+    authDomain: 'rotogramas-confianca.firebaseapp.com',
+    databaseURL: 'https://rotogramas-confianca-default-rtdb.firebaseio.com',
+    projectId: 'rotogramas-confianca',
+    storageBucket: 'rotogramas-confianca.firebasestorage.app',
+    messagingSenderId: '156398881281',
+    appId: '1:156398881281:web:a67f3e2ee02b969ab78e00'
+  });
+  firebase.messaging().onBackgroundMessage(payload => {
+    const d = payload.data || {};
+    const titulo = d.titulo || 'Rotogramas — Confiança';
+    const corpo = d.mensagem || '';
+    // Mesmo esquema de tag usado por _maybeShowNative no app: se a mesma
+    // notificação chegar pelos dois caminhos, o navegador substitui em vez
+    // de empilhar duas.
+    return self.registration.showNotification(titulo, {
+      body: corpo,
+      icon: './icon-192.png',
+      badge: './icon-192.png',
+      tag: 'rot-' + (d.id || Date.now()),
+      renotify: true,
+      data: { tipo: d.tipo || '', rota: d.rota || '', id: d.id || '' }
+    });
+  });
+} catch (e) {
+  // Sem FCM nesta sessão do SW — cache e offline seguem funcionando normalmente
+}
 
 self.addEventListener('install', e => {
   e.waitUntil(
@@ -74,13 +110,19 @@ self.addEventListener('fetch', e => {
   );
 });
 
-// Notification click: foca ou abre o app
+// Notification click: foca ou abre o app, indo direto para a rota do aviso
 self.addEventListener('notificationclick', e => {
   e.notification.close();
+  const rota = e.notification.data?.rota || '';
+  const alvo = rota ? './#rota=' + encodeURIComponent(rota) : './';
   e.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {
-      if (clients.length > 0) return clients[0].focus();
-      return self.clients.openWindow('./');
+      if (clients.length > 0) {
+        const c = clients[0];
+        if (rota && 'navigate' in c) return c.navigate(alvo).then(w => w && w.focus()).catch(() => c.focus());
+        return c.focus();
+      }
+      return self.clients.openWindow(alvo);
     })
   );
 });
