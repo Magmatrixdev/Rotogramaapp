@@ -241,6 +241,8 @@ async function viewDriverCPF(id,nome){
     if(code==='functions/permission-denied')msg='Você precisa estar logado como administrador.';
     else if(code==='functions/not-found')msg='CPF não encontrado para este motorista.';
     else if(code==='functions/unauthenticated')msg='Sessão expirada. Entre novamente como admin.';
+    else if(code==='functions/invalid-argument')msg='Identificador do motorista inválido.';
+    else if(code)msg='Erro ('+code+'). Tente novamente.';
     box.innerHTML=`<span style="font-size:14px;font-weight:600;color:#c0392b;text-align:center">${esc(msg)}</span>`;
   }
 }
@@ -354,6 +356,7 @@ function switchAdminTab(tab,el){
     if(db&&adminMode&&Object.keys(drivers).length===0){
       db.ref('motoristas').once('value',snap=>{
         drivers=snap.val()||{};
+        Object.keys(drivers).forEach(k=>{const dr=drivers[k];if(dr&&typeof dr==='object'&&!dr.id)dr.id=k;});
         renderDriverManager();
       }).catch(()=>renderDriverManager());
     }else{
