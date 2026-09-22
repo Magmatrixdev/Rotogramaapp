@@ -266,6 +266,7 @@ async function doAdminLogin(){
       db.ref('motoristas').once('value',snap=>{
         const fbData=snap.val()||{};
         drivers={...fbData};
+        Object.keys(drivers).forEach(k=>{const dr=drivers[k];if(dr&&typeof dr==='object'&&!dr.id)dr.id=k;});
       }).catch(()=>{});
       // Recarrega rotogramas explicitamente: o listener .on('value') registrado em
       // initFirebase() pode ter falhado (permission_denied) antes do login, e o RTDB
