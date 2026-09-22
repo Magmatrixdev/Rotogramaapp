@@ -248,8 +248,17 @@ async function viewDriverCPF(id,nome){
 }
 
 async function toggleBlockDriver(id,blocked){
-  if(db)await db.ref('motoristas/'+id+'/bloqueado').set(!blocked);
-  if(typeof showToast==='function')showToast(blocked?'🔓 Motorista desbloqueado':'🔒 Motorista bloqueado');
+  if(!id){if(typeof showToast==='function')showToast('⚠️ Motorista sem ID — recarregue a lista');return;}
+  try{
+    if(db)await db.ref('motoristas/'+id+'/bloqueado').set(!blocked);
+    if(drivers[id]&&typeof drivers[id]==='object')drivers[id].bloqueado=!blocked;
+    if(typeof renderDriverCards==='function')renderDriverCards();
+    if(typeof renderDriverStats==='function')renderDriverStats();
+    if(typeof showToast==='function')showToast(blocked?'🔓 Motorista desbloqueado':'🔒 Motorista bloqueado');
+  }catch(e){
+    console.error('[toggleBlockDriver]',e);
+    if(typeof showToast==='function')showToast('❌ Erro ao alterar bloqueio: '+((e&&e.code)||(e&&e.message)||'tente novamente'));
+  }
 }
 
 async function deleteDriver(id){
