@@ -205,7 +205,7 @@ async function renderDriverCards(){
       <div class="driver-card-actions">
         <button class="driver-btn driver-btn-edit" onclick="showEditDriverModal('${driverId}')"><i class="ti ti-edit" aria-hidden="true"></i><span class="driver-btn-label"> Editar</span></button>
         <button class="driver-btn driver-btn-cpf" onclick="viewDriverCPF('${driverId}','${esc(d.nome)}')"><i class="ti ti-eye" aria-hidden="true"></i><span class="driver-btn-label"> Ver CPF</span></button>
-        <button class="driver-btn ${d.bloqueado?'driver-btn-unblock':'driver-btn-block'}" onclick="toggleBlockDriver('${driverId}',${d.bloqueado})"><i class="ti ti-${d.bloqueado?'lock-open':'lock'}" aria-hidden="true"></i><span class="driver-btn-label"> ${d.bloqueado?'Desbloquear':'Bloquear'}</span></button>
+        <button class="driver-btn ${d.bloqueado?'driver-btn-unblock':'driver-btn-block'}" onclick="toggleBlockDriver('${driverId}',${!!d.bloqueado})"><i class="ti ti-${d.bloqueado?'lock-open':'lock'}" aria-hidden="true"></i><span class="driver-btn-label"> ${d.bloqueado?'Desbloquear':'Bloquear'}</span></button>
         <button class="driver-btn driver-btn-del" onclick="deleteDriver('${driverId}')"><i class="ti ti-trash" aria-hidden="true"></i><span class="driver-btn-label"> Excluir</span></button>
       </div>
     </div>`;
@@ -213,8 +213,41 @@ async function renderDriverCards(){
   container.innerHTML=h;
 }
 
+async function viewDriverCPF(id,nome){
+  document.querySelector('.driver-modal-overlay')?.remove();
+  const ov=document.createElement('div');ov.className='driver-modal-overlay confirm-overlay';
+  ov.innerHTML=`<div class="confirm-box" style="max-width:360px;text-align:left">
+    <h3 style="margin-bottom:4px">CPF do motorista</h3>
+    <p style="font-size:13px;color:#9a9894;margin-bottom:16px;font-family:'Barlow',sans-serif">${esc(nome||'')}</p>
+    <div id="cpfBox" style="display:flex;align-items:center;justify-content:center;padding:16px;background:#f4f2ee;border-radius:10px;font-family:'Barlow',sans-serif;font-size:18px;font-weight:700;letter-spacing:.5px;color:#9a9894;min-height:24px"><span style="font-size:14px;font-weight:600;color:#9a9894">Carregando CPF…</span></div>
+    <div class="btns" style="margin-top:16px">
+      <button style="background:#eae8e3;color:#1c1c1c;flex:1;padding:12px;border-radius:10px;border:none;font-weight:700;cursor:pointer" onclick="this.closest('.driver-modal-overlay').remove()">Fechar</button>
+      <button id="cpfCopyBtn" disabled style="background:#1c1c1c;color:#fff;flex:1;padding:12px;border-radius:10px;border:none;font-weight:700;cursor:pointer;opacity:.5">Copiar</button>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+  const box=ov.querySelector('#cpfBox');const copyBtn=ov.querySelector('#cpfCopyBtn');
+  try{
+    const fn=firebase.functions().httpsCallable('getDriverCPF');
+    const res=await fn({uid:id});
+    const cpf=(res&&res.data&&res.data.cpf)||'';
+    if(!cpf)throw new Error('empty');
+    box.style.color='#1c1c1c';box.innerHTML=`<span>${esc(cpf)}</span>`;
+    copyBtn.disabled=false;copyBtn.style.opacity='1';
+    copyBtn.onclick=async()=>{try{await navigator.clipboard.writeText(cpf);}catch(e){}if(typeof showToast==='function')showToast('📋 CPF copiado');ov.remove();};
+  }catch(err){
+    const code=(err&&err.code)||'';
+    let msg='Erro ao buscar o CPF. Tente novamente.';
+    if(code==='functions/permission-denied')msg='Você precisa estar logado como administrador.';
+    else if(code==='functions/not-found')msg='CPF não encontrado para este motorista.';
+    else if(code==='functions/unauthenticated')msg='Sessão expirada. Entre novamente como admin.';
+    box.innerHTML=`<span style="font-size:14px;font-weight:600;color:#c0392b;text-align:center">${esc(msg)}</span>`;
+  }
+}
+
 async function toggleBlockDriver(id,blocked){
   if(db)await db.ref('motoristas/'+id+'/bloqueado').set(!blocked);
+  if(typeof showToast==='function')showToast(blocked?'🔓 Motorista desbloqueado':'🔒 Motorista bloqueado');
 }
 
 async function deleteDriver(id){
