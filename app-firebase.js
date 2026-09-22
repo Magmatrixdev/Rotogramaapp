@@ -78,6 +78,7 @@ function initFirebase(){
       drivers={...fbData};
       Object.values(localPending).forEach(d=>{if(!fbData[d.id]){db.ref('motoristas/'+d.id).set(d).then(()=>{const lp=JSON.parse(localStorage.getItem('drivers_local')||'{}');delete lp[d.id];localStorage.setItem('drivers_local',JSON.stringify(lp));}).catch(()=>{});}else{const lp=JSON.parse(localStorage.getItem('drivers_local')||'{}');delete lp[d.id];localStorage.setItem('drivers_local',JSON.stringify(lp));}});
       drivers={...fbData,...localPending};
+      Object.keys(drivers).forEach(k=>{const dr=drivers[k];if(dr&&typeof dr==='object'&&!dr.id)dr.id=k;});
       if(adminMode)renderDriverManager();renderMonitoring();renderBI();
     });
 
