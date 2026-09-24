@@ -1,5 +1,49 @@
 // ═══ DRIVER AUTH ═══
 const SESSION_EXPIRY_MS=30*60*1000; // 30 minutos
+
+// ═══ PERSISTÊNCIA DE SESSÃO + LOGOUT POR INATIVIDADE (30 min) ═══
+const IDLE_TIMEOUT_MS=SESSION_EXPIRY_MS;
+const _ACT_KEY='last_activity';
+let _idleInterval=null,_idleBound=false,_lastActTouch=0;
+function _authTouch(force){
+  const now=Date.now();
+  if(!force&&now-_lastActTouch<20000)return; // grava no máximo 1x/20s
+  _lastActTouch=now;
+  try{localStorage.setItem(_ACT_KEY,String(now));}catch(e){}
+}
+function _authLastActivity(){const v=parseInt(localStorage.getItem(_ACT_KEY)||'0',10);return isNaN(v)?0:v;}
+function _authIsIdle(){const last=_authLastActivity();if(!last)return false;return Date.now()-last>IDLE_TIMEOUT_MS;}
+function _authOnActivity(){_authTouch(false);}
+function _authOnVisible(){
+  if(document.visibilityState!=='visible')return;
+  if((currentDriver||adminMode)&&_authIsIdle()){_idleLogout();return;}
+  _authTouch(true);
+}
+function _authBindListeners(){
+  if(_idleBound)return;_idleBound=true;
+  ['click','keydown','touchstart','pointerdown','wheel'].forEach(ev=>document.addEventListener(ev,_authOnActivity,{passive:true,capture:true}));
+  document.addEventListener('visibilitychange',_authOnVisible);
+  window.addEventListener('focus',_authOnVisible);
+}
+function _authActivate(){
+  _authTouch(true);_authBindListeners();
+  if(_idleInterval)clearInterval(_idleInterval);
+  _idleInterval=setInterval(()=>{if((currentDriver||adminMode)&&_authIsIdle())_idleLogout();},60000);
+}
+function _authDeactivate(){
+  if(_idleInterval){clearInterval(_idleInterval);_idleInterval=null;}
+  try{localStorage.removeItem(_ACT_KEY);}catch(e){}
+  _lastActTouch=0;
+}
+function _idleLogout(){
+  _authDeactivate();
+  currentDriver=null;adminMode=false;
+  firebase.auth().signOut().catch(()=>{});
+  localStorage.removeItem('drv_session');
+  if(typeof hideBottomNav==='function')hideBottomNav();
+  navReset('screenDriverLogin');
+  if(typeof showToast==='function')showToast('Sessão expirada por inatividade. Faça login novamente.','#c2410c');
+}
 async function doDriverRegister(){
   const nome=(document.getElementById('dRegNome')?.value||'').trim();
   const cpfRaw=cleanCPF(document.getElementById('dRegCPF')?.value||'');
@@ -20,6 +64,7 @@ async function doDriverRegister(){
       const fn=firebase.functions().httpsCallable('registerDriver');
       const result=await fn({nome,cpf:cpfRaw,pin});
       const {token}=result.data;
+      if(typeof _authActivate==='function')_authActivate();
       await firebase.auth().signInWithCustomToken(token);
       showSuccessMessage(nome);
     }catch(err){
@@ -84,6 +129,7 @@ async function doDriverLogin(){
       const fn=firebase.functions().httpsCallable('loginDriver');
       const result=await fn({cpf:cpfRaw,pin});
       const {token,pinResetRequired}=result.data;
+      if(typeof _authActivate==='function')_authActivate();
       await firebase.auth().signInWithCustomToken(token);
       if(pinResetRequired){showForcedPINChangeModal(pin);}
       else{showHome();}
@@ -151,6 +197,7 @@ function verifyDriverSession(){
 }
 
 function logoutDriver(){
+  if(typeof _authDeactivate==='function')_authDeactivate();
   currentDriver=null;adminMode=false;
   localStorage.removeItem('drv_session');
   localStorage.removeItem('drivers_local'); // limpa cache legado com dados sensíveis
@@ -166,6 +213,7 @@ function promptLogout(){
 }
 
 function logoutAdmin(){
+  if(typeof _authDeactivate==='function')_authDeactivate();
   adminMode=false;
   firebase.auth().signOut().catch(()=>{});
   if(typeof hideBottomNav==='function')hideBottomNav();
@@ -243,6 +291,7 @@ async function doAdminLogin(){
   if(btn){btn.disabled=true;btn.textContent='Aguarde...';}
   try{
     adminMode=true; // Seta ANTES do signIn para evitar race com onAuthStateChanged
+    if(typeof _authActivate==='function')_authActivate();
     await firebase.auth().signInWithEmailAndPassword(u,p);
     // Seta o custom claim admin=true (idempotente: seguro chamar sempre).
     // bootstrapAdminClaim verifica que o caller tem email=ADMIN_EMAIL antes de setar.
