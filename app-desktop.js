@@ -11,13 +11,15 @@ function toggleDesktopMode(){
     localStorage.setItem('rotograma_desktop_on','0');
     if(btn)btn.innerHTML='🖥️ Versão Web';
     navReset('screenHome',()=>renderHome());
+    if(typeof updateBottomNav==='function')updateBottomNav('Rotas'); // FIX#2: restaura a barra inferior ao voltar pro mobile
   }else{
-    localStorage.setItem('rotograma_desktop_on','1');
-    if(btn)btn.innerHTML='📱 Versão Mobile';
+    // FIX#3: sem sessao nao da pra aplicar o desktop — nao grava preferencia nem troca rotulo (evita estado inconsistente)
     if(!currentDriver&&!adminMode){
       navReset('screenDriverLogin');
       return;
     }
+    localStorage.setItem('rotograma_desktop_on','1');
+    if(btn)btn.innerHTML='📱 Versão Mobile';
     document.body.classList.add('desktop-mode');
     _dActivateHomeLayout();
     dUpdateTopbar();dUpdateSidebar();
@@ -134,6 +136,7 @@ function _restoreDesktopIfNeeded(){
   if(localStorage.getItem('rotograma_desktop_on')!=='1')return; // desktop mode não está salvo
   if(adminMode)return;              // admin tem seu próprio fluxo de restauração
   if(!currentDriver)return;         // motorista não autenticado ainda
+  if(window.innerWidth<1024)return; // FIX#1: nao restaura desktop em tela estreita (evita layout preso); o resize reaplica ao alargar
   _desktopRestored=true;
   document.body.classList.add('desktop-mode');
   var btn=document.getElementById('btnToggleDesktop');
@@ -144,3 +147,28 @@ function _restoreDesktopIfNeeded(){
 }
 
 
+/* ── FIX#1: reconcilia desktop-mode com a largura da tela ──
+   Abaixo de 1024px cai pro mobile (preservando a preferencia salva) para nao
+   prender o usuario num layout desktop sem o botao de toggle; ao voltar a
+   >=1024px, reaplica o desktop se a preferencia estiver ligada e houver sessao. */
+function _reconcileDesktopWidth(){
+  var wide=window.innerWidth>=1024;
+  var on=IS_DESKTOP();
+  var btn=document.getElementById('btnToggleDesktop');
+  if(on&&!wide){
+    document.body.classList.remove('desktop-mode');
+    if(btn)btn.innerHTML='🖥️ Versão Web';
+    navReset('screenHome',function(){renderHome();});
+    if(typeof updateBottomNav==='function')updateBottomNav('Rotas');
+  }else if(!on&&wide&&localStorage.getItem('rotograma_desktop_on')==='1'&&(currentDriver||adminMode)){
+    document.body.classList.add('desktop-mode');
+    if(btn)btn.innerHTML='📱 Versão Mobile';
+    _dActivateHomeLayout();
+    dUpdateTopbar();dUpdateSidebar();
+  }
+}
+var _desktopResizeTimer=null;
+window.addEventListener('resize',function(){
+  clearTimeout(_desktopResizeTimer);
+  _desktopResizeTimer=setTimeout(_reconcileDesktopWidth,180);
+});
