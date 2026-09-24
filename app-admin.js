@@ -205,6 +205,7 @@ async function renderDriverCards(){
       <div class="driver-card-actions">
         <button class="driver-btn driver-btn-edit" onclick="showEditDriverModal('${driverId}')"><i class="ti ti-edit" aria-hidden="true"></i><span class="driver-btn-label"> Editar</span></button>
         <button class="driver-btn driver-btn-cpf" onclick="viewDriverCPF('${driverId}','${esc(d.nome)}')"><i class="ti ti-eye" aria-hidden="true"></i><span class="driver-btn-label"> Ver CPF</span></button>
+        <button class="driver-btn driver-btn-ratelimit" onclick="clearDriverLoginRate('${driverId}','${esc(d.nome)}')"><i class="ti ti-key" aria-hidden="true"></i><span class="driver-btn-label"> Liberar login</span></button>
         <button class="driver-btn ${d.bloqueado?'driver-btn-unblock':'driver-btn-block'}" onclick="toggleBlockDriver('${driverId}',${!!d.bloqueado})"><i class="ti ti-${d.bloqueado?'lock-open':'lock'}" aria-hidden="true"></i><span class="driver-btn-label"> ${d.bloqueado?'Desbloquear':'Bloquear'}</span></button>
         <button class="driver-btn driver-btn-del" onclick="deleteDriver('${driverId}')"><i class="ti ti-trash" aria-hidden="true"></i><span class="driver-btn-label"> Excluir</span></button>
       </div>
@@ -244,6 +245,30 @@ async function viewDriverCPF(id,nome){
     else if(code==='functions/invalid-argument')msg='Identificador do motorista inválido.';
     else if(code)msg='Erro ('+code+'). Tente novamente.';
     box.innerHTML=`<span style="font-size:14px;font-weight:600;color:#c0392b;text-align:center">${esc(msg)}</span>`;
+  }
+}
+
+function clearDriverLoginRate(id,nome){
+  if(!id){if(typeof showToast==='function')showToast('⚠️ Motorista sem ID — recarregue a lista');return;}
+  const ov=document.createElement('div');ov.className='confirm-overlay';
+  ov.innerHTML=`<div class="confirm-box"><h3>Liberar login?</h3><p>Zera o bloqueio por tentativas de senha de <b>${esc(nome||'')}</b>, permitindo novo login imediato.</p><div class="btns"><button style="background:#eae8e3;color:#1c1c1c" onclick="this.closest('.confirm-overlay').remove()">Cancelar</button><button style="background:#b8791a;color:#fff" onclick="confirmClearDriverLoginRate('${id}');this.closest('.confirm-overlay').remove()">Liberar</button></div></div>`;
+  document.body.appendChild(ov);
+}
+
+async function confirmClearDriverLoginRate(id){
+  try{
+    const fn=firebase.functions().httpsCallable('clearDriverRateLimit');
+    await fn({uid:id});
+    if(typeof showToast==='function')showToast('🔓 Login liberado (limite de senha zerado)');
+  }catch(err){
+    const code=(err&&err.code)||'';
+    let msg='Erro ao liberar o login. Tente novamente.';
+    if(code==='functions/permission-denied')msg='Voce precisa estar logado como administrador.';
+    else if(code==='functions/not-found')msg='Motorista nao encontrado.';
+    else if(code==='functions/unauthenticated')msg='Sessao expirada. Entre novamente como admin.';
+    else if(code==='functions/invalid-argument')msg='Identificador invalido.';
+    else if(code)msg='Erro ('+code+'). Tente novamente.';
+    if(typeof showToast==='function')showToast('❌ '+msg);
   }
 }
 
