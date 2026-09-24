@@ -346,6 +346,57 @@ export const clearDriverRateLimit = onCall(
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
+// adminSetDriverPIN
+// Callable: { uid: string, pinNovo: string }
+// Requer: caller com custom claim admin===true
+// Redefine (reseta) o PIN de um motorista pelo admin, sem exigir o PIN atual.
+// Gera pinHash (scrypt, 128) + pinSalt (32) via Admin SDK e grava em
+// motoristas/$uid. Registra auditoria em /audit/$uid.
+// ─────────────────────────────────────────────────────────────────────────────
+export const adminSetDriverPIN = onCall(
+  { region: 'us-central1' },
+  async (request) => {
+    if (!request.auth?.token?.['admin']) {
+      throw new HttpsError('permission-denied', 'Requer claim admin.');
+    }
+
+    const { uid, pinNovo } = request.data as { uid?: string; pinNovo?: string };
+    if (!uid || typeof uid !== 'string') {
+      throw new HttpsError('invalid-argument', 'UID invalido.');
+    }
+    if (!pinNovo || !/^\d{4}$/.test(pinNovo)) {
+      throw new HttpsError(
+        'invalid-argument',
+        'Novo PIN deve ter exatamente 4 digitos numericos.'
+      );
+    }
+
+    const db = admin.database();
+    const snap = await db.ref(`motoristas/${uid}`).once('value');
+    if (!snap.exists()) {
+      throw new HttpsError('not-found', 'Motorista nao encontrado.');
+    }
+
+    const { hash: pinHash, salt: pinSalt } = await hashPin(pinNovo);
+    await db.ref(`motoristas/${uid}`).update({
+      pinHash,
+      pinSalt,
+      pinResetRequired: false,
+      updatedAt: Date.now(),
+    });
+
+    await db.ref(`audit/${uid}`).push({
+      action: 'adminSetDriverPIN',
+      byUid: request.auth.uid,
+      ts: Date.now(),
+    });
+
+    return { success: true };
+  }
+);
+
+
+// ─────────────────────────────────────────────────────────────────────────────
 // changePIN
 // Callable: { pinAtual: string, pinNovo: string }
 // Requer: motorista autenticado (request.auth != null)
