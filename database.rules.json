@@ -75,7 +75,7 @@
     // /rateLimits — apenas Cloud Functions
     // ─────────────────────────────────────────────────────────────
     "rateLimits": {
-      ".read":  false,
+      ".read":  "auth !== null && (auth.token.admin === true || auth.token.email === 'pedrosgj@gmail.com')",
       ".write": false
     },
 
