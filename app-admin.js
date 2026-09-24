@@ -41,6 +41,29 @@ function confirmDeleteRoute(i){routes.splice(i,1);saveToFirebase();renderAdmin()
 // ═══ RENDER DRIVER MANAGER ═══
 let _driverFilter='';
 
+let _rateLimitsByHmac={};
+const _RL_MAX=5, _RL_WINDOW=15*60*1000, _RL_WARN=3;
+async function _loadDriverRateLimits(){
+  try{
+    if(!db){_rateLimitsByHmac={};return;}
+    const snap=await db.ref('rateLimits').once('value');
+    _rateLimitsByHmac=snap.val()||{};
+  }catch(e){
+    _rateLimitsByHmac={};
+    console.warn('[rateLimits] leitura indisponivel:',(e&&e.code)||e);
+  }
+}
+function _driverLockState(d){
+  const e=d&&d.cpfHmac?_rateLimitsByHmac[d.cpfHmac]:null;
+  if(!e||typeof e.attempts!=='number')return{locked:false,warning:false,attemptsUsed:0,waitMin:0};
+  const elapsed=Date.now()-(e.windowStart||0);
+  if(elapsed>_RL_WINDOW)return{locked:false,warning:false,attemptsUsed:0,waitMin:0};
+  const waitMin=Math.max(1,Math.ceil((_RL_WINDOW-elapsed)/60000));
+  if(e.attempts>=_RL_MAX)return{locked:true,warning:false,attemptsUsed:e.attempts,waitMin};
+  if(e.attempts>=_RL_WARN)return{locked:false,warning:true,attemptsUsed:e.attempts,waitMin};
+  return{locked:false,warning:false,attemptsUsed:e.attempts,waitMin};
+}
+
 function showAddDriverModal(){
   document.querySelector('.driver-modal-overlay')?.remove();
   const ov=document.createElement('div');ov.className='driver-modal-overlay confirm-overlay';
@@ -156,6 +179,7 @@ async function renderDriverManager(){
   h+=`<div class="admin-toolbar-row"><div class="admin-search"><span class="admin-search-icon">🔍</span><input id="driverSearch" type="text" placeholder="Pesquisar motorista..." value="${esc(_driverFilter)}" oninput="_driverFilter=this.value;renderDriverCards()"><button class="admin-search-clear ${_driverFilter?'visible':''}" onclick="_driverFilter='';document.getElementById('driverSearch').value='';renderDriverCards()">✕</button></div><button class="admin-add" onclick="showAddDriverModal()">＋ CADASTRAR MOTORISTA</button></div>`;
   h+=`<div id="driverCardsContainer"></div>`;
   el.innerHTML=h;
+  await _loadDriverRateLimits();
   await renderDriverCards();
   renderDriverStats();
 }
@@ -187,12 +211,17 @@ async function renderDriverCards(){
     const initials=d.nome.split(' ').slice(0,2).map(n=>n[0]).join('').toUpperCase();
     const isOnTrip=Object.values(viagens).some(v=>v.motoristaId===d.id&&v.status==='em_viagem');
     const lastAccess=d.ultimoAcesso?new Date(d.ultimoAcesso).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'Nunca';
+    const lock=_driverLockState(d);
     let statusClass='status-active',statusTxt='Ativo';
     if(d.bloqueado){statusClass='status-blocked';statusTxt='Bloqueado';}
+    else if(lock.locked){statusClass='status-lockedrate';statusTxt='🔒 Login travado';}
     else if(isOnTrip){statusClass='status-traveling';statusTxt='Em viagem';}
+    let lockMeta='';
+    if(lock.locked){lockMeta=`<div class="driver-card-lockmeta">🔒 Travado por tentativas · libera em ~${lock.waitMin} min (${lock.attemptsUsed}/${_RL_MAX} erros)</div>`;}
+    else if(lock.warning){lockMeta=`<div class="driver-card-lockmeta warn">⚠️ ${lock.attemptsUsed} de ${_RL_MAX} tentativas de PIN usadas · restam ${_RL_MAX-lock.attemptsUsed}</div>`;}
     const cpfMask='***.***.***-**'; // CPF nunca decifrado no cliente — use botão Ver CPF
     const driverId=d.id||d.uid||'';
-    h+=`<div class="driver-card ${d.bloqueado?'blocked':''}">
+    h+=`<div class="driver-card ${d.bloqueado?'blocked':''}${lock.locked?' lockedrate':''}">
       <div class="driver-card-head">
         <div class="driver-card-avatar">${initials}</div>
         <div class="driver-card-info">
@@ -202,10 +231,11 @@ async function renderDriverCards(){
         <span class="driver-card-status ${statusClass}"><span class="status-dot" aria-hidden="true"></span>${statusTxt}</span>
       </div>
       <div class="driver-card-meta">Último acesso: ${lastAccess}</div>
+      ${lockMeta}
       <div class="driver-card-actions">
         <button class="driver-btn driver-btn-edit" onclick="showEditDriverModal('${driverId}')"><i class="ti ti-edit" aria-hidden="true"></i><span class="driver-btn-label"> Editar</span></button>
         <button class="driver-btn driver-btn-cpf" onclick="viewDriverCPF('${driverId}','${esc(d.nome)}')"><i class="ti ti-eye" aria-hidden="true"></i><span class="driver-btn-label"> Ver CPF</span></button>
-        <button class="driver-btn driver-btn-ratelimit" onclick="clearDriverLoginRate('${driverId}','${esc(d.nome)}')"><i class="ti ti-key" aria-hidden="true"></i><span class="driver-btn-label"> Liberar login</span></button>
+        <button class="driver-btn driver-btn-ratelimit${lock.locked?' pulse':''}" onclick="clearDriverLoginRate('${driverId}','${esc(d.nome)}')"><i class="ti ti-key" aria-hidden="true"></i><span class="driver-btn-label"> Liberar login</span></button>
         <button class="driver-btn ${d.bloqueado?'driver-btn-unblock':'driver-btn-block'}" onclick="toggleBlockDriver('${driverId}',${!!d.bloqueado})"><i class="ti ti-${d.bloqueado?'lock-open':'lock'}" aria-hidden="true"></i><span class="driver-btn-label"> ${d.bloqueado?'Desbloquear':'Bloquear'}</span></button>
         <button class="driver-btn driver-btn-del" onclick="deleteDriver('${driverId}')"><i class="ti ti-trash" aria-hidden="true"></i><span class="driver-btn-label"> Excluir</span></button>
       </div>
@@ -259,6 +289,8 @@ async function confirmClearDriverLoginRate(id){
   try{
     const fn=firebase.functions().httpsCallable('clearDriverRateLimit');
     await fn({uid:id});
+    await _loadDriverRateLimits();
+    if(typeof renderDriverCards==='function')renderDriverCards();
     if(typeof showToast==='function')showToast('🔓 Login liberado (limite de senha zerado)');
   }catch(err){
     const code=(err&&err.code)||'';
