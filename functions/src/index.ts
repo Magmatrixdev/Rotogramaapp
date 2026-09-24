@@ -7,6 +7,7 @@
  *   loginDriver     — autentica com CPF+PIN, retorna custom token + rate limit
  *   setAdminClaim   — seta custom claim admin=true (requer admin caller)
  *   getDriverCPF    — retorna CPF formatado para admin + auditoria
+ *   clearDriverRateLimit — zera bloqueio por tentativas de senha (admin)
  *   changePIN       — motorista autenticado troca o próprio PIN
  *   onNotificationCreated — envia push FCM ao criar aviso em /notifications
  *
@@ -302,6 +303,45 @@ export const getDriverCPF = onCall(
     });
 
     return { cpf: formatted };
+  }
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// clearDriverRateLimit
+// Callable: { uid: string }
+// Requer: caller com custom claim admin===true
+// Remove o no /rateLimits/$cpfHmac do motorista (busca o cpfHmac em
+// motoristas/$uid/cpfHmac), liberando novas tentativas de login apos
+// bloqueio por excesso de tentativas. Registra auditoria em /audit/$uid.
+// ─────────────────────────────────────────────────────────────────────────────
+export const clearDriverRateLimit = onCall(
+  { region: 'us-central1' },
+  async (request) => {
+    if (!request.auth?.token?.['admin']) {
+      throw new HttpsError('permission-denied', 'Requer claim admin.');
+    }
+
+    const { uid } = request.data as { uid?: string };
+    if (!uid || typeof uid !== 'string') {
+      throw new HttpsError('invalid-argument', 'UID invalido.');
+    }
+
+    const db = admin.database();
+    const snap = await db.ref(`motoristas/${uid}/cpfHmac`).once('value');
+    if (!snap.exists()) {
+      throw new HttpsError('not-found', 'Motorista nao encontrado ou sem cpfHmac.');
+    }
+    const cpfHmac = snap.val() as string;
+
+    await db.ref(`rateLimits/${cpfHmac}`).remove();
+
+    await db.ref(`audit/${uid}`).push({
+      action: 'clearDriverRateLimit',
+      byUid: request.auth.uid,
+      ts: Date.now(),
+    });
+
+    return { success: true };
   }
 );
 
