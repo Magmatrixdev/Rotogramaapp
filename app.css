@@ -354,12 +354,13 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .status-blocked{background:rgba(254,38,39,.12);color:#fe2627}.status-blocked .status-dot{background:#fe2627}
 .status-traveling{background:rgba(26,111,181,.12);color:#1a6fb5}.status-traveling .status-dot{background:#1a6fb5}
 .driver-card-meta{font-family:'Barlow',sans-serif;font-size:11px;color:#b0aea9;margin-top:6px}
-.driver-card-actions{display:flex;gap:6px;margin-top:10px}
-.driver-btn{flex:1;padding:9px;border-radius:8px;border:none;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;cursor:pointer;min-height:38px}
+.driver-card-actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.driver-btn{flex:1 1 30%;padding:9px;border-radius:8px;border:none;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;cursor:pointer;min-height:38px}
 .driver-btn-block{background:rgba(254,38,39,.1);color:#fe2627}
 .driver-btn-unblock{background:rgba(31,138,61,.1);color:#1f8a3d}
 .driver-btn-del{background:#f4f4f2;color:#9a9894}
 .driver-btn-edit{background:rgba(28,28,28,.07);color:#1c1c1c}
+.driver-btn-ratelimit{background:rgba(214,158,46,.14);color:#b8791a}
 
 /* ═══ MONITORING ═══ */
 .monitor-stats{display:flex;gap:8px;padding:14px 20px 0;flex-shrink:0}
