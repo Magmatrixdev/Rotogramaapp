@@ -167,7 +167,7 @@ function showHome(){
   if(!currentDriver&&!adminMode){showDriverLogin();return;}
   isEditing=false;if(window._draftInterval)clearInterval(window._draftInterval);
   requestNotifPermission();
-  if(localStorage.getItem('rotograma_desktop_on')==='1'&&!IS_DESKTOP()){
+  if(localStorage.getItem('rotograma_desktop_on')==='1'&&!IS_DESKTOP()&&window.innerWidth>=1024){
     document.body.classList.add('desktop-mode');
     var btn=document.getElementById('btnToggleDesktop');
     if(btn)btn.innerHTML='📱 Versão Mobile';
