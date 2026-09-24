@@ -157,19 +157,35 @@ async function doEditDriver(id){
   if(pin&&(pin.length!==4||!/^\d{4}$/.test(pin))){showErr('PIN deve ter 4 dígitos numéricos');return;}
   if(btn){btn.disabled=true;btn.textContent='Salvando...';}
   try{
-    const updates={nome};
+    // Nome: escrita direta (as rules permitem para admin)
+    if(nome!==d.nome){
+      if(db){await db.ref('motoristas/'+id).update({nome});}
+      else{drivers[id]={...d,nome};}
+    }
+    // PIN: redefinicao via Cloud Function (hash scrypt server-side; escrita direta
+    // do pinHash e barrada pelas rules do novo auth -> PERMISSION_DENIED)
     if(pin){
-      const hashFn=(!window.crypto||!window.crypto.subtle)?sha256Fallback:sha256;
-      updates.pinHash=await hashFn(pin);
+      if(USE_NEW_AUTH){
+        const fn=firebase.functions().httpsCallable('adminSetDriverPIN');
+        await fn({uid:id,pinNovo:pin});
+      }else{
+        const hashFn=(!window.crypto||!window.crypto.subtle)?sha256Fallback:sha256;
+        if(db)await db.ref('motoristas/'+id).update({pinHash:await hashFn(pin)});
+      }
     }
-    if(db){
-      await db.ref('motoristas/'+id).update(updates);
-    }else{
-      drivers[id]={...d,...updates};
-      await renderDriverCards();
-    }
+    if(drivers[id])drivers[id]={...drivers[id],nome};
     document.querySelector('.driver-modal-overlay')?.remove();
-  }catch(err){showErr('Erro: '+(err.message||'tente novamente'));}
+    if(typeof showToast==='function')showToast('✅ Motorista atualizado');
+    if(typeof renderDriverCards==='function')renderDriverCards();
+  }catch(err){
+    const code=(err&&err.code)||'';
+    let msg='Erro: '+(err.message||'tente novamente');
+    if(code==='functions/permission-denied')msg='Você precisa estar logado como administrador.';
+    else if(code==='functions/not-found')msg='Função não implantada. Rode o deploy das Cloud Functions.';
+    else if(code==='functions/unauthenticated')msg='Sessão expirada. Entre novamente como admin.';
+    else if(code==='functions/invalid-argument')msg='PIN inválido (use 4 dígitos).';
+    showErr(msg);
+  }
   finally{if(btn){btn.disabled=false;btn.textContent='Salvar';}}
 }
 
