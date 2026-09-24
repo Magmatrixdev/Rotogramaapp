@@ -5,6 +5,8 @@ function initFirebase(){
     firebase.initializeApp(FIREBASE_CONFIG);
     db=firebase.database();
     if(firebase.storage)storage=firebase.storage();
+    // Persistência LOCAL explícita: mantém a sessão após recarregar a página
+    try{firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(()=>{});}catch(e){}
 
     // ═══ AUTH STATE ═══
     firebase.auth().onAuthStateChanged(async function(user){
@@ -16,7 +18,21 @@ function initFirebase(){
       // ── USE_NEW_AUTH = true ────────────────────────────────────────────
       if(!user){
         // Sessão encerrada — limpa motorista; admin gerencia próprio estado
-        if(!adminMode)currentDriver=null;
+        if(!adminMode){
+          currentDriver=null;
+          if(typeof _authDeactivate==='function')_authDeactivate();
+          // Sem usuário: garante a tela de login (corrige o modo "home otimista")
+          if(_navStack.length&&_navStack[_navStack.length-1]!=='screenDriverLogin'){navReset('screenDriverLogin');}
+        }
+        return;
+      }
+      // Sessão restaurada após refresh: se passou de 30 min de inatividade, encerra
+      if(typeof _authIsIdle==='function'&&_authIsIdle()){
+        if(typeof _authDeactivate==='function')_authDeactivate();
+        currentDriver=null;adminMode=false;
+        firebase.auth().signOut().catch(()=>{});
+        navReset('screenDriverLogin');
+        if(typeof showToast==='function')showToast('Sessão expirada por inatividade. Faça login novamente.','#c2410c');
         return;
       }
       // Verifica claim admin — forceRefresh=true garante que claims atualizados
@@ -24,11 +40,15 @@ function initFirebase(){
       const tok=await user.getIdTokenResult(true).catch(()=>null);
       if(tok?.claims?.admin){
         adminMode=true; // já setado em doAdminLogin, mas garante aqui
+        if(typeof _authActivate==='function')_authActivate();
         if(typeof initPushMessaging==='function')initPushMessaging();
+        // Após refresh o admin cai na tela de login — leva para a home para não ficar preso
+        if(!_navStack.length||_navStack[_navStack.length-1]==='screenDriverLogin'){showHome();}
         return;
       }
       // ── Motorista autenticado via custom token ─────────────────────────
       currentDriver={uid:user.uid,nome:user.displayName||''};
+      if(typeof _authActivate==='function')_authActivate();
       if(db){
         // Ouve apenas o próprio nó — não acessa a coleção inteira
         db.ref('motoristas/'+user.uid).on('value',snap=>{
