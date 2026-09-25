@@ -44,6 +44,10 @@ function initFirebase(){
         if(typeof initPushMessaging==='function')initPushMessaging();
         // Após refresh o admin cai na tela de login — leva para a home para não ficar preso
         if(!_navStack.length||_navStack[_navStack.length-1]==='screenDriverLogin'){showHome();}
+        // Restaura a tela Admin se era onde ele estava antes do refresh (não cair no modo comum)
+        if(localStorage.getItem('last_screen')==='screenAdmin'&&_navStack[_navStack.length-1]!=='screenAdmin'){
+          if(typeof showAdmin==='function')showAdmin();
+        }
         return;
       }
       // ── Motorista autenticado via custom token ─────────────────────────
