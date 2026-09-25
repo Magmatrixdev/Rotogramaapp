@@ -165,6 +165,7 @@ function showDriverLogin(){navReset('screenDriverLogin');}
 
 function showHome(){
   if(!currentDriver&&!adminMode){showDriverLogin();return;}
+  try{localStorage.setItem('last_screen','screenHome');}catch(e){}
   isEditing=false;if(window._draftInterval)clearInterval(window._draftInterval);
   requestNotifPermission();
   if(localStorage.getItem('rotograma_desktop_on')==='1'&&!IS_DESKTOP()&&window.innerWidth>=1024){
@@ -220,6 +221,7 @@ function showMapLive(){
 
 function showAdmin(){
   isEditing=false;if(window._draftInterval)clearInterval(window._draftInterval);
+  try{localStorage.setItem('last_screen','screenAdmin');}catch(e){}
   renderAdmin();
   navPush('screenAdmin');
 }
