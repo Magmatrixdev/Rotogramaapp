@@ -80,6 +80,7 @@ function _navResetOrig(id,setupFn){
 
 // ─── Wrappers desktop-aware (únicos navPush/navPop/navReset do app) ───
 function navPush(id,setupFn){
+  if(id==='screenAdmin'){try{localStorage.setItem('last_screen','screenAdmin');}catch(e){}}
   if(IS_DESKTOP()){
     const prevId=_navStack.length>0?_navStack[_navStack.length-1]:null;
     _navStack.push(id);
