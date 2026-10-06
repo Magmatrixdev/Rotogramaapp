@@ -90,7 +90,7 @@ async function doAddDriverAdmin(){
   const btn=document.getElementById('adSaveBtn');
   function showErr(msg){errEl.textContent=msg;errEl.style.display='block';setTimeout(()=>errEl.style.display='none',4000);}
   if(!nome){showErr('Informe o nome completo');return;}
-  if(cpfRaw.length!==11){showErr('CPF inválido');return;}
+  if(!validateCPF(cpfRaw)){showErr('CPF inválido — verifique os dígitos');return;}
   if(pin.length!==4||!/^\d{4}$/.test(pin)){showErr('PIN deve ter 4 dígitos numéricos');return;}
   if(btn){btn.disabled=true;btn.textContent='Salvando...';}
   // ── USE_NEW_AUTH: cadastro via Cloud Function ─────────────────────────
