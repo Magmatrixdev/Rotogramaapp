@@ -1,4 +1,4 @@
-const CACHE = 'rotograma-v12';
+const CACHE = 'rotograma-v13';
 const STATIC = [
   './manifest.json',
   './icon-192.png',
@@ -69,6 +69,9 @@ self.addEventListener('fetch', e => {
 
   // Requisições externas (Firebase, Mapbox, CDNs): passam direto
   if (url.origin !== self.location.origin) return;
+
+  // Probe de versão (?cb=): sempre rede, nunca cacheia
+  if (url.searchParams.has('cb')) { e.respondWith(fetch(e.request)); return; }
 
   // HTML, raiz, sw.js: NÃO interceptar — browser busca direto do servidor
   // Isso garante que atualizações do index.html chegam sempre
