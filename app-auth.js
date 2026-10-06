@@ -53,7 +53,7 @@ async function doDriverRegister(){
   const btn=document.querySelector('#dauthRegisterForm .dauth-btn');
   function showErr(msg){errEl.textContent=msg;errEl.style.display='block';setTimeout(()=>errEl.style.display='none',4000);}
   if(!nome){showErr('Informe o nome completo');return;}
-  if(cpfRaw.length!==11){showErr('CPF inválido — digite os 11 dígitos');return;}
+  if(!validateCPF(cpfRaw)){showErr('CPF inválido — verifique os dígitos');return;}
   if(pin.length!==4){showErr('PIN deve ter 4 dígitos');return;}
   if(pin!==pin2){showErr('Os PINs não coincidem');return;}
   if(!/^\d{4}$/.test(pin)){showErr('PIN deve conter apenas números');return;}
@@ -120,7 +120,7 @@ async function doDriverLogin(){
   function showErr(msg,isBlock=false){errEl.textContent=msg||'CPF ou PIN incorretos';errEl.style.display='block';errEl.style.background=isBlock?'#fee2e2':'';errEl.style.color=isBlock?'#b91c1c':'';errEl.style.borderLeft=isBlock?'4px solid #ef4444':'';if(!isBlock)setTimeout(()=>{errEl.style.display='none';errEl.style.background='';errEl.style.color='';errEl.style.borderLeft='';},7000);}
   function showWarn(msg){errEl.textContent=msg;errEl.style.display='block';errEl.style.background='#fff7ed';errEl.style.color='#c2410c';errEl.style.borderLeft='4px solid #f97316';setTimeout(()=>{errEl.style.display='none';errEl.style.background='';errEl.style.color='';errEl.style.borderLeft='';},10000);}
   function showInfo(msg,showAction){errEl.textContent=msg;errEl.style.display='block';errEl.style.background='#eff6ff';errEl.style.color='#1e40af';errEl.style.borderLeft='4px solid #3b82f6';errEl.style.padding='8px 10px';errEl.style.borderRadius='8px';errEl.style.textAlign='left';if(showAction){const br=document.createElement('br');const btnReg=document.createElement('button');btnReg.textContent='Ir para Criar conta';btnReg.style.cssText='margin-top:8px;background:#1d4ed8;color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:Barlow,sans-serif;width:100%';btnReg.addEventListener('click',()=>switchAuthTab('register'));errEl.appendChild(br);errEl.appendChild(btnReg);}setTimeout(()=>{errEl.style.display='none';errEl.style.cssText='';errEl.textContent='';},14000);}
-  if(cpfRaw.length!==11){showErr('CPF inválido — digite os 11 dígitos');return;}
+  if(!validateCPF(cpfRaw)){showErr('CPF inválido — verifique os dígitos');return;}
   if(pin.length!==4){showErr('PIN deve ter 4 dígitos');return;}
   if(btn){btn.disabled=true;btn.textContent='Verificando...';}
   // ── USE_NEW_AUTH: login via Cloud Function ───────────────────────────────
