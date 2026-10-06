@@ -26,6 +26,39 @@
   }
 })();
 </script>
+<script>
+/* ── BLINDAGEM DE VERSÃO — fonte única: APP_VERSION do app-config.js ── */
+(function(){
+  try{
+    fetch('app-config.js?cb='+Date.now(),{cache:'no-store'})
+      .then(function(r){return r.ok?r.text():null;})
+      .then(function(txt){
+        if(!txt)return;
+        var m=txt.match(/APP_VERSION\s*=\s*(\d+)/);
+        if(!m)return;
+        var remote=parseInt(m[1],10);
+        var local=parseInt(localStorage.getItem('_blindVer')||'0',10);
+        if(!localStorage.getItem('_blindVer')){
+          localStorage.setItem('_blindVer',String(remote));
+          return;
+        }
+        if(remote>local){
+          localStorage.setItem('_blindVer',String(remote));
+          var done=function(){location.reload(true);};
+          if('serviceWorker' in navigator){
+            navigator.serviceWorker.getRegistrations()
+              .then(function(regs){return Promise.all(regs.map(function(x){return x.unregister();}));})
+              .then(function(){return 'caches' in window?caches.keys():[];})
+              .then(function(keys){return Promise.all((keys||[]).map(function(k){return caches.delete(k);}));})
+              .then(done).catch(done);
+          }else if('caches' in window){
+            caches.keys().then(function(keys){return Promise.all(keys.map(function(k){return caches.delete(k);}));}).then(done).catch(done);
+          }else{done();}
+        }
+      }).catch(function(){});
+  }catch(e){}
+})();
+</script>
 <meta name="theme-color" content="#1c1c1c">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
