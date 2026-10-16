@@ -298,7 +298,7 @@
     // /informativos
     //   • Leitura: qualquer usuário autenticado
     //   • Escrita: apenas admin
-    //   Schema: regiao, posto, formaPagamento, descricao, ts
+    //   Schema: regiao, posto, localizacao, formaPagamento, descricao, ts
     "informativos": {
       ".read":  "auth !== null",
       ".write": "auth !== null && (auth.token.admin === true || auth.token.email === 'pedrosgj@gmail.com')",
@@ -314,6 +314,9 @@
         },
         "formaPagamento": {
           ".validate": "newData.isString() && newData.val().length <= 100"
+        },
+        "localizacao": {
+          ".validate": "newData.isString() && newData.val().length <= 500"
         },
         "descricao": {
           ".validate": "newData.isString() && newData.val().length <= 4000"

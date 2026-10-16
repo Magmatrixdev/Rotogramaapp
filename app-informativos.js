@@ -2,7 +2,7 @@
 // Layout aprovado (mockup "Avisos — Senhas"): hero com contadores, filtro por região,
 // cards de posto, seção de senhas por operadora e formulário em folha inferior.
 // Admin cadastra/exclui; motorista apenas lê.
-// Firebase: /informativos/{id} = { regiao, posto, formaPagamento, descricao, ts }
+// Firebase: /informativos/{id} = { regiao, posto, localizacao?, formaPagamento, descricao, ts }
 var informativos = {};
 var _infFilter = 'Todas';
 var _infOp = 'truck';
@@ -20,6 +20,7 @@ const _INF_SVG={
   pin:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
   trash:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>',
   pump:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="10" height="18" rx="1.5"/><path d="M6 8h4"/><path d="M13 8h3l3 3v7a2 2 0 0 1-4 0v-5"/></svg>',
+  loc:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l18-8-8 18-2-8-8-2z"/></svg>',
   chat:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8a8886" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
   down:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c2c0ba" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"/><path d="M6 13l6 6 6-6"/></svg>',
   warn:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#e8a020" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>',
@@ -59,6 +60,12 @@ function _infPayColor(p){
   if(s.indexOf('shell')>=0)return '#b5651d';
   return '#8a8886';
 }
+function _infIsAdmin(){return !!(adminMode&&!currentDriver);}
+function _infMapUrl(loc){
+  const l=(loc||'').trim();
+  if(/^https?:\/\//i.test(l))return l;
+  return 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(l);
+}
 function _infNl2br(s){return esc(s).replace(/\n/g,'<br>');}
 
 // ─── render ───
@@ -96,7 +103,7 @@ function renderInformativos(){
      <div class="inf-stat"><div class="inf-stat-n">${regions.length}</div><div class="inf-stat-l">REGIÕES</div></div>`;
 
   const add=document.getElementById('infAddBtn');
-  if(add)add.style.display=adminMode?'flex':'none';
+  if(add)add.style.display=_infIsAdmin()?'flex':'none';
 
   document.getElementById('infFilters').innerHTML=['Todas'].concat(regions).map(r=>
     `<button class="inf-chip${r===_infFilter?' active':''}" data-r="${esc(r)}" onclick="setInfFilter(this.dataset.r)">${esc(r)}</button>`).join('');
@@ -112,10 +119,13 @@ function renderInformativos(){
 function buildInformativoCard(it){
   const regiao=(it.regiao||'').trim()
     ?`<span class="inf-region">${_INF_SVG.pin}<span>Região de ${esc(it.regiao)}</span></span>`:'';
-  const del=adminMode
+  const del=_infIsAdmin()
     ?`<button class="inf-del" onclick="deleteInformativo('${it.id}')" aria-label="Remover informativo">${_INF_SVG.trash}</button>`:'';
   const pay=it.formaPagamento
     ?`<div class="inf-pay"><span class="inf-pay-dot" style="background:${_infPayColor(it.formaPagamento)}"></span><span>Pagamento: <strong>${esc(it.formaPagamento)}</strong></span></div>`:'';
+  const locTxt=(it.localizacao||'').trim();
+  const loc=locTxt
+    ?`<a class="inf-loc" href="${esc(_infMapUrl(locTxt))}" target="_blank" rel="noopener">${_INF_SVG.loc}<span>${/^https?:\/\//i.test(locTxt)?'Abrir localização no mapa':esc(locTxt)}</span></a>`:'';
   const desc=(it.descricao||'').trim()
     ?`<div class="inf-desc">${_INF_SVG.chat}<p>${_infNl2br(it.descricao)}</p></div>`
     :'<div style="height:14px"></div>';
@@ -128,6 +138,7 @@ function buildInformativoCard(it){
         ${pay}
       </div>
     </div>
+    ${loc}
     ${desc}
   </article>`;
 }
@@ -170,7 +181,7 @@ function renderInfSenhas(){
 
 // ─── admin: cadastrar (folha inferior) ───
 function showAddInformativoForm(){
-  if(!adminMode)return;
+  if(!_infIsAdmin())return;
   closeInfSheet();
   const ov=document.createElement('div');
   ov.className='inf-sheet-ov';
@@ -183,6 +194,7 @@ function showAddInformativoForm(){
     </div>
     <label class="inf-fld"><span>REGIÃO</span><input id="ifRegiao" maxlength="100" placeholder="Ex.: Cuiabá - MT" oninput="_infValidate()"></label>
     <label class="inf-fld"><span>POSTO</span><input id="ifPosto" maxlength="200" placeholder="Ex.: Posto São Matheus" oninput="_infValidate()"></label>
+    <label class="inf-fld"><span>LOCALIZAÇÃO</span><input id="ifLocalizacao" maxlength="500" placeholder="Endereço ou link do Google Maps"></label>
     <label class="inf-fld"><span>FORMA DE PAGAMENTO</span><select id="ifPagamento">${INF_PAY_OPTS.map(p=>`<option value="${p}">${p}</option>`).join('')}</select></label>
     <label class="inf-fld"><span>DESCRIÇÃO</span><textarea id="ifDescricao" rows="3" maxlength="4000" placeholder="Ex.: difícil achar vaga para pernoite, tem lavagem e borracharia…"></textarea></label>
     <div class="inf-sheet-err" id="ifError" style="display:none"></div>
@@ -201,16 +213,19 @@ function _infValidate(){
 }
 
 function saveInformativo(){
-  if(!adminMode||!_infValidate())return;
+  if(!_infIsAdmin()||!_infValidate())return;
   const regiao=document.getElementById('ifRegiao').value.trim();
   const posto=document.getElementById('ifPosto').value.trim();
   const formaPagamento=document.getElementById('ifPagamento').value;
   const descricao=(document.getElementById('ifDescricao').value||'').trim();
+  const localizacao=(document.getElementById('ifLocalizacao').value||'').trim();
   const errEl=document.getElementById('ifError');
   const btn=document.getElementById('ifSave');
   if(!db||!firebaseReady){errEl.textContent='Sem conexão com o servidor. Tente novamente.';errEl.style.display='block';return;}
   btn.disabled=true;btn.textContent='PUBLICANDO...';
-  db.ref('informativos').push({regiao,posto,formaPagamento,descricao,ts:Date.now()})
+  const rec={regiao,posto,formaPagamento,descricao,ts:Date.now()};
+  if(localizacao)rec.localizacao=localizacao; // só grava se preenchido
+  db.ref('informativos').push(rec)
     .then(()=>{_infFilter='Todas';closeInfSheet();})
     .catch(e=>{
       btn.disabled=false;btn.textContent='PUBLICAR INFORMATIVO';
@@ -221,7 +236,7 @@ function saveInformativo(){
 
 // ─── admin: excluir ───
 function deleteInformativo(id){
-  if(!adminMode||!id)return;
+  if(!_infIsAdmin()||!id)return;
   if(!confirm('Excluir este informativo? Esta ação não pode ser desfeita.'))return;
   if(!db)return;
   db.ref('informativos/'+id).remove()

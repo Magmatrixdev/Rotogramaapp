@@ -45,6 +45,11 @@
 .inf-pay{display:flex;align-items:center;gap:6px;margin-top:4px;font-size:12.5px;color:#8a8886}
 .inf-pay strong{color:#1c1c1c}
 .inf-pay-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.inf-loc{margin:10px 12px 0;display:flex;align-items:center;gap:8px;min-height:44px;padding:8px 12px;border:1.5px solid #e8e6e1;border-radius:12px;color:#1a6fb5;text-decoration:none;font-size:13px;font-weight:600;line-height:1.3}
+.inf-loc svg{flex-shrink:0}
+.inf-loc span{word-break:break-word}
+.inf-loc:active{background:#f4f4f2}
+.inf-add[style*="none"]{display:none!important}
 .inf-desc{margin:12px;background:#f4f4f2;border-radius:12px;padding:11px 13px;display:flex;gap:10px}
 .inf-desc svg{flex-shrink:0;margin-top:1px}
 .inf-desc p{margin:0;font-size:13.5px;line-height:1.45;color:#3a3a38;word-break:break-word}
