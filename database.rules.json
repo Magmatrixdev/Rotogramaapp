@@ -295,6 +295,39 @@
     },
 
     // ─────────────────────────────────────────────────────────────
+    // /informativos
+    //   • Leitura: qualquer usuário autenticado
+    //   • Escrita: apenas admin
+    //   Schema: regiao, posto, formaPagamento, descricao, ts
+    "informativos": {
+      ".read":  "auth !== null",
+      ".write": "auth !== null && (auth.token.admin === true || auth.token.email === 'pedrosgj@gmail.com')",
+
+      "$infId": {
+        ".validate": "newData.hasChildren(['posto', 'ts'])",
+
+        "regiao": {
+          ".validate": "newData.isString() && newData.val().length <= 100"
+        },
+        "posto": {
+          ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 200"
+        },
+        "formaPagamento": {
+          ".validate": "newData.isString() && newData.val().length <= 100"
+        },
+        "descricao": {
+          ".validate": "newData.isString() && newData.val().length <= 4000"
+        },
+        "ts": {
+          ".validate": "newData.isNumber() && newData.val() > 0"
+        },
+        "createdAt": {
+          ".validate": "newData.isNumber() && newData.val() > 0"
+        },
+        "$outrosCampos": { ".validate": false }
+      }
+    },
+
     // /fcmTokens — tokens de push por aparelho
     //   • Coleção inteira: fechada (só Cloud Functions via Admin SDK leem)
     //   • Nó do usuário:   próprio uid ou admin
