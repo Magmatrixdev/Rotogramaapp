@@ -1,44 +1,98 @@
-/* ═══ INFORMATIVOS ═══ */
+/* ═══ INFORMATIVOS — layout aprovado (mockup "Avisos — Senhas") ═══ */
 #screenInformativos{background:#f4f4f2}
+#informativosList{flex:1;min-height:0;display:flex;flex-direction:column;font-family:'Barlow',system-ui,sans-serif;color:#1c1c1c}
+#informativosList button,#informativosList input{font:inherit}
+.inf-hero-kicker,.inf-hero-title,.inf-stat-n,.inf-stat-l,.inf-sec-label,.inf-add span,.inf-chip,.inf-region,.inf-posto,
+.inf-tab,.inf-senha-lbl,.inf-senha-chip,.inf-senha-rule,.inf-dg,.inf-dg-sep,.inf-senha-res-l,.inf-senha-res-v,
+.inf-sheet-title,.inf-fld span,.inf-sheet-save{font-family:'Barlow Condensed',system-ui,sans-serif}
 
-/* topbar (padrão do app) */
-.inf-topbar{background:#1c1c1c;padding:calc(env(safe-area-inset-top, 44px) + 14px) 16px 14px;flex-shrink:0}
-.inf-topbar-row{display:flex;align-items:center;gap:10px}
-.inf-topbar-txt{min-width:0;flex:1}
-.inf-topbar-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:#fff;letter-spacing:.3px;line-height:1.05}
-.inf-topbar-sub{font-family:'Barlow',sans-serif;font-size:11px;color:#b0aea9;margin-top:2px}
+/* hero */
+.inf-hero{position:relative;background:#1c1c1c;color:#fff;padding:calc(env(safe-area-inset-top, 44px) + 14px) 16px 20px;flex-shrink:0;overflow:hidden}
+.inf-hero-road{position:absolute;right:0;top:0;opacity:.5;pointer-events:none}
+.inf-hero-row{position:relative;display:flex;align-items:center;gap:10px}
+.inf-hero-back{width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.1);border:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.inf-hero-kicker{font-size:12px;font-weight:700;letter-spacing:1.6px;color:#b0aea9;flex:1}
+.inf-hero-title{position:relative;margin:18px 0 0;font-size:32px;font-weight:800;line-height:.95;color:#fff}
+.inf-hero-stats{position:relative;margin-top:14px;display:flex;gap:8px}
+.inf-stat{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:8px 13px}
+.inf-stat-n{font-size:22px;font-weight:800;line-height:1}
+.inf-stat-l{font-size:10px;letter-spacing:1px;color:#9a9894;font-weight:700}
 
-/* lista */
-.inf-list{flex:1;overflow-y:auto;padding:14px 14px 90px;display:flex;flex-direction:column;gap:12px}
+/* área rolável */
+.inf-main{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 16px calc(90px + env(safe-area-inset-bottom, 0px))}
+.inf-sec-head{display:flex;align-items:center;justify-content:space-between;margin:18px 2px 10px;min-height:40px}
+.inf-sec-label{font-size:13px;font-weight:700;letter-spacing:1.2px;color:#8a8886}
+.inf-sec-gap{margin:22px 2px 10px}
+.inf-add{display:flex;align-items:center;gap:6px;background:#fe2627;color:#fff;border:none;border-radius:11px;padding:0 14px;height:40px;cursor:pointer;box-shadow:0 4px 12px rgba(254,38,39,.3)}
+.inf-add span{font-size:15px;font-weight:800;letter-spacing:.3px}
+.inf-add:active{transform:scale(.97)}
+
+/* filtro de região */
+.inf-filters{display:flex;gap:7px;overflow-x:auto;padding:2px 0 12px;scrollbar-width:none}
+.inf-filters::-webkit-scrollbar{display:none}
+.inf-chip{flex-shrink:0;height:36px;padding:0 14px;border-radius:999px;cursor:pointer;font-size:14px;font-weight:700;white-space:nowrap;background:#fff;color:#5a5856;border:1.5px solid #e4e2dd}
+.inf-chip.active{background:#1c1c1c;color:#fff;border-color:#1c1c1c}
 
 /* card */
-.inf-card{background:#fff;border:1.5px solid #e8e6e1;border-radius:16px;padding:15px 16px;box-shadow:0 2px 10px rgba(40,38,34,.04)}
-.inf-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;min-height:24px}
-.inf-card-badges{display:flex;flex-wrap:wrap;gap:6px;flex:1}
-.inf-region{display:inline-flex;align-items:center;gap:5px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:#1b6b3a;background:#e6f3ea;padding:4px 9px;border-radius:999px}
-.inf-region i{font-size:13px}
-.inf-posto{font-family:'Barlow Condensed',sans-serif;font-size:21px;font-weight:800;color:#1c1c1c;line-height:1.05;margin:8px 0 0;letter-spacing:.2px}
-.inf-pay{display:inline-flex;align-items:center;gap:6px;margin-top:8px;font-family:'Barlow',sans-serif;font-size:12.5px;font-weight:600;color:#3a3a38;background:#f4f4f2;border:1px solid #eae8e3;padding:6px 11px;border-radius:9px}
-.inf-pay i{font-size:15px;color:#8a8886}
-.inf-desc{font-family:'Barlow',sans-serif;font-size:13.5px;line-height:1.5;color:#3a3a38;margin-top:12px;white-space:pre-wrap;word-break:break-word}
+.inf-card{background:#fff;border:1.5px solid #e8e6e1;border-radius:18px;overflow:hidden;margin-bottom:12px;box-shadow:0 2px 10px rgba(40,38,34,.05)}
+.inf-card-top{display:flex;align-items:center;gap:8px;padding:11px 12px 0 15px;min-height:45px}
+.inf-region{display:inline-flex;align-items:center;gap:5px;background:#fff0f0;color:#d41f20;border-radius:999px;padding:4px 10px 4px 8px;font-size:12px;font-weight:800;letter-spacing:.3px}
+.inf-del{width:34px;height:34px;border-radius:9px;border:none;background:transparent;color:#b0aea9;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.inf-del:active{background:#fdeaea;color:#d41f20}
+.inf-card-body{display:flex;align-items:center;gap:12px;padding:8px 15px 0}
+.inf-pump{width:46px;height:46px;border-radius:13px;background:#1c1c1c;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.inf-posto{font-size:24px;font-weight:800;line-height:1;word-break:break-word}
+.inf-pay{display:flex;align-items:center;gap:6px;margin-top:4px;font-size:12.5px;color:#8a8886}
+.inf-pay strong{color:#1c1c1c}
+.inf-pay-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.inf-desc{margin:12px;background:#f4f4f2;border-radius:12px;padding:11px 13px;display:flex;gap:10px}
+.inf-desc svg{flex-shrink:0;margin-top:1px}
+.inf-desc p{margin:0;font-size:13.5px;line-height:1.45;color:#3a3a38;word-break:break-word}
+.inf-empty{text-align:center;padding:28px 16px;border:1.5px dashed #d6d3cc;border-radius:16px;color:#9a9894;font-size:13px}
 
-/* lixeira (admin) */
-.inf-del{flex-shrink:0;width:34px;height:34px;border-radius:9px;background:#f4f4f2;border:1px solid #eae8e3;color:#b71c1c;display:flex;align-items:center;justify-content:center;cursor:pointer}
-.inf-del i{font-size:17px}
-.inf-del:active{background:#fdeaea}
+/* senhas */
+.inf-tabs{background:#eae8e3;border-radius:14px;padding:4px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+.inf-tab{border:none;border-radius:11px;padding:11px 4px;min-height:44px;cursor:pointer;font-size:15px;font-weight:800;background:transparent;color:#8a8886}
+.inf-tab.active{background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.inf-senha{margin-top:12px;background:#fff;border:1.5px solid #e8e6e1;border-radius:18px;padding:18px 16px 16px;box-shadow:0 2px 10px rgba(40,38,34,.05)}
+.inf-senha-head{display:flex;align-items:center;justify-content:space-between}
+.inf-senha-lbl{font-size:11px;font-weight:700;letter-spacing:1.2px;color:#8a8886}
+.inf-senha-chip{font-size:11px;font-weight:800;letter-spacing:.5px;padding:4px 10px;border-radius:999px}
+.inf-senha-rule{font-size:22px;font-weight:800;line-height:1.1;margin-top:8px}
+.inf-digits{margin-top:16px;display:flex;align-items:flex-end;justify-content:space-between}
+.inf-dg-wrap{display:flex;align-items:flex-end}
+.inf-dg{width:26px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:21px;font-weight:800;transition:all .2s;background:#f4f4f2;color:#9a9894}
+.inf-dg.on{color:#fff;transform:translateY(-3px)}
+.inf-dg.skip{color:#c2c0ba;text-decoration:line-through;border:1.5px dashed #c2c0ba}
+.inf-dg-sep{font-size:16px;font-weight:700;color:#c2c0ba;width:7px;text-align:center;padding-bottom:4px}
+.inf-senha-cap{display:flex;justify-content:space-between;margin-top:7px;font-size:11px;color:#9a9894}
+.inf-senha-arrow{display:flex;justify-content:center;margin:10px 0 6px}
+.inf-senha-res{border-radius:14px;padding:14px;text-align:center;color:#fff}
+.inf-senha-res-l{font-size:11px;font-weight:700;letter-spacing:1.4px;opacity:.85}
+.inf-senha-res-v{font-size:44px;font-weight:800;letter-spacing:10px;line-height:1;margin-top:4px}
+.inf-senha-warn{margin-top:12px;display:flex;gap:8px;align-items:flex-start;font-size:12px;color:#8a4a12;background:#fff3cd;border-radius:10px;padding:9px 11px;line-height:1.4}
+.inf-senha-warn svg{flex-shrink:0;margin-top:1px}
+.inf-footnote{font-size:11px;color:#9a9894;line-height:1.5;margin:14px 2px 0}
 
-/* estado vazio */
-.inf-empty{text-align:center;color:#9a9894;padding:60px 20px;font-family:'Barlow',sans-serif}
-.inf-empty i{font-size:46px;color:#d5d3cf;display:block;margin-bottom:10px}
-.inf-empty p{font-size:14px}
+/* telas estreitas: dígitos do CPF cabem em 320px */
+@media (max-width:360px){.inf-dg{width:22px;height:34px;font-size:18px}.inf-dg-sep{width:5px}}
 
-/* FAB adicionar (admin) — padrão idêntico ao de postos */
-.inf-fab{position:fixed;bottom:74px;right:20px;width:52px;height:52px;background:#1c1c1c;color:#fff;border:none;border-radius:50%;font-size:24px;display:none;align-items:center;justify-content:center;cursor:pointer;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,.25)}
-.inf-fab:active{transform:scale(.95)}
+/* folha inferior: novo informativo */
+.inf-sheet-ov{position:fixed;inset:0;background:rgba(20,20,19,.55);display:flex;flex-direction:column;justify-content:flex-end;z-index:200;font-family:'Barlow',system-ui,sans-serif;color:#1c1c1c}
+.inf-sheet{background:#fff;border-radius:22px 22px 0 0;padding:10px 18px calc(20px + env(safe-area-inset-bottom, 0px));box-shadow:0 -10px 30px rgba(0,0,0,.2);max-height:92vh;overflow-y:auto;width:100%;max-width:520px;margin:0 auto;box-sizing:border-box}
+.inf-sheet-grip{width:40px;height:5px;border-radius:3px;background:#e4e2dd;margin:0 auto 12px}
+.inf-sheet-head{display:flex;align-items:center;justify-content:space-between}
+.inf-sheet-title{font-size:24px;font-weight:800}
+.inf-sheet-x{width:38px;height:38px;border-radius:10px;border:none;background:#f4f4f2;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.inf-fld{display:block;margin-top:10px}
+.inf-fld span{font-size:11px;font-weight:700;letter-spacing:1px;color:#8a8886}
+.inf-fld input,.inf-fld select,.inf-fld textarea{margin-top:4px;width:100%;box-sizing:border-box;border:1.5px solid #e4e2dd;border-radius:12px;font-family:'Barlow',sans-serif;font-size:15px;background:#fff;color:#1c1c1c;outline:none}
+.inf-fld input,.inf-fld select{height:46px;padding:0 13px}
+.inf-fld textarea{padding:11px 13px;font-size:14.5px;line-height:1.4;resize:none}
+.inf-fld input:focus,.inf-fld select:focus,.inf-fld textarea:focus{border-color:#fe2627}
+.inf-sheet-err{margin-top:10px;font-size:13px;color:#b71c1c}
+.inf-sheet-save{margin-top:16px;width:100%;height:52px;border:none;border-radius:12px;color:#fff;cursor:pointer;background:#fe2627;box-shadow:0 6px 16px rgba(254,38,39,.3);font-size:17px;font-weight:800;letter-spacing:.5px}
+.inf-sheet-save:disabled{background:#c2c0ba;box-shadow:none;cursor:not-allowed}
 
-/* textarea do formulário (reaproveita .postos-form-*) */
-.inf-textarea{padding:10px 12px;border:1px solid #d5d3cf;border-radius:8px;font-size:14px;font-family:'Barlow',sans-serif;color:#1c1c1c;outline:none;background:#fff;resize:vertical;min-height:120px;line-height:1.45}
-.inf-textarea:focus{border-color:#1c1c1c}
-
-/* desktop mode: trata como overlay (defensivo; a aba fica no bottom nav, oculto no desktop) */
+/* desktop mode: overlay */
 body.desktop-mode #screenInformativos{position:absolute;z-index:10}
