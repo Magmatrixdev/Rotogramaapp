@@ -22,3 +22,8 @@ index.html.old
 # Variáveis de ambiente (quando migrar credenciais)
 .env
 .env.local
+
+# Credenciais / chaves de serviço (NUNCA versionar)
+serviceAccountKey.json
+service-account.json
+serviceAccount*.json
