@@ -668,3 +668,100 @@ body.desktop-mode #biContent{padding:0}
 .stop-ac-cidade{font-size:11px;color:#9a9894;margin-top:2px}
 
 
+
+/* ═══════════════════════════════════════════════════════════
+   ADMIN — NOVO VISUAL DA ABA ROTAS (v16)
+   ═══════════════════════════════════════════════════════════ */
+.ar-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px;margin:4px 0 16px}
+.ar-crumb{font-family:'Barlow',sans-serif;font-size:12px;color:#6b6b70}
+.ar-title{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:28px;line-height:1.05;color:#141416;margin-top:2px}
+.ar-head-actions{display:flex;gap:8px;flex-wrap:wrap}
+.ar-btn{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border-radius:12px;font-family:'Barlow',sans-serif;font-weight:700;font-size:14px;cursor:pointer;border:1px solid transparent}
+.ar-btn i{font-size:17px}
+.ar-btn-ghost{background:#fff;border-color:#deddd8;color:#141416}.ar-btn-ghost:hover{border-color:#b9b8b2}
+.ar-btn-primary{background:#d91f26;color:#fff;box-shadow:0 6px 16px rgba(217,31,38,.25)}.ar-btn-primary:hover{background:#c0181f}
+.ar-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:16px}
+.ar-kpi{background:#fff;border:1px solid #ecebe7;border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.ar-kpi-lbl{font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;color:#5e5e63;display:flex;align-items:center;gap:6px}
+.ar-kpi-val{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:700;line-height:1;color:#141416}
+.ar-kpi-val small{font-size:16px;color:#5e5e63;margin-left:3px}
+.ar-kpi-sub{font-family:'Barlow',sans-serif;font-size:12px;color:#5e5e63}
+.ar-kpi-alert{background:#141416;border-color:#141416}
+.ar-kpi-alert .ar-kpi-lbl,.ar-kpi-alert .ar-kpi-sub{color:#c9c9ce}
+.ar-kpi-alert .ar-kpi-lbl i,.ar-kpi-alert .ar-kpi-val{color:#ff6b6e}
+.ar-kpi-alert.ok .ar-kpi-lbl i,.ar-kpi-alert.ok .ar-kpi-val{color:#3ccb7f}
+.ar-panel{background:#fff;border:1px solid #ecebe7;border-radius:16px;overflow:hidden}
+.ar-panel-top{padding:14px;display:flex;flex-direction:column;gap:12px}
+.ar-panel .ar-search{margin-bottom:0;background:#fafaf8;border:1px solid #deddd8;min-height:46px}
+.ar-panel .ar-search:focus-within{border-color:#141416;box-shadow:0 0 0 3px rgba(229,38,42,.15)}
+.ar-chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px}
+.ar-chip{flex-shrink:0;display:inline-flex;align-items:center;gap:8px;min-height:38px;padding:0 14px;border-radius:999px;border:1px solid #deddd8;background:#fff;color:#3a3a3f;font-family:'Barlow',sans-serif;font-size:13px;font-weight:600;cursor:pointer}
+.ar-chip:hover{border-color:#b9b8b2}
+.ar-chip.on{background:#141416;border-color:#141416;color:#fff}
+.ar-chip-ct{font-size:11px;font-weight:700;color:#6b6b70;background:#f1f0ec;border-radius:999px;padding:1px 7px}
+.ar-chip.on .ar-chip-ct{background:#e5262a;color:#fff}
+.ar-thead{display:none}
+.ar-row{display:grid;grid-template-columns:36px minmax(0,1fr) auto;align-items:center;gap:12px;padding:12px 14px;border-top:1px solid #eeede9}
+.ar-row:hover{background:#fafaf8}
+.ar-num{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:17px;color:#8a8a90}
+.ar-route{min-width:0;display:flex;flex-direction:column;gap:3px}
+.ar-route-name{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-family:'Barlow',sans-serif;font-weight:700;font-size:14px;color:#141416}
+.ar-uf{font-size:10px;font-weight:700;color:#5e5e63;background:#f1f0ec;border-radius:4px;padding:1px 5px}
+.ar-arrow{color:#e5262a;font-size:15px}
+.ar-route-sub{font-family:'Barlow',sans-serif;font-size:12px;color:#6b6b70}
+.ar-col-reg,.ar-col-postos,.ar-col-km{display:none}
+.ar-badge{display:inline-flex;align-items:center;gap:6px;font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;white-space:nowrap}
+.ar-badge::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.ar-reg-co{background:#fdf0e6;color:#9a4a0e}.ar-reg-ne{background:#e8f1fb;color:#1c5a99}.ar-reg-se{background:#eeeaf9;color:#5a3fa8}.ar-reg-su{background:#e6f4ee;color:#1f6b4a}
+.ar-reg-no,.ar-reg-cn,.ar-reg-xx{background:#efefef;color:#4a4a4a}
+.ar-warn{font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;color:#b4141c;background:#fdecec;border-radius:6px;padding:4px 8px;white-space:nowrap}
+.ar-col-postos,.ar-col-km span{font-family:'Barlow',sans-serif;font-size:14px;font-weight:600;color:#141416}
+.ar-col-km{flex-direction:column;gap:6px}
+.ar-bar{height:4px;border-radius:4px;background:#eeede9;overflow:hidden}.ar-bar div{height:4px;border-radius:4px;background:#141416}
+.ar-actions{display:flex;gap:6px;justify-content:flex-end}
+.ar-icon{width:40px;height:40px;border-radius:10px;border:1px solid #e4e3df;background:#fff;color:#3a3a3f;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px}
+.ar-icon:hover{background:#f4f4f2}
+.ar-icon-del:hover{background:#fdecec;color:#b4141c;border-color:#f3c4c6}
+.ar-foot{padding:12px 14px;border-top:1px solid #eeede9;font-family:'Barlow',sans-serif;font-size:13px;color:#5e5e63}
+.ar-panel .admin-no-results{border-top:1px solid #eeede9}
+.ar-panel .admin-no-results i{font-size:32px;display:block;margin-bottom:8px}
+.admin-tab-count{display:none}
+
+/* Desktop: tabela com colunas */
+body.desktop-mode .ar-title{font-size:38px}
+body.desktop-mode .ar-head{margin:0 0 20px}
+body.desktop-mode .ar-kpis{grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:20px}
+body.desktop-mode .ar-kpi{padding:18px 20px;gap:8px}
+body.desktop-mode .ar-kpi-val{font-size:42px}
+body.desktop-mode .ar-panel-top{padding:16px 20px}
+body.desktop-mode .ar-chips{flex-wrap:wrap;overflow:visible}
+body.desktop-mode .ar-thead,body.desktop-mode .ar-row{display:grid;grid-template-columns:52px minmax(0,2.4fr) minmax(0,1fr) minmax(0,.8fr) minmax(0,1.3fr) 96px;gap:16px;padding:12px 20px}
+body.desktop-mode .ar-thead{background:#fafaf8;border-top:1px solid #eeede9;font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#6b6b70;padding-top:10px;padding-bottom:10px}
+body.desktop-mode .ar-thead span:last-child{text-align:right}
+body.desktop-mode .ar-col-reg,body.desktop-mode .ar-col-postos{display:block}
+body.desktop-mode .ar-col-km{display:flex}
+body.desktop-mode .ar-route-sub{display:none}
+body.desktop-mode .ar-foot{padding:14px 20px}
+body.desktop-mode #screenAdmin .admin-tab-pane.active{padding:28px 32px 40px!important}
+
+/* Desktop: shell do admin — um menu lateral só */
+body.desktop-mode:has(#screenAdmin.active) #dSidebar,
+body.desktop-mode:has(#screenEditor.active) #dSidebar{display:none}
+body.desktop-mode #screenAdmin{grid-template-columns:232px 1fr}
+body.desktop-mode #screenAdmin .admin-top{background:#0e0f11}
+body.desktop-mode.admin-only #screenAdmin .admin-top .logout-btn{display:none!important}
+body.desktop-mode .admin-tab-bar{background:#121316!important;padding:12px!important;gap:4px!important}
+body.desktop-mode .admin-dsb-section{padding:6px 12px!important;font-family:'Barlow',sans-serif!important;font-size:11px!important;letter-spacing:1.2px!important;color:#6e6e75!important}
+body.desktop-mode .admin-tab-btn{flex:none!important;border-radius:10px!important;border-left:0!important;padding:10px 12px!important;gap:12px!important;font-family:'Barlow',sans-serif!important;font-size:14px!important;font-weight:500!important;color:#a8a8ad!important}
+body.desktop-mode .admin-tab-btn:hover{background:#1c1d21!important;color:#fff!important}
+body.desktop-mode .admin-tab-btn.active{background:#26272c!important;color:#fff!important;box-shadow:inset 3px 0 0 #e5262a}
+body.desktop-mode .admin-tab-btn i{font-size:18px}
+body.desktop-mode .admin-tab-count{display:inline-block;margin-left:auto;font-size:12px;font-weight:700;background:#e5262a;color:#fff;border-radius:999px;padding:1px 8px}
+body.desktop-mode .admin-tab-count:empty{display:none}
+
+/* Desktop: topo */
+body.desktop-mode #dTopbar{background:#0e0f11}
+body.desktop-mode .dtb-sync{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.06);border-radius:999px;padding:6px 12px;color:#c9c9ce;font-size:12px;margin-right:4px}
+body.desktop-mode .dtb-sync::before{content:'';width:8px;height:8px;border-radius:50%;background:#e0a800}
+body.desktop-mode .dtb-sync.on::before{background:#3ccb7f}
+body.desktop-mode .dtb-sync.err::before{background:#fe2627}

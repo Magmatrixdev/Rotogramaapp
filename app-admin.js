@@ -1,37 +1,92 @@
 // ═══ RENDER ADMIN — ROTAS ═══
 let _adminRouteFilter='';
+let _adminRegionFilter='all';
+const _AR_REGIONS=['Centro-Oeste','Nordeste','Sudeste','Sul','Norte','Centro-Norte'];
+const _AR_REG_CLS={'Centro-Oeste':'co','Nordeste':'ne','Sudeste':'se','Sul':'su','Norte':'no','Centro-Norte':'cn'};
+
+function _arStops(r){return (r.paradas||[]).filter(p=>p.tipo!=='origem'&&p.tipo!=='destino').length}
+function _arKm(r){const n=parseInt(String(r.distancia||'').replace(/[^\d]/g,''),10);return isNaN(n)?0:n}
+function _arKmLabel(r){const km=_arKm(r);if(!km)return esc(String(r.distancia||'—'));return (String(r.distancia).includes('~')?'~':'')+km.toLocaleString('pt-BR')+' km'}
+function _arSplitName(nome){
+  const parts=String(nome||'').split(/\s*(?:→|->|⟶)\s*/);
+  if(parts.length<2)return null;
+  const p=s=>{const m=s.trim().match(/^(.*?)\s*[-–—]\s*([A-Za-z]{2})$/);return m?{c:m[1].trim(),uf:m[2].toUpperCase()}:{c:s.trim(),uf:''}};
+  return {o:p(parts[0]),d:p(parts.slice(1).join(' → '))};
+}
+function _arNorm(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'')}
 
 function renderAdmin(){
   const el=document.getElementById('adminList');if(!el)return;
-  let h=`<div class="admin-stats-bar" id="adminRoutesStats"></div>`;
-  h+=`<div class="admin-toolbar-row"><div class="admin-search"><span class="admin-search-icon">🔍</span><input id="adminRouteSearch" type="text" placeholder="Pesquisar rota..." value="${esc(_adminRouteFilter)}" oninput="_adminRouteFilter=this.value;renderAdminRoutes()"><button class="admin-search-clear ${_adminRouteFilter?'visible':''}" onclick="_adminRouteFilter='';document.getElementById('adminRouteSearch').value='';renderAdminRoutes()">✕</button></div><button class="admin-add" onclick="editRoute(-1)">＋ NOVA ROTA</button></div>`;
-  h+=`<div id="adminRouteCards"></div>`;
+  let h=`<div class="ar-head"><div><div class="ar-crumb">Administração / Rotas</div><h2 class="ar-title">Rotas cadastradas</h2></div><div class="ar-head-actions"><button class="ar-btn ar-btn-ghost" onclick="exportRoutesCSV()"><i class="ti ti-download" aria-hidden="true"></i> Exportar</button><button class="ar-btn ar-btn-primary" onclick="editRoute(-1)"><i class="ti ti-plus" aria-hidden="true"></i> Nova rota</button></div></div>`;
+  h+=`<div class="ar-kpis" id="adminRoutesStats"></div>`;
+  h+=`<div class="ar-panel"><div class="ar-panel-top"><div class="admin-search ar-search"><i class="ti ti-search admin-search-icon" aria-hidden="true"></i><input id="adminRouteSearch" type="text" aria-label="Pesquisar rota" placeholder="Buscar por cidade, UF ou número da rota…" value="${esc(_adminRouteFilter)}" oninput="_adminRouteFilter=this.value;renderAdminRoutes()"><button class="admin-search-clear ${_adminRouteFilter?'visible':''}" aria-label="Limpar busca" onclick="_adminRouteFilter='';document.getElementById('adminRouteSearch').value='';renderAdminRoutes()">✕</button></div><div class="ar-chips" id="adminRegionChips" role="group" aria-label="Filtrar por região"></div></div><div class="ar-thead" aria-hidden="true"><span>Nº</span><span>Rota</span><span>Região</span><span>Postos</span><span>Distância</span><span>Ações</span></div><div id="adminRouteCards"></div><div class="ar-foot" id="adminRouteFoot"></div></div>`;
   el.innerHTML=h;
   renderAdminRoutes();
   renderAdminRoutesStats();
 }
 
 function renderAdminRoutesStats(){
-  const el=document.getElementById('adminRoutesStats');if(!el)return;
-  const totalRoutes=routes.length;
-  const totalStops=routes.reduce((sum,r)=>sum+r.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino').length,0);
-  const avg=totalRoutes?(totalStops/totalRoutes).toFixed(1):'0';
-  el.innerHTML=`<div class="admin-stat-card"><div class="admin-stat-val">${totalRoutes}</div><div class="admin-stat-lbl">Rotas cadastradas</div></div><div class="admin-stat-card"><div class="admin-stat-val">${totalStops}</div><div class="admin-stat-lbl">Paradas no total</div></div><div class="admin-stat-card"><div class="admin-stat-val">${avg}</div><div class="admin-stat-lbl">Média de paradas/rota</div></div>`;
+  const el=document.getElementById('adminRoutesStats');
+  const total=routes.length;
+  const tabCt=document.getElementById('adminTabRoutesCount');if(tabCt)tabCt.textContent=total||'';
+  if(!el)return;
+  const stops=routes.reduce((s,r)=>s+_arStops(r),0);
+  const avg=total?(stops/total).toFixed(1).replace('.',','):'0';
+  const kms=routes.map(_arKm).filter(k=>k>0);
+  const avgKm=kms.length?Math.round(kms.reduce((a,b)=>a+b,0)/kms.length).toLocaleString('pt-BR'):'—';
+  const semPosto=routes.filter(r=>_arStops(r)===0).length;
+  const byReg={};routes.forEach(r=>{const k=r.regiao||'Sem região';byReg[k]=(byReg[k]||0)+1});
+  const top=Object.entries(byReg).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([k,v])=>`${v} no ${k}`).join(' · ');
+  el.innerHTML=`<div class="ar-kpi"><div class="ar-kpi-lbl">Rotas cadastradas</div><div class="ar-kpi-val">${total}</div><div class="ar-kpi-sub">${esc(top||'Nenhuma rota ainda')}</div></div>`
+   +`<div class="ar-kpi"><div class="ar-kpi-lbl">Paradas no total</div><div class="ar-kpi-val">${stops}</div><div class="ar-kpi-sub">Média de ${avg} por rota</div></div>`
+   +`<div class="ar-kpi"><div class="ar-kpi-lbl">Distância média</div><div class="ar-kpi-val">${avgKm}<small>km</small></div><div class="ar-kpi-sub">${kms.length} rota${kms.length===1?'':'s'} com distância informada</div></div>`
+   +`<div class="ar-kpi ar-kpi-alert${semPosto?'':' ok'}"><div class="ar-kpi-lbl"><i class="ti ${semPosto?'ti-alert-triangle':'ti-circle-check'}" aria-hidden="true"></i> Rotas sem posto</div><div class="ar-kpi-val">${semPosto}</div><div class="ar-kpi-sub">${semPosto?'Precisam de parada definida':'Todas as rotas têm parada'}</div></div>`;
 }
 
 function renderAdminRoutes(){
   const container=document.getElementById('adminRouteCards');if(!container)return;
-  const q=_adminRouteFilter.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const q=_arNorm(_adminRouteFilter);
   const clearBtn=document.querySelector('.admin-search-clear');
   if(clearBtn)clearBtn.className='admin-search-clear'+(q?' visible':'');
+  const counts={};routes.forEach(r=>{const k=r.regiao||'';if(k)counts[k]=(counts[k]||0)+1});
+  const regs=_AR_REGIONS.slice();Object.keys(counts).forEach(k=>{if(!regs.includes(k))regs.push(k)});
+  if(_adminRegionFilter!=='all'&&!regs.includes(_adminRegionFilter))_adminRegionFilter='all';
+  const chipsEl=document.getElementById('adminRegionChips');
+  if(chipsEl)chipsEl.innerHTML=[['all','Todas',routes.length]].concat(regs.map(k=>[k,k,counts[k]||0])).map(([k,l,c])=>{const on=_adminRegionFilter===k;return `<button class="ar-chip${on?' on':''}" aria-pressed="${on}" data-r="${esc(k)}" onclick="_adminSetRegion(this.dataset.r)">${esc(l)}<span class="ar-chip-ct">${c}</span></button>`}).join('');
+  const maxKm=Math.max(1,...routes.map(_arKm));
   let h='';let count=0;
   routes.forEach((r,i)=>{
-    const searchText=(r.nome+' '+r.numero+' '+(r.regiao||'')+' '+(r.estados||'')+' '+(r.distancia||'')).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    if(_adminRegionFilter!=='all'&&(r.regiao||'')!==_adminRegionFilter)return;
+    const searchText=_arNorm(r.nome+' '+r.numero+' '+(r.regiao||'')+' '+(r.estados||'')+' '+(r.distancia||''));
     if(q&&!searchText.includes(q))return;
-    count++;const stops=r.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino').length;
-    h+=`<div class="admin-rcard"><div class="admin-rcard-head"><div class="admin-rcard-num">${r.numero}</div><div class="admin-rcard-info"><div class="admin-rcard-name">${r.nome}</div><div class="admin-rcard-sub"><i class="ti ti-map-pin" aria-hidden="true"></i>${r.regiao} · ${stops} postos · ${r.distancia}</div></div></div><div class="admin-rcard-actions"><button class="admin-btn admin-btn-edit" onclick="editRoute(${i})"><i class="ti ti-edit" aria-hidden="true"></i><span class="admin-btn-label"> Editar</span></button><button class="admin-btn admin-btn-del" onclick="deleteRoute(${i})"><i class="ti ti-trash" aria-hidden="true"></i><span class="admin-btn-label"> Excluir</span></button></div></div>`});
-  if(q&&count===0)h=`<div class="admin-no-results"><span>🔍</span>Nenhuma rota encontrada para "<strong>${esc(_adminRouteFilter)}</strong>"</div>`;
+    count++;
+    const stops=_arStops(r),km=_arKm(r),sp=_arSplitName(r.nome),num=esc(String(r.numero??''));
+    const city=x=>`<span>${esc(x.c)}</span>${x.uf?`<span class="ar-uf">${esc(x.uf)}</span>`:''}`;
+    const nameHtml=sp?`${city(sp.o)}<i class="ti ti-arrow-right ar-arrow" aria-hidden="true"></i>${city(sp.d)}`:`<span>${esc(String(r.nome||''))}</span>`;
+    const regCls=_AR_REG_CLS[r.regiao]||'xx';
+    const stopsTxt=stops===0?'sem paradas':stops+(stops===1?' parada':' paradas');
+    h+=`<div class="ar-row"><span class="ar-num">${num}</span>`
+      +`<div class="ar-route"><div class="ar-route-name">${nameHtml}</div><div class="ar-route-sub">${esc(r.regiao||'Sem região')} · ${stopsTxt} · ${_arKmLabel(r)}</div></div>`
+      +`<span class="ar-col-reg"><span class="ar-badge ar-reg-${regCls}">${esc(r.regiao||'—')}</span></span>`
+      +`<span class="ar-col-postos">${stops===0?'<span class="ar-warn">Sem posto</span>':stops+(stops===1?' posto':' postos')}</span>`
+      +`<div class="ar-col-km"><span>${_arKmLabel(r)}</span><div class="ar-bar"><div style="width:${km?Math.round(km/maxKm*100):0}%"></div></div></div>`
+      +`<div class="ar-actions"><button class="ar-icon" title="Editar" aria-label="Editar rota ${num}" onclick="editRoute(${i})"><i class="ti ti-edit" aria-hidden="true"></i></button><button class="ar-icon ar-icon-del" title="Excluir" aria-label="Excluir rota ${num}" onclick="deleteRoute(${i})"><i class="ti ti-trash" aria-hidden="true"></i></button></div></div>`;
+  });
+  if(count===0)h=`<div class="admin-no-results"><i class="ti ti-search" aria-hidden="true"></i>${routes.length?'Nenhuma rota encontrada para esse filtro.':'Nenhuma rota cadastrada ainda.'}</div>`;
   container.innerHTML=h;
+  const foot=document.getElementById('adminRouteFoot');if(foot)foot.textContent=`Mostrando ${count} de ${routes.length} rota${routes.length===1?'':'s'}`;
+}
+
+function _adminSetRegion(k){_adminRegionFilter=k||'all';renderAdminRoutes()}
+
+function exportRoutesCSV(){
+  const cell=v=>{let s=String(v??'');if(/^[=+\-@]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"'};
+  const rows=[['Numero','Rota','Regiao','Postos','Distancia (km)','Distancia (texto)']];
+  routes.forEach(r=>rows.push([r.numero,r.nome,r.regiao||'',_arStops(r),_arKm(r)||'',r.distancia||'']));
+  const csv='﻿'+rows.map(x=>x.map(cell).join(';')).join('\r\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download='rotas-'+new Date().toISOString().slice(0,10)+'.csv';document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);
 }
 
 function deleteRoute(i){const r=routes[i];const ov=document.createElement('div');ov.className='confirm-overlay';ov.innerHTML=`<div class="confirm-box"><h3>Excluir rota?</h3><p>${r.nome}</p><div class="btns"><button style="background:#eae8e3;color:#1c1c1c" onclick="this.closest('.confirm-overlay').remove()">Cancelar</button><button style="background:#fe2627;color:#fff" onclick="confirmDeleteRoute(${i});this.closest('.confirm-overlay').remove()">Excluir</button></div></div>`;document.body.appendChild(ov)}

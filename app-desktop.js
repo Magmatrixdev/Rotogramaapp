@@ -46,8 +46,9 @@ function dUpdateTopbar(){
   const dsbFoot=document.getElementById('dsbFooter');
   if(syncEl&&syncBar){
     const cls=syncBar.className;
-    if(cls.includes('on')){syncEl.textContent='Sincronizado';if(dsbFoot){dsbFoot.textContent='Sincronizado';dsbFoot.className='dsb-footer';}}
-    else if(cls.includes('err')){syncEl.textContent='Erro de conexão';if(dsbFoot){dsbFoot.textContent='Erro de conexão';dsbFoot.className='dsb-footer err';}}
+    syncEl.classList.remove('on','err');
+    if(cls.includes('on')){syncEl.classList.add('on');syncEl.textContent='Sincronizado';if(dsbFoot){dsbFoot.textContent='Sincronizado';dsbFoot.className='dsb-footer';}}
+    else if(cls.includes('err')){syncEl.classList.add('err');syncEl.textContent='Erro de conexão';if(dsbFoot){dsbFoot.textContent='Erro de conexão';dsbFoot.className='dsb-footer err';}}
     else{syncEl.textContent='Sincronizando...';if(dsbFoot){dsbFoot.textContent='Sincronizando...';dsbFoot.className='dsb-footer';}}
   }
   const driverEl=document.getElementById('dtbDriver');
@@ -57,11 +58,11 @@ function dUpdateTopbar(){
     if(currentDriver){
       const initials=currentDriver.nome.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
       driverEl.innerHTML=`<div class="dtb-driver-avatar">${initials}</div><span>${currentDriver.nome.split(' ')[0]}</span>`;
-      if(logoutBtn)logoutBtn.style.display='flex';
+      if(logoutBtn){logoutBtn.style.display='flex';logoutBtn.onclick=promptLogout;}
       if(adminBtn)adminBtn.style.display='flex';
     }else if(adminMode){
-      driverEl.innerHTML='<span style="color:rgba(255,255,255,.6);font-size:12px">Admin</span>';
-      if(logoutBtn)logoutBtn.style.display='flex';
+      driverEl.innerHTML='<div class="dtb-driver-avatar">AD</div><span>Admin</span>';
+      if(logoutBtn){logoutBtn.style.display='flex';logoutBtn.onclick=promptLogoutAdmin;}
       if(adminBtn)adminBtn.style.display='none';
     }else{
       driverEl.innerHTML='';
@@ -69,6 +70,7 @@ function dUpdateTopbar(){
       if(adminBtn)adminBtn.style.display='flex';
     }
   }
+  document.body.classList.toggle('admin-only',!!adminMode&&!currentDriver);
   const sub=document.getElementById('dtbSubtitle');
   if(sub){
     if(adminMode)sub.textContent='Painel Administrativo';

@@ -72,7 +72,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script>
-<link rel="stylesheet" href="app.css?v=15">
+<link rel="stylesheet" href="app.css?v=16">
 <link rel="stylesheet" href="app-postos.css?v=13">
 <link rel="stylesheet" href="app-informativos.css?v=1">
 </head>
@@ -284,7 +284,7 @@
   <div class="admin-top"><button class="back-btn" onclick="showHome();if(adminMode&&!currentDriver)hideBottomNav()">‹</button><div class="admin-title">Administração</div><button class="logout-btn show" onclick="promptLogoutAdmin()" title="Sair do admin"><i class="ti ti-logout" aria-hidden="true"></i><span class="mobile-btn-label">Sair</span></button></div>
   <div class="admin-tab-bar">
     <div class="admin-dsb-section">Painel Admin</div>
-    <button class="admin-tab-btn active" onclick="switchAdminTab('routes',this)"><i class="ti ti-route" aria-hidden="true"></i> Rotas</button>
+    <button class="admin-tab-btn active" onclick="switchAdminTab('routes',this)"><i class="ti ti-route" aria-hidden="true"></i> Rotas<span class="admin-tab-count" id="adminTabRoutesCount"></span></button>
     <button class="admin-tab-btn" onclick="switchAdminTab('drivers',this)"><i class="ti ti-users" aria-hidden="true"></i> Motoristas</button>
     <button class="admin-tab-btn" onclick="switchAdminTab('monitor',this)"><i class="ti ti-activity" aria-hidden="true"></i> Monitor</button>
     <button class="admin-tab-btn" onclick="switchAdminTab('bi',this)"><i class="ti ti-chart-bar" aria-hidden="true"></i> Análise</button>
