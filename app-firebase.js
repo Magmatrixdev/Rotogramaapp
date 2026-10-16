@@ -109,7 +109,7 @@ function initFirebase(){
     db.ref('viagens').on('value',snap=>{const d=snap.val();viagens=d||{};checkActiveTrip();renderMonitoring();renderBI();});
     db.ref('posicoes').on('value',snap=>{const d=snap.val();posicoes=d||{};updateMonitorMap();renderMonitoring();});
     db.ref('postos').on('value',snap=>{postosAvulsos=snap.val()||{};if(typeof renderPostosList==='function')renderPostosList();});
-    db.ref('informativos').on('value',snap=>{informativos=snap.val()||{};if(typeof renderInformativos==='function')renderInformativos();});
+    db.ref('informativos').on('value',snap=>{informativos=snap.val()||{};if(typeof renderInformativos==='function')renderInformativos();if(typeof renderHomeInf==='function')renderHomeInf();});
 
     // ═══ NOTIFICATIONS LISTENER ═══
     const _notifListenerStart=Date.now();
@@ -137,7 +137,7 @@ function saveToFirebase(){if(db&&firebaseReady){db.ref('rotogramas').set(routes)
 
 function loadLocal(){const c=localStorage.getItem('rotogramas_cache'),m=localStorage.getItem('rotogramas_data'),s=c||m;if(s){try{routes=JSON.parse(s);renderHome();return}catch(e){}}routes=JSON.parse(JSON.stringify(DEFAULTS));renderHome();}
 
-function setSyncStatus(t,txt){const el=document.getElementById('syncBar');if(!el)return;el.className='sync-bar'+(t==='on'?'':t==='off'?' off':' err');el.textContent=(t==='on'?'🟢':t==='off'?'🟡':'🔴')+' '+txt;if(IS_DESKTOP())setTimeout(dUpdateTopbar,50);}
+function setSyncStatus(t,txt){const el=document.getElementById('syncBar');if(!el)return;el.className='sync-bar'+(t==='on'?' on':t==='off'?' off':' err');el.textContent=txt;if(IS_DESKTOP())setTimeout(dUpdateTopbar,50);}
 
 
 

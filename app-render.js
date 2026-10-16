@@ -1,9 +1,9 @@
 // ═══ SEARCH ═══
 function searchText(r){const p=[r.nome,r.estados,r.subtitulo,r.numero,r.regiao||''];for(const s of r.paradas)p.push(s.nome,s.cidade,s.cartao||'',s.razaoSocial||'');return p.join(' ')}
 
-function filterRoutes(q){const cards=document.querySelectorAll('.rcard'),regs=document.querySelectorAll('.region'),nr=document.getElementById('noResults'),cl=document.getElementById('searchClear');const n=norm(q.trim());if(!n){cards.forEach(c=>c.style.display='');regs.forEach(r=>r.style.display='');nr.style.display='none';cl.classList.remove('vis');return}cl.classList.add('vis');const terms=n.split(/\s+/);let vis=0;cards.forEach(c=>{const m=terms.every(x=>(c.dataset.search||'').includes(x));c.style.display=m?'':'none';if(m)vis++});regs.forEach(r=>{r.style.display=[...r.querySelectorAll('.rcard')].some(c=>c.style.display!=='none')?'':'none'});nr.style.display=vis?'none':'block'}
 
-function clearSearch(){const i=document.getElementById('searchInput');i.value='';filterRoutes('');i.focus()}
+
+
 
 // ═══ RENDER ROUTE ═══
 function renderStop(p){
@@ -75,21 +75,75 @@ function renderRoute(r){const orig=r.paradas.find(p=>p.tipo==='origem'),dest=r.p
   if(dest)h+=`<div class="dest-stop"><div class="stop-node dest"><div class="stop-node-dot"></div></div><div class="dest-nome">Chegada · ${dc}</div></div>`;
   return h+`</div></div></div>`}
 
-// ═══ RENDER HOME ═══
+// ═══ RENDER HOME (layout aprovado v63: header escuro, chips de região, destaque de informativo, cards com cartões) ═══
+var _homeRegion='all';
+const _HM_SVG={
+  dist:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h7a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h7"/></svg>',
+  clock:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+  pump:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 22V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v17"/><path d="M3 22h13"/><path d="M7 8h5"/><path d="M15 12h2a2 2 0 0 1 2 2v3a1.5 1.5 0 0 0 3 0V9l-3-3"/></svg>',
+  chev:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>',
+  mega:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11v2a1 1 0 0 0 1 1h3l5 4V6L7 10H4a1 1 0 0 0-1 1z"/><path d="M16 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8.5 8.5 0 0 1 0 12"/></svg>',
+  chat:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 21l1.9-5.3A8.5 8.5 0 1 1 21 11.5z"/></svg>'
+};
+const _HM_BADGE={truckpag:['hm-b-truck','TruckPag'],shell:['hm-b-shell','Shell'],shell_expers:['hm-b-shell','Shell Expers'],redefrota:['hm-b-frota','Rede Frota'],compra_antecipada:['hm-b-ant','Antecipada']};
+function _homeRegionNow(){return IS_DESKTOP()?(typeof _dActiveRegion!=='undefined'?_dActiveRegion:'all'):_homeRegion;}
+function _regIdx(g){const i=REGION_ORDER.indexOf(g);return i<0?99:i;}
+function _routeCards(r){const s=[];const add=c=>{if(c&&_HM_BADGE[c]&&s.indexOf(c)<0)s.push(c)};(r.paradas||[]).forEach(p=>{if(p.tipo==='origem'||p.tipo==='destino')return;add(p.cartao);if(p.alternativa)add(p.alternativa.cartao)});return s;}
+
+function filterRoutes(q){
+  if(q==null){const i=document.getElementById('searchInput');q=i?i.value:'';}
+  const cards=document.querySelectorAll('#routeList .rcard'),nr=document.getElementById('noResults'),cl=document.getElementById('searchClear');
+  const n=norm(q.trim()),terms=n?n.split(/\s+/):[],reg=_homeRegionNow();
+  if(cl)cl.classList.toggle('vis',!!n);
+  let vis=0;
+  cards.forEach(c=>{const m=terms.every(x=>(c.dataset.search||'').includes(x))&&(reg==='all'||c.dataset.region===reg);c.style.display=m?'':'none';if(m)vis++});
+  if(nr)nr.style.display=vis?'none':'block';
+  const t=document.getElementById('homeSectionTitle'),ct=document.getElementById('homeSectionCount');
+  if(t)t.textContent=n?'Resultados da busca':(reg==='all'?'Todas as rotas':reg);
+  if(ct)ct.textContent=vis+(vis===1?' rota':' rotas');
+}
+
+function clearSearch(){const i=document.getElementById('searchInput');i.value='';filterRoutes('');i.focus()}
+
+function setHomeRegion(r){_homeRegion=r;renderHomeChips();filterRoutes();}
+
+function renderHomeChips(){
+  const el=document.getElementById('homeRegionChips');if(!el)return;
+  const counts={};routes.forEach(r=>{const g=r.regiao||'Outras';counts[g]=(counts[g]||0)+1});
+  const regs=Object.keys(counts).sort((a,b)=>_regIdx(a)-_regIdx(b));
+  if(_homeRegion!=='all'&&!counts[_homeRegion])_homeRegion='all';
+  const chip=(id,label,n)=>{const on=_homeRegion===id;return `<button type="button" role="tab" aria-selected="${on}" class="hm-chip${on?' on':''}" onclick="setHomeRegion('${esc(id)}')">${esc(label)}<span class="hm-chip-ct">${n}</span></button>`};
+  el.innerHTML=chip('all','Todas',routes.length)+regs.map(g=>chip(g,g,counts[g])).join('');
+}
+
+function renderHomeInf(){
+  const el=document.getElementById('homeInfHighlight');if(!el)return;
+  const list=typeof _infList==='function'?_infList():[];
+  if(!list.length){el.innerHTML='';return;}
+  const it=list[0];
+  const sub=[it.regiao,it.formaPagamento].filter(Boolean).map(esc).join(' · ');
+  el.innerHTML=`<button type="button" class="hm-inf" onclick="bnavGoInformativos()"><span class="hm-inf-ic">${_HM_SVG.mega}</span><span class="hm-inf-txt"><span class="hm-inf-lbl">ÚLTIMO INFORMATIVO</span><span class="hm-inf-tit">${esc(it.posto||'Informativo')}</span>${sub?`<span class="hm-inf-sub">${sub}</span>`:''}</span><span class="hm-inf-chev">${_HM_SVG.chev}</span></button>`;
+}
+
 function renderHome(){
   const el=document.getElementById('routeList');if(!el)return;
-  const rm={};routes.forEach((r,i)=>{const g=r.regiao||'Outras';if(!rm[g])rm[g]=[];rm[g].push({r,i})});
-  const sorted=Object.keys(rm).sort((a,b)=>{const ia=REGION_ORDER.indexOf(a),ib=REGION_ORDER.indexOf(b);return(ia<0?99:ia)-(ib<0?99:ib)});
+  const list=routes.map((r,i)=>({r,i})).sort((a,b)=>{const d=_regIdx(a.r.regiao||'Outras')-_regIdx(b.r.regiao||'Outras');return d||String(a.r.numero||'').localeCompare(String(b.r.numero||''),'pt-BR',{numeric:true})});
   let h='';
-  for(const reg of sorted){const items=rm[reg];
-    h+=`<div class="region"><div class="region-hd"><span class="region-bar"></span><span class="region-name">${reg}</span><span class="region-count">${items.length}</span><span class="region-line"></span></div>`;
-    for(const{r,i}of items){const stops=r.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino').length;
-      h+=`<div class="rcard" data-search="${norm(searchText(r))}" data-region="${r.regiao||'Outras'}" data-route-idx="${i}" onclick="showRoute(${i})"><div class="rcard-uf">${r.numero}</div><div class="rcard-info"><div class="rcard-nome">${r.nome}</div><div class="rcard-detail">${r.estados}</div><div class="rcard-stats"><span>${r.distancia||''}</span><span class="dot">·</span><span>${r.tempo||''}</span><span class="dot">·</span><span class="red">⛽ ${stops} posto${stops!==1?'s':''}</span></div></div><div class="rcard-arrow">›</div></div>`}
-    h+='</div>'}
+  for(const{r,i}of list){
+    const stops=r.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino').length;
+    const badges=_routeCards(r).map(c=>`<span class="hm-badge ${_HM_BADGE[c][0]}">${_HM_BADGE[c][1]}</span>`).join('');
+    h+=`<div class="rcard hm-card" role="button" tabindex="0" data-search="${norm(searchText(r))}" data-region="${r.regiao||'Outras'}" data-route-idx="${i}" onclick="showRoute(${i})">`
+      +`<div class="rcard-uf hm-num"><span class="hm-num-lbl">ROTA</span><span class="hm-num-val">${r.numero}</span></div>`
+      +`<div class="rcard-info"><div class="rcard-nome">${r.nome}</div><div class="rcard-detail">${r.estados||''}</div>`
+      +`<div class="hm-stats">${r.distancia?`<span>${_HM_SVG.dist}${r.distancia}</span>`:''}${r.tempo?`<span>${_HM_SVG.clock}${r.tempo}</span>`:''}<span class="hm-postos">${_HM_SVG.pump}${stops} posto${stops!==1?'s':''}</span></div>`
+      +(badges?`<div class="hm-badges">${badges}</div>`:'')
+      +`</div><div class="rcard-arrow">${_HM_SVG.chev}</div></div>`;
+  }
   h+='<div class="no-results" id="noResults"><span>🔍</span>Nenhuma rota encontrada</div>';
+  h+=`<section class="hm-support" aria-label="Suporte de abastecimento"><div><div class="hm-sup-tit">PRECISA DE AJUDA?</div><div class="hm-sup-sub">Suporte de abastecimento no WhatsApp</div></div><div class="hm-sup-btns"><a class="hm-sup-btn primary" href="https://wa.me/5562998780792" target="_blank" rel="noopener">${_HM_SVG.chat}<span><span class="hm-sup-name">Pedro</span><span class="hm-sup-when">Seg a Sex</span></span></a><a class="hm-sup-btn" href="https://wa.me/556299220160" target="_blank" rel="noopener">${_HM_SVG.chat}<span><span class="hm-sup-name">Ismael</span><span class="hm-sup-when">Sáb e Dom</span></span></a></div></section>`;
   el.innerHTML=h;
-  document.getElementById('routeCountText').textContent=`${routes.length} rotas ativas · toque para abrir`;
-  const inp=document.getElementById('searchInput');if(inp&&inp.value.trim())filterRoutes(inp.value);
+  document.getElementById('routeCountText').textContent=`${routes.length} rotas ativas`;
+  renderHomeChips();renderHomeInf();filterRoutes();
   verifyDriverSession();checkActiveTrip();updateActiveTripBanner();
   const logoutBtn=document.getElementById('logoutBtn');const greeting=document.getElementById('driverGreeting');
   if(logoutBtn){logoutBtn.classList.add('show');}
@@ -102,4 +156,3 @@ function renderHome(){
     }
   }
 }
-

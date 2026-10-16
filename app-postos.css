@@ -97,15 +97,16 @@
 .pf-edit-fotos-wrap{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start}
 
 /* ─── bottom nav ─── */
-#bottomNav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #eae8e3;display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom,0)}
-.bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 4px 11px;background:none;border:none;color:#b5b3af;cursor:pointer;font-family:'Barlow',sans-serif;transition:color .15s}
-.bnav-item i{font-size:24px}
-.bnav-item span{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
-.bnav-item.active{color:#1c1c1c}
+#bottomNav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #ecebe7;display:flex;gap:6px;z-index:100;padding:6px 10px calc(6px + env(safe-area-inset-bottom,0px))}
+.bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:52px;padding:6px 4px;background:none;border:none;border-radius:14px;color:#5e5e63;cursor:pointer;font-family:'Barlow',sans-serif;transition:color .15s,background .15s}
+.bnav-item i{font-size:22px}
+.bnav-item span{font-size:12px;font-weight:600}
+.bnav-item.active{color:#b4141c;background:#fdecec}
+.bnav-item.active span{font-weight:700}
 
 /* ocultar bottom nav no desktop */
 body.desktop-mode #bottomNav{display:none!important}
 
 /* padding-bottom nas telas que usam o bottom nav */
-#screenHome .d-list-col{padding-bottom:64px}
+#screenHome .d-list-col{padding-bottom:76px}
 
