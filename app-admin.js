@@ -136,6 +136,9 @@ function showEditDriverModal(id){
     <p style="font-size:13px;color:#9a9894;margin-bottom:16px;font-family:'Barlow',sans-serif">CPF não pode ser alterado</p>
     <div class="login-field"><label>Nome completo</label><input type="text" id="edNome" value="${esc(d.nome)}" style="width:100%;padding:12px;border:1.5px solid #e4e2dd;border-radius:10px;font-family:'Barlow',sans-serif;font-size:14px;outline:none"></div>
     <div class="login-field" style="margin-top:10px"><label>Novo PIN (deixe vazio para não alterar)</label><input type="password" id="edPIN" placeholder="••••" maxlength="4" inputmode="numeric" style="width:100%;padding:12px;border:1.5px solid #e4e2dd;border-radius:10px;font-family:'Barlow',sans-serif;font-size:14px;outline:none"></div>
+    <div style="border-top:1px solid #efeee9;margin:14px 0 12px"></div>
+    <button type="button" style="width:100%;background:#fff;color:#c2410c;border:1.5px solid #f0997b;border-radius:10px;padding:11px;font-weight:700;font-family:'Barlow',sans-serif;font-size:14px;cursor:pointer" onclick="doResetDriverPIN('${id}')">🔑 Resetar senha para 0000</button>
+    <p style="font-size:11.5px;color:#9a9894;margin:7px 2px 0;line-height:1.5;font-family:'Barlow',sans-serif">No próximo acesso o motorista entra com <b style="color:#6b6a66">0000</b> e é obrigado a criar uma nova senha.</p>
     <div class="login-error" id="edError" style="display:none;margin-top:8px"></div>
     <div class="btns" style="margin-top:16px">
       <button style="background:#eae8e3;color:#1c1c1c;flex:1;padding:12px;border-radius:10px;border:none;font-weight:700;cursor:pointer" onclick="this.closest('.driver-modal-overlay').remove()">Cancelar</button>
@@ -187,6 +190,53 @@ async function doEditDriver(id){
     showErr(msg);
   }
   finally{if(btn){btn.disabled=false;btn.textContent='Salvar';}}
+}
+
+async function doResetDriverPIN(id){
+  const d=drivers[id];if(!d)return;
+  document.querySelector('.reset-pin-overlay')?.remove();
+  const ov=document.createElement('div');ov.className='reset-pin-overlay confirm-overlay';
+  ov.innerHTML=`<div class="confirm-box" style="max-width:360px;text-align:left">
+    <h3 style="margin-bottom:8px">Resetar senha?</h3>
+    <p style="font-size:13px;color:#9a9894;margin-bottom:6px;font-family:'Barlow',sans-serif">A senha de <b style="color:#1c1c1c">${esc(d.nome)}</b> será redefinida para <b style="color:#1c1c1c">0000</b>.</p>
+    <p style="font-size:13px;color:#9a9894;margin-bottom:16px;font-family:'Barlow',sans-serif">No próximo acesso o motorista será obrigado a criar uma nova senha.</p>
+    <div class="login-error" id="rpError" style="display:none;margin-bottom:8px"></div>
+    <div class="btns">
+      <button style="background:#eae8e3;color:#1c1c1c;flex:1;padding:12px;border-radius:10px;border:none;font-weight:700;cursor:pointer;font-family:'Barlow',sans-serif" onclick="this.closest('.reset-pin-overlay').remove()">Cancelar</button>
+      <button id="rpConfirmBtn" style="background:#fe2627;color:#fff;flex:1;padding:12px;border-radius:10px;border:none;font-weight:700;cursor:pointer;font-family:'Barlow',sans-serif" onclick="doResetDriverPINConfirm('${id}')">Resetar</button>
+    </div>
+  </div>`;
+  document.body.appendChild(ov);
+}
+
+async function doResetDriverPINConfirm(id){
+  const d=drivers[id];if(!d)return;
+  const errEl=document.getElementById('rpError');
+  const btn=document.getElementById('rpConfirmBtn');
+  function showErr(msg){if(errEl){errEl.textContent=msg;errEl.style.display='block';}}
+  if(btn){btn.disabled=true;btn.textContent='Resetando...';}
+  try{
+    if(USE_NEW_AUTH){
+      const fn=firebase.functions().httpsCallable('adminSetDriverPIN');
+      await fn({uid:id,pinNovo:'0000',exigirTroca:true});
+    }else{
+      const hashFn=(!window.crypto||!window.crypto.subtle)?sha256Fallback:sha256;
+      if(db)await db.ref('motoristas/'+id).update({pinHash:await hashFn('0000'),pinResetRequired:true});
+    }
+    document.querySelector('.reset-pin-overlay')?.remove();
+    document.querySelector('.driver-modal-overlay')?.remove();
+    if(typeof showToast==='function')showToast('✅ Senha resetada para 0000 — o motorista criará uma nova no próximo acesso');
+    if(typeof renderDriverCards==='function')renderDriverCards();
+  }catch(err){
+    const code=(err&&err.code)||'';
+    let msg='Erro: '+(err.message||'tente novamente');
+    if(code==='functions/permission-denied')msg='Você precisa estar logado como administrador.';
+    else if(code==='functions/not-found')msg='Função não implantada. Rode o deploy das Cloud Functions.';
+    else if(code==='functions/unauthenticated')msg='Sessão expirada. Entre novamente como admin.';
+    else if(code==='functions/invalid-argument')msg='Dados inválidos.';
+    showErr(msg);
+    if(btn){btn.disabled=false;btn.textContent='Resetar';}
+  }
 }
 
 async function renderDriverManager(){

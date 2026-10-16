@@ -360,7 +360,7 @@ export const adminSetDriverPIN = onCall(
       throw new HttpsError('permission-denied', 'Requer claim admin.');
     }
 
-    const { uid, pinNovo } = request.data as { uid?: string; pinNovo?: string };
+    const { uid, pinNovo, exigirTroca } = request.data as { uid?: string; pinNovo?: string; exigirTroca?: boolean };
     if (!uid || typeof uid !== 'string') {
       throw new HttpsError('invalid-argument', 'UID invalido.');
     }
@@ -381,7 +381,7 @@ export const adminSetDriverPIN = onCall(
     await db.ref(`motoristas/${uid}`).update({
       pinHash,
       pinSalt,
-      pinResetRequired: false,
+      pinResetRequired: exigirTroca === true,
       updatedAt: Date.now(),
     });
 
