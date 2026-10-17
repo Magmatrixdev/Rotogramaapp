@@ -73,7 +73,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script>
 <link rel="stylesheet" href="app.css?v=17">
-<link rel="stylesheet" href="app-postos.css?v=14">
+<link rel="stylesheet" href="app-postos.css?v=15">
 <link rel="stylesheet" href="app-informativos.css?v=3">
 </head>
 <body>
@@ -200,25 +200,23 @@
 
 <!-- ═══ POSTOS ═══ -->
 <div class="screen" id="screenPostos">
-  <div class="postos-topbar">
-    <div class="postos-topbar-row">
-      <button class="back-btn" onclick="bnavGoRotas()">‹</button>
-      <div class="postos-topbar-title">Postos</div>
+  <div class="pst-hero">
+    <svg class="pst-hero-road" aria-hidden="true" width="220" height="200" viewBox="0 0 220 200"><path d="M40 200 L150 0" stroke="#3a3a38" stroke-width="44" fill="none"/><path d="M95 200 L150 100 M158 86 L178 50 M186 36 L200 10" stroke="#5a5856" stroke-width="3" stroke-dasharray="14 12" fill="none"/></svg>
+    <div class="pst-hero-row">
+      <button class="pst-hero-back" onclick="bnavGoRotas()" aria-label="Voltar"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
+      <div class="pst-hero-kicker">REDE DE ABASTECIMENTO</div>
     </div>
-    <div class="postos-search-wrap">
+    <h1 class="pst-hero-title">Postos</h1>
+    <div class="pst-hero-stats" id="postosStats"></div>
+    <label class="pst-search">
       <i class="ti ti-search" aria-hidden="true"></i>
-      <input id="postosSearch" placeholder="Buscar posto ou cidade..." oninput="filterPostos()" autocomplete="off" autocorrect="off" spellcheck="false">
-    </div>
+      <input id="postosSearch" aria-label="Buscar posto, cidade ou UF" placeholder="Buscar posto, cidade ou UF" oninput="filterPostos()" autocomplete="off" autocorrect="off" spellcheck="false">
+    </label>
   </div>
-  <div class="postos-filter-row">
-    <div class="postos-chip active" data-filter="all" onclick="setPostosFilter(this,'all')">Todos</div>
-    <div class="postos-chip" data-filter="truckpag" onclick="setPostosFilter(this,'truckpag')">TruckPag</div>
-    <div class="postos-chip" data-filter="shell" onclick="setPostosFilter(this,'shell')">Shell</div>
-    <div class="postos-chip" data-filter="frota" onclick="setPostosFilter(this,'frota')">Rede Frota</div>
-    <div class="postos-chip" data-filter="antecipada" onclick="setPostosFilter(this,'antecipada')">Antecipada</div>
+  <div class="pst-main">
+    <div class="pst-filters" id="postosFilters"></div>
+    <div id="postosListContainer"></div>
   </div>
-  <div id="postosListContainer" class="postos-list"></div>
-  <button class="postos-fab" id="postosFab" onclick="showAddPostoForm()" aria-label="Adicionar posto" style="display:none"><i class="ti ti-plus" aria-hidden="true"></i></button>
 </div>
 
 <!-- ═══ ROTA (estático) ═══ -->

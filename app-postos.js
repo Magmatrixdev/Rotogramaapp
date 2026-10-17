@@ -26,7 +26,7 @@ function extractPostosFromRoutes(){
       if(p.tipo==='origem'||p.tipo==='destino')return;
       list.push({_id:rota.id+'_'+p.ordem,nome:p.nome,cidade:p.cidade,cartao:p.cartao,link:p.link||'',rotaNumero:rota.numero,_source:'rota'});
       if(p.alternativa){
-        list.push({_id:rota.id+'_'+p.ordem+'_alt',nome:p.alternativa.nome,cidade:p.alternativa.cidade,cartao:p.alternativa.cartao,link:p.alternativa.link||'',rotaNumero:rota.numero,_source:'rota'});
+        list.push({_id:rota.id+'_'+p.ordem+'_alt',nome:p.alternativa.nome,cidade:p.alternativa.cidade,cartao:p.alternativa.cartao,link:p.alternativa.link||'',rotaNumero:rota.numero,_source:'rota',_alt:true});
       }
     });
   });
@@ -57,7 +57,7 @@ function showPostos(){
   renderPostosList();
   updateBottomNav('Postos');
   // Reseta scroll do container interno para garantir que cards com foto (topo da lista) fiquem visíveis
-  const _resetListScroll=()=>{const l=document.querySelector('#screenPostos .postos-list');if(l)l.scrollTop=0;};
+  const _resetListScroll=()=>{const l=document.querySelector('#screenPostos .pst-main');if(l)l.scrollTop=0;};
   _resetListScroll();
   // Re-render garantido após Firebase responder (async) — cobre casos de cache frio
   setTimeout(()=>{renderPostosList();_resetListScroll();},600);
@@ -92,119 +92,192 @@ function hideBottomNav(){
   if(nav)nav.style.display='none';
 }
 
-// ─── render lista ───
+// ─── render lista (layout modernizado — mockup "Postos — Tela modernizada") ───
+var _postosFiltro='all';
+var _postoGaleriaCache={};
+const _UF_NOMES={AC:'Acre',AL:'Alagoas',AP:'Amapá',AM:'Amazonas',BA:'Bahia',CE:'Ceará',DF:'Distrito Federal',ES:'Espírito Santo',GO:'Goiás',MA:'Maranhão',MT:'Mato Grosso',MS:'Mato Grosso do Sul',MG:'Minas Gerais',PA:'Pará',PB:'Paraíba',PR:'Paraná',PE:'Pernambuco',PI:'Piauí',RJ:'Rio de Janeiro',RN:'Rio Grande do Norte',RS:'Rio Grande do Sul',RO:'Rondônia',RR:'Roraima',SC:'Santa Catarina',SP:'São Paulo',SE:'Sergipe',TO:'Tocantins'};
+const _PST_CARTOES={
+  truckpag:{label:'TruckPag',dot:'#1f8a3b',fg:'#14662b',bg:'#e6f4ea'},
+  shell:{label:'Shell',dot:'#d4241c',fg:'#a3170f',bg:'#fdecea'},
+  frota:{label:'Rede Frota',dot:'#6b6a66',fg:'#4a4946',bg:'#f1f0eb'},
+  antecipada:{label:'Antecipada',dot:'#c98a00',fg:'#7a5300',bg:'#fef6dc'},
+  outro:{label:'Outro',dot:'#9a9894',fg:'#4a4946',bg:'#f1f0eb'}
+};
+function getCartaoKey(cartao){
+  const c=(cartao||'').toLowerCase();
+  if(c==='truckpag')return 'truckpag';
+  if(c.startsWith('shell'))return 'shell';
+  if(c.includes('frota'))return 'frota';
+  if(c.includes('antecipada'))return 'antecipada';
+  return 'outro';
+}
+function _pstEsc(s){return String(s==null?'':s).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
+function _pstUF(cidade){
+  const m=String(cidade||'').toUpperCase().match(/(?:^|[^A-Z])([A-Z]{2})\s*\.?\s*$/);
+  return(m&&_UF_NOMES[m[1]])?m[1]:'';
+}
+
 function renderPostosList(){
-  const query=(document.getElementById('postosSearch')?.value||'').toLowerCase().trim();
-  const activeFilter=document.querySelector('.postos-chip.active')?.dataset.filter||'all';
+  const norm=s=>(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  const queryNorm=norm((document.getElementById('postosSearch')?.value||'').trim());
+  const filtro=_postosFiltro;
 
-  function matchFilter(cartao){
-    if(activeFilter==='all')return true;
-    const c=(cartao||'').toLowerCase();
-    if(activeFilter==='truckpag')return c==='truckpag';
-    if(activeFilter==='shell')return c.startsWith('shell');
-    if(activeFilter==='frota')return c.includes('frota');
-    if(activeFilter==='antecipada')return c.includes('antecipada');
-    return true;
-  }
-  const norm=s=>(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-  const queryNorm=norm(query);
-  function matchQuery(p){
-    if(!queryNorm)return true;
-    return norm(p.nome).includes(queryNorm)||norm(p.cidade).includes(queryNorm);
-  }
-
-  // Dedup por NOME apenas — evita duplicatas de postos com mesma nome mas
-  // cidade levemente diferente entre rotas (ex: "Goiânia - GO" vs "Goiânia—GO")
+  // Dedup por NOME — rotas primeiro, avulsos do Firebase sobrescrevem (fotos/dados ricos)
   const dedup={};
-  // Pass 1: postos das rotas — nome como chave, primeiro encontrado vence
+  const rotasMap={};
   extractPostosFromRoutes().forEach(p=>{
     const k=norm(p.nome);
+    if(!k)return;
     if(!dedup[k])dedup[k]=p;
+    const lbl='Rota '+(p.rotaNumero||'?')+(p._alt?' · alternativa':'');
+    (rotasMap[k]=rotasMap[k]||[]);
+    if(!rotasMap[k].includes(lbl))rotasMap[k].push(lbl);
   });
-  // Pass 2: avulsos do Firebase — têm prioridade (podem ter fotos e dados ricos)
   Object.values(postosAvulsos).forEach(p=>{
     const k=norm(p.nome);
-    // Mescla: avulso sobrescreve campos definidos; campos da rota servem de fallback
+    if(!k)return;
     dedup[k]={...(dedup[k]||{}),...p,_source:'avulso'};
   });
-  // Pass 3: enriquece entradas de rota sem fotos usando avulso de mesmo nome
   Object.keys(dedup).forEach(k=>{
     const entry=dedup[k];
     if(entry._source==='rota'&&(!Array.isArray(entry.fotos)||!entry.fotos.filter(Boolean).length)){
       const fotos=getFotosByNome(entry.nome);
       if(fotos.length>0)dedup[k]={...entry,fotos};
     }
-  });
-  const unified=Object.values(dedup).filter(p=>matchFilter(p.cartao)&&matchQuery(p)).sort((a,b)=>{
-    const af=Array.isArray(a.fotos)&&a.fotos.filter(Boolean).length>0;
-    const bf=Array.isArray(b.fotos)&&b.fotos.filter(Boolean).length>0;
-    if(af&&!bf)return -1;
-    if(!af&&bf)return 1;
-    return(a.nome||'').localeCompare(b.nome||'','pt');
+    dedup[k]._key=k;
+    dedup[k]._rotas=rotasMap[k]||[];
+    dedup[k]._uf=_pstUF(dedup[k].cidade);
+    const f=Array.isArray(dedup[k].fotos)?dedup[k].fotos.filter(Boolean):[];
+    dedup[k]._fotos=f;
   });
 
+  const todos=Object.values(dedup);
+  const porBusca=todos.filter(p=>!queryNorm||norm(p.nome).includes(queryNorm)||norm(p.cidade).includes(queryNorm)||norm(p._uf).includes(queryNorm)||norm(_UF_NOMES[p._uf]).includes(queryNorm));
+  const visiveis=porBusca.filter(p=>filtro==='all'||getCartaoKey(p.cartao)===filtro);
+
+  // ── stats do topo (lista completa) ──
+  const stats=document.getElementById('postosStats');
+  if(stats){
+    const ufs=new Set(todos.map(p=>p._uf).filter(Boolean)).size;
+    const comFoto=todos.filter(p=>p._fotos.length>0).length;
+    const st=(n,l)=>`<div class="pst-stat"><div class="pst-stat-n">${n}</div><div class="pst-stat-l">${l}</div></div>`;
+    stats.innerHTML=st(todos.length,'POSTOS')+st(ufs,'ESTADOS')+st(comFoto,'COM FOTO');
+  }
+
+  // ── chips de cartão (contagem respeita a busca) ──
+  const chipsEl=document.getElementById('postosFilters');
+  if(chipsEl){
+    const defs=[{id:'all',label:'Todos',dot:'#1c1c1c'}].concat(['truckpag','shell','frota','antecipada'].map(id=>({id,label:_PST_CARTOES[id].label,dot:_PST_CARTOES[id].dot})));
+    chipsEl.innerHTML=defs.map(c=>{
+      const n=porBusca.filter(p=>c.id==='all'||getCartaoKey(p.cartao)===c.id).length;
+      const on=c.id===filtro;
+      return `<button class="postos-chip pst-chip${on?' active':''}" data-filter="${c.id}" onclick="setPostosFilter(this,'${c.id}')"><span class="pst-chip-dot" style="background:${on&&c.id==='all'?'#fff':c.dot}"></span>${c.label}<span class="pst-chip-n">${n}</span></button>`;
+    }).join('');
+  }
+
+  // ── agrupa por estado ──
+  const grupos={};
+  visiveis.forEach(p=>{const uf=p._uf||'__';(grupos[uf]=grupos[uf]||[]).push(p);});
+  const ordemUF=Object.keys(grupos).sort((a,b)=>{
+    if(a==='__')return 1;if(b==='__')return -1;
+    return _UF_NOMES[a].localeCompare(_UF_NOMES[b],'pt');
+  });
+
+  _postoGaleriaCache={};
   let html='';
-  if(unified.length>0){
-    unified.forEach(p=>{html+=buildPostoCard(p);});
+  if(adminMode){
+    html+=`<div class="pst-admin-bar"><div class="pst-sec-label">GERENCIAR POSTOS</div><button class="pst-add" onclick="showAddPostoForm()"><i class="ti ti-plus" aria-hidden="true"></i><span>Adicionar posto</span></button></div>`;
+  }
+  if(visiveis.length===0){
+    const msg=filtro!=='all'&&porBusca.length>0?'Nenhum posto nesse cartão':'Nenhum posto encontrado';
+    const sub=filtro!=='all'?'Toque em “Todos” para ver a lista completa.':'Tente buscar por outro nome, cidade ou UF.';
+    html+=`<div class="pst-empty"><i class="ti ti-gas-station" aria-hidden="true"></i><div class="pst-empty-t">${msg}</div><div class="pst-empty-s">${sub}</div></div>`;
   } else {
-    html=`<div class="postos-empty"><i class="ti ti-gas-station" aria-hidden="true"></i><p>Nenhum posto encontrado</p></div>`;
+    ordemUF.forEach(uf=>{
+      const itens=grupos[uf].sort((a,b)=>{
+        const af=a._fotos.length>0,bf=b._fotos.length>0;
+        if(af&&!bf)return -1;if(!af&&bf)return 1;
+        return(a.nome||'').localeCompare(b.nome||'','pt');
+      });
+      const titulo=uf==='__'?'OUTROS':(_UF_NOMES[uf].toUpperCase()+' · '+uf);
+      html+=`<section class="pst-group"><div class="pst-group-head"><div class="pst-sec-label">${titulo}</div><div class="pst-group-line"></div><div class="pst-group-n">${itens.length}</div></div><div class="pst-group-list">${itens.map(buildPostoCard).join('')}</div></section>`;
+    });
   }
 
   const el=document.getElementById('postosListContainer');
   if(el)el.innerHTML=html;
-  const fab=document.getElementById('postosFab');
-  if(fab)fab.style.display=adminMode?'flex':'none';
 }
 
 function buildPostoCard(p){
-  const cls=getCartaoClass(p.cartao);
-  const lbl=getCartaoLabel(p.cartao);
-  const maps=p.link?`<a class="postos-maps-btn" href="${p.link}" target="_blank"><i class="ti ti-map-pin" aria-hidden="true"></i> Maps</a>`:'';
-
-  const _rawFotos=Array.isArray(p.fotos)?p.fotos.filter(Boolean):[];
-  const fotos=_rawFotos.length>0?_rawFotos:getFotosByNome(p.nome).filter(Boolean);
+  const ck=getCartaoKey(p.cartao);
+  const cc=_PST_CARTOES[ck];
+  const lbl=ck==='outro'?getCartaoLabel(p.cartao):cc.label;
+  const fotos=(p._fotos&&p._fotos.length)?p._fotos:getFotosByNome(p.nome).filter(Boolean);
+  const gk='g'+Object.keys(_postoGaleriaCache).length;
+  if(fotos.length)_postoGaleriaCache[gk]=fotos;
   const _nEnc=encodeURIComponent(p.nome||'');const _cEnc=encodeURIComponent(p.cidade||'');
-  const editFotosBtn=adminMode
-    ?`<button class="postos-edit-btn" onclick="editPostoFotosByKey('${_nEnc}','${_cEnc}')" aria-label="Editar fotos"><i class="ti ti-photo-edit" aria-hidden="true"></i></button>`:'';
-  const editDadosBtn=adminMode
-    ?`<button class="postos-edit-btn" onclick="showEditPostoUnified('${_nEnc}','${_cEnc}')" aria-label="Editar dados" style="background:#2d5a27"><i class="ti ti-pencil" aria-hidden="true"></i></button>`:'';
-  const editBtn=editDadosBtn+editFotosBtn;
-  const del=(adminMode&&p._source==='avulso'&&p.id)
-    ?`<button class="postos-del-btn" onclick="deletePostoAvulso('${p.id}')" aria-label="Remover posto"><i class="ti ti-trash" aria-hidden="true"></i></button>`:'';
+  const pill=`<span class="pst-pill" style="background:${cc.bg};color:${cc.fg}"><span class="pst-pill-dot" style="background:${cc.dot}"></span>${_pstEsc(lbl)}</span>`;
 
-  // ── Hero area: foto real ou placeholder ───────────────────────────────────
-  const heroInner=fotos.length>0
-    ?`<img class="posto-hero-img" src="${fotos[0]}" loading="eager" alt="${p.nome}" onclick="showPostoFotoViewer('${fotos[0]}')">`
-    :`<div class="posto-hero-placeholder"><i class="ti ti-gas-station" aria-hidden="true"></i></div>`;
+  const foto=fotos.length
+    ?`<div class="pst-photo">
+        <img src="${_pstEsc(fotos[0])}" loading="lazy" alt="${_pstEsc(p.nome)}" onclick="showPostoGaleria('${gk}',0)">
+        <span class="pst-pill pst-pill--onphoto" style="color:${cc.fg}"><span class="pst-pill-dot" style="background:${cc.dot}"></span>${_pstEsc(lbl)}</span>
+        <button class="pst-fotos-btn" onclick="showPostoGaleria('${gk}',0)" aria-label="Ver fotos"><i class="ti ti-camera" aria-hidden="true"></i>${fotos.length===1?'1 foto':fotos.length+' fotos'}</button>
+      </div>`:'';
 
-  const extraStrip=fotos.length>1
-    ?`<div class="posto-fotos-strip">${fotos.slice(1).map(url=>`<img class="posto-foto-thumb" src="${url}" onclick="showPostoFotoViewer('${url}')" loading="lazy" alt="Foto do posto">`).join('')}</div>`
-    :'';
+  const rotas=(p._rotas||[]).length
+    ?`<div class="pst-rotas"><span class="pst-rotas-l">Nas rotas</span>${p._rotas.map(r=>`<span class="pst-rota">${_pstEsc(r)}</span>`).join('')}</div>`:'';
 
-  // ── Layout hero universal (todos os postos) ───────────────────────────────
-  return `<div class="postos-card postos-card--hero">
-    <div class="posto-hero" style="height:130px;min-height:130px;flex-shrink:0">
-      ${heroInner}
-      <div class="posto-hero-overlay"></div>
-      <div class="posto-hero-name">${p.nome}</div>
-    </div>
-    <div class="posto-card-body">
-      <div class="posto-card-body-left">
-        <div class="postos-card-city"><i class="ti ti-map-pin" style="font-size:11px" aria-hidden="true"></i> ${p.cidade}</div>
-        <div class="postos-card-tags"><span class="postos-tag ${cls}"><i class="ti ti-credit-card" style="font-size:11px" aria-hidden="true"></i> ${lbl}</span></div>
+  const go=p.link
+    ?`<a class="pst-go" href="${_pstEsc(p.link)}" target="_blank" rel="noopener"><i class="ti ti-navigation" aria-hidden="true"></i>Como chegar</a>`
+    :`<div class="pst-go pst-go--off"><i class="ti ti-map-pin-off" aria-hidden="true"></i>Sem localização</div>`;
+
+  let adm='';
+  if(adminMode){
+    adm+=`<button class="pst-ico" onclick="showEditPostoUnified('${_nEnc}','${_cEnc}')" aria-label="Editar dados do posto"><i class="ti ti-pencil" aria-hidden="true"></i></button>`;
+    adm+=`<button class="pst-ico" onclick="editPostoFotosByKey('${_nEnc}','${_cEnc}')" aria-label="Editar fotos do posto"><i class="ti ti-photo-edit" aria-hidden="true"></i></button>`;
+    if(p._source==='avulso'&&p.id)adm+=`<button class="pst-ico pst-ico--del" onclick="deletePostoAvulso('${p.id}')" aria-label="Remover posto"><i class="ti ti-trash" aria-hidden="true"></i></button>`;
+  }
+
+  return `<article class="pst-card">
+    ${foto}
+    <div class="pst-head">
+      ${fotos.length?'':`<div class="pst-pump"><i class="ti ti-gas-station" aria-hidden="true"></i></div>`}
+      <div class="pst-head-txt">
+        <h2 class="pst-name">${_pstEsc(p.nome)}</h2>
+        <div class="pst-city"><i class="ti ti-map-pin" aria-hidden="true"></i>${_pstEsc(p.cidade||'—')}</div>
       </div>
-      <div class="posto-card-body-right">${editBtn}${del}${maps}</div>
+      ${fotos.length?'':pill}
     </div>
-    ${extraStrip}
-  </div>`;
+    ${rotas}
+    <div class="pst-actions">${go}${adm}</div>
+  </article>`;
 }
 
 function filterPostos(){renderPostosList();}
 
 function setPostosFilter(el,filter){
-  document.querySelectorAll('.postos-chip').forEach(c=>c.classList.remove('active'));
-  el.classList.add('active');
+  _postosFiltro=filter||'all';
   renderPostosList();
+}
+
+// ─── galeria de fotos (desliza entre as fotos do posto) ───
+function showPostoGaleria(gk,idx){
+  const fotos=_postoGaleriaCache[gk]||[];
+  if(!fotos.length)return;
+  if(fotos.length===1){showPostoFotoViewer(fotos[0]);return;}
+  document.querySelector('.posto-foto-modal')?.remove();
+  const ov=document.createElement('div');
+  ov.className='posto-foto-modal pst-gal';
+  ov.innerHTML=`<div class="pst-gal-track">${fotos.map(u=>`<div class="pst-gal-slide"><img src="${_pstEsc(u)}" alt="Foto do posto"></div>`).join('')}</div>
+    <div class="pst-gal-count"><span id="pstGalN">${(idx||0)+1}</span> / ${fotos.length}</div>
+    <button aria-label="Fechar"><i class="ti ti-x" aria-hidden="true"></i></button>`;
+  ov.querySelector('button').onclick=()=>ov.remove();
+  ov.addEventListener('click',e=>{if(e.target===ov||e.target.classList.contains('pst-gal-slide'))ov.remove();});
+  document.body.appendChild(ov);
+  const tr=ov.querySelector('.pst-gal-track');
+  tr.scrollLeft=(idx||0)*tr.clientWidth;
+  tr.addEventListener('scroll',()=>{const n=ov.querySelector('#pstGalN');if(n)n.textContent=Math.round(tr.scrollLeft/tr.clientWidth)+1;},{passive:true});
 }
 
 // ─── foto viewer fullscreen ───
