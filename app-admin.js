@@ -151,7 +151,7 @@ async function doAddDriverAdmin(){
   // ── USE_NEW_AUTH: cadastro via Cloud Function ─────────────────────────
   if(USE_NEW_AUTH){
     try{
-      const fn=firebase.functions().httpsCallable('registerDriver');
+      const fn=_callFn('registerDriver');
       await fn({nome,cpf:cpfRaw,pin});
       document.querySelector('.driver-modal-overlay')?.remove();
       showToast('✅ Motorista cadastrado com sucesso');
@@ -224,7 +224,7 @@ async function doEditDriver(id){
     // do pinHash e barrada pelas rules do novo auth -> PERMISSION_DENIED)
     if(pin){
       if(USE_NEW_AUTH){
-        const fn=firebase.functions().httpsCallable('adminSetDriverPIN');
+        const fn=_callFn('adminSetDriverPIN');
         await fn({uid:id,pinNovo:pin});
       }else{
         const hashFn=(!window.crypto||!window.crypto.subtle)?sha256Fallback:sha256;
@@ -272,7 +272,7 @@ async function doResetDriverPINConfirm(id){
   if(btn){btn.disabled=true;btn.textContent='Resetando...';}
   try{
     if(USE_NEW_AUTH){
-      const fn=firebase.functions().httpsCallable('adminSetDriverPIN');
+      const fn=_callFn('adminSetDriverPIN');
       await fn({uid:id,pinNovo:'0000',exigirTroca:true});
     }else{
       const hashFn=(!window.crypto||!window.crypto.subtle)?sha256Fallback:sha256;
@@ -380,7 +380,7 @@ async function viewDriverCPF(id,nome){
   document.body.appendChild(ov);
   const box=ov.querySelector('#cpfBox');const copyBtn=ov.querySelector('#cpfCopyBtn');
   try{
-    const fn=firebase.functions().httpsCallable('getDriverCPF');
+    const fn=_callFn('getDriverCPF');
     const res=await fn({uid:id});
     const cpf=(res&&res.data&&res.data.cpf)||'';
     if(!cpf)throw new Error('empty');
@@ -408,7 +408,7 @@ function clearDriverLoginRate(id,nome){
 
 async function confirmClearDriverLoginRate(id){
   try{
-    const fn=firebase.functions().httpsCallable('clearDriverRateLimit');
+    const fn=_callFn('clearDriverRateLimit');
     await fn({uid:id});
     await _loadDriverRateLimits();
     if(typeof renderDriverCards==='function')renderDriverCards();

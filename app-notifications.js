@@ -183,3 +183,45 @@ async function initPushMessaging(){
     console.warn('FCM indisponível:',e&&e.message);
   }
 }
+
+// ═══ CHAMADA DE CLOUD FUNCTIONS À PROVA DE FALHA DO PUSH ═══
+// O SDK de Functions tenta anexar o token FCM em toda chamada. Sem um SW
+// registrado no Messaging, ele procura /firebase-messaging-sw.js na RAIZ do
+// domínio (404 no GitHub Pages) e a chamada falha antes de chegar ao servidor
+// — era isso que aparecia como "CPF ou PIN incorretos" depois de ativar
+// notificações / instalar a PWA. Aqui: (1) registramos o Messaging com o SW do
+// app; (2) se ainda assim der erro de messaging, chamamos via HTTPS direto.
+const _FN_BASE='https://us-central1-rotogramas-confianca.cloudfunctions.net/';
+let _fcmPrimed=false;
+async function _primeMessagingForCallables(){
+  if(_fcmPrimed)return;
+  try{
+    if(!('serviceWorker' in navigator)||!('Notification' in window)||Notification.permission!=='granted')return;
+    if(typeof firebase==='undefined'||!firebase.messaging)return;
+    const reg=await Promise.race([navigator.serviceWorker.ready,new Promise(r=>setTimeout(()=>r(null),3000))]);
+    if(!reg)return;
+    await Promise.race([firebase.messaging().getToken({vapidKey:VAPID_KEY,serviceWorkerRegistration:reg}),new Promise(r=>setTimeout(r,5000))]);
+    _fcmPrimed=true;
+  }catch(e){console.warn('FCM prime:',e&&e.code);}
+}
+async function _callFnHttp(name,data){
+  const headers={'Content-Type':'application/json'};
+  const u=firebase.auth().currentUser;
+  if(u){try{headers.Authorization='Bearer '+await u.getIdToken();}catch(e){}}
+  let res,body;
+  try{res=await fetch(_FN_BASE+name,{method:'POST',headers,body:JSON.stringify({data:data==null?null:data})});body=await res.json().catch(()=>({}));}
+  catch(e){const er=new Error('Sem conexão com o servidor. Verifique sua internet.');er.code='functions/unavailable';throw er;}
+  if(body&&body.error){const er=new Error(body.error.message||'Erro');er.code='functions/'+String(body.error.status||'internal').toLowerCase().replace(/_/g,'-');er.details=body.error.details;throw er;}
+  if(!res.ok){const er=new Error('Erro '+res.status);er.code='functions/internal';throw er;}
+  return {data:body.result};
+}
+function _callFn(name){
+  return async function(data){
+    await _primeMessagingForCallables();
+    try{return await firebase.functions().httpsCallable(name)(data);}
+    catch(e){
+      if(String((e&&e.code)||'').startsWith('messaging/')){console.warn('Callable via HTTPS (falha FCM):',e.code);return _callFnHttp(name,data);}
+      throw e;
+    }
+  };
+}

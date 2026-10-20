@@ -1,4 +1,4 @@
-const CACHE = 'rotograma-v13';
+const CACHE = 'rotograma-v14';
 const STATIC = [
   './manifest.json',
   './icon-192.png',
@@ -91,7 +91,7 @@ self.addEventListener('fetch', e => {
   // já que o Service Worker intercepta o fetch antes do cache HTTP do navegador.
   if (p.endsWith('.js') || p.endsWith('.css')) {
     e.respondWith(
-      fetch(e.request).then(res => {
+      fetch(e.request, { cache: 'no-cache' }).then(res => {
         caches.open(CACHE).then(c => c.put(e.request, res.clone()));
         return res;
       }).catch(() =>

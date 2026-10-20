@@ -61,7 +61,7 @@ async function doDriverRegister(){
   // ── USE_NEW_AUTH: cadastro via Cloud Function ────────────────────────────
   if(USE_NEW_AUTH){
     try{
-      const fn=firebase.functions().httpsCallable('registerDriver');
+      const fn=_callFn('registerDriver');
       const result=await fn({nome,cpf:cpfRaw,pin});
       const {token}=result.data;
       if(typeof _authActivate==='function')_authActivate();
@@ -126,7 +126,7 @@ async function doDriverLogin(){
   // ── USE_NEW_AUTH: login via Cloud Function ───────────────────────────────
   if(USE_NEW_AUTH){
     try{
-      const fn=firebase.functions().httpsCallable('loginDriver');
+      const fn=_callFn('loginDriver');
       const result=await fn({cpf:cpfRaw,pin});
       const {token,pinResetRequired}=result.data;
       if(typeof _authActivate==='function')_authActivate();
@@ -144,8 +144,11 @@ async function doDriverLogin(){
         showWarn(msg);
       }else if(code==='functions/permission-denied'){
         showErr('Conta bloqueada. Contate o administrador.',true);
-      }else{
+      }else if(code==='functions/unauthenticated'||code==='functions/invalid-argument'){
         showErr('CPF ou PIN incorretos');
+      }else{
+        console.error('Erro no login:',err);
+        showErr('Não foi possível entrar ('+(code||'erro')+'). Verifique a internet e tente novamente.');
       }
     }finally{if(btn){btn.disabled=false;btn.textContent='ENTRAR';}}
     return;
@@ -256,7 +259,7 @@ async function doForcedPINChange(pinAtual){
   if(pinNovo===pinAtual){showErr('O novo PIN deve ser diferente do atual');return;}
   if(btn){btn.disabled=true;btn.textContent='Salvando...';}
   try{
-    const fn=firebase.functions().httpsCallable('changePIN');
+    const fn=_callFn('changePIN');
     await fn({pinAtual,pinNovo});
     document.querySelector('.forced-pin-overlay')?.remove();
     showHome();
@@ -297,7 +300,7 @@ async function doAdminLogin(){
     // bootstrapAdminClaim verifica que o caller tem email=ADMIN_EMAIL antes de setar.
     // Após setar, força refresh do token para o claim aparecer imediatamente.
     try{
-      const bsFn=firebase.functions().httpsCallable('bootstrapAdminClaim');
+      const bsFn=_callFn('bootstrapAdminClaim');
       await bsFn({});
       console.log('[admin] bootstrapAdminClaim ok');
     }catch(bsErr){console.warn('[admin] bootstrapAdminClaim:',bsErr);}
