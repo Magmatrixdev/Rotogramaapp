@@ -13,11 +13,13 @@ function initFirebase(){
       if(!USE_NEW_AUTH){
         // Legado: derruba qualquer sessão Firebase Auth que não seja do admin
         if(user&&!adminMode){firebase.auth().signOut().catch(()=>{});}
+        _attachDataListeners(adminMode);
         return;
       }
       // ── USE_NEW_AUTH = true ────────────────────────────────────────────
       if(!user){
         // Sessão encerrada — limpa motorista; admin gerencia próprio estado
+        _detachDataListeners();
         if(!adminMode){
           currentDriver=null;
           if(typeof _authDeactivate==='function')_authDeactivate();
@@ -40,6 +42,7 @@ function initFirebase(){
       const tok=await user.getIdTokenResult(true).catch(()=>null);
       if(tok?.claims?.admin){
         adminMode=true; // já setado em doAdminLogin, mas garante aqui
+        _attachDataListeners(true);
         if(typeof _authActivate==='function')_authActivate();
         if(typeof initPushMessaging==='function')initPushMessaging();
         // Após refresh o admin cai na tela de login — leva para a home para não ficar preso
@@ -52,6 +55,7 @@ function initFirebase(){
       }
       // ── Motorista autenticado via custom token ─────────────────────────
       currentDriver={uid:user.uid,nome:user.displayName||''};
+      _attachDataListeners(false);
       if(typeof _authActivate==='function')_authActivate();
       if(db){
         // Ouve apenas o próprio nó — não acessa a coleção inteira
@@ -88,12 +92,45 @@ function initFirebase(){
       }
     });
 
+    // Listeners que exigem auth são ligados em _attachDataListeners(), chamado
+    // pelo onAuthStateChanged depois do login. Antes disso, mostra o cache local.
+    if(!firebase.auth().currentUser){loadLocal();setSyncStatus('off','Aguardando login');}
+
+  }catch(e){setSyncStatus('err','Erro Firebase');loadLocal();}
+}
+
+function saveToFirebase(){if(db&&firebaseReady){db.ref('rotogramas').set(routes).then(()=>setSyncStatus('on','Salvo e sincronizado')).catch(()=>setSyncStatus('err','Erro ao salvar'))}else{localStorage.setItem('rotogramas_data',JSON.stringify(routes))}}
+
+function loadLocal(){const c=localStorage.getItem('rotogramas_cache'),m=localStorage.getItem('rotogramas_data'),s=c||m;if(s){try{routes=JSON.parse(s);renderHome();return}catch(e){}}routes=JSON.parse(JSON.stringify(DEFAULTS));renderHome();}
+
+function setSyncStatus(t,txt){const el=document.getElementById('syncBar');if(!el)return;el.className='sync-bar'+(t==='on'?' on':t==='off'?' off':' err');el.textContent=txt;if(IS_DESKTOP())setTimeout(dUpdateTopbar,50);}
+
+// ═══ LISTENERS DE DADOS (exigem login) ═══
+// Ligados só depois do onAuthStateChanged confirmar o usuário. Antes, as rules
+// (auth !== null) recusavam a leitura e o RTDB cancelava o listener para sempre —
+// por isso no 1º login aparecia "Erro Firebase — dados locais" até reabrir o app.
+let _dataListenersOn=false,_dataListenersAdmin=false;
+const _DATA_PATHS=['rotogramas','motoristas','viagens','posicoes','postos','informativos','notifications'];
+function _detachDataListeners(){
+  if(!db)return;
+  _DATA_PATHS.forEach(p=>{try{db.ref(p).off();}catch(e){}});
+  try{db.ref('notifications').limitToLast(30).off();}catch(e){}
+  _dataListenersOn=false;_dataListenersAdmin=false;
+}
+function _attachDataListeners(isAdmin){
+  if(!db)return;
+  isAdmin=!!isAdmin;
+  if(_dataListenersOn&&_dataListenersAdmin===isAdmin)return;
+  _detachDataListeners();
+  _dataListenersOn=true;_dataListenersAdmin=isAdmin;
+  setSyncStatus('off','Sincronizando...');
     db.ref('rotogramas').on('value',snap=>{
       const data=snap.val();
       if(data&&Array.isArray(data)){routes=data;firebaseReady=true;localStorage.setItem('rotogramas_cache',JSON.stringify(routes));setSyncStatus('on','Sincronizado');if(!isEditing)renderHome();if(typeof renderPostosList==='function'&&document.getElementById('screenPostos')?.classList.contains('active'))renderPostosList();_handleDeepLink();if(typeof _restoreDesktopIfNeeded==='function')_restoreDesktopIfNeeded();}
       else if(!data&&firebase.auth().currentUser){db.ref('rotogramas').set(DEFAULTS).then(()=>{routes=DEFAULTS;firebaseReady=true;setSyncStatus('on','Sincronizado');renderHome()}).catch(()=>{})}
-    },err=>{setSyncStatus('err','Erro Firebase — dados locais');loadLocal()});
+    },err=>{console.warn('rotogramas listener err:',err);setSyncStatus('err','Erro Firebase — dados locais');loadLocal();_dataListenersOn=false;});
 
+    if(isAdmin){
     db.ref('motoristas').on('value',snap=>{
       // USE_NEW_AUTH: motoristas não-admin não têm acesso à coleção inteira
       if(USE_NEW_AUTH&&!adminMode)return;
@@ -108,6 +145,7 @@ function initFirebase(){
 
     db.ref('viagens').on('value',snap=>{const d=snap.val();viagens=d||{};checkActiveTrip();renderMonitoring();renderBI();});
     db.ref('posicoes').on('value',snap=>{const d=snap.val();posicoes=d||{};updateMonitorMap();renderMonitoring();});
+    }
     db.ref('postos').on('value',snap=>{postosAvulsos=snap.val()||{};if(typeof renderPostosList==='function')renderPostosList();});
     db.ref('informativos').on('value',snap=>{informativos=snap.val()||{};if(typeof renderInformativos==='function')renderInformativos();if(typeof renderHomeInf==='function')renderHomeInf();});
 
@@ -130,16 +168,4 @@ function initFirebase(){
       }
     },err=>{console.warn('Notif listener err:',err);});
 
-  }catch(e){setSyncStatus('err','Erro Firebase');loadLocal();}
 }
-
-function saveToFirebase(){if(db&&firebaseReady){db.ref('rotogramas').set(routes).then(()=>setSyncStatus('on','Salvo e sincronizado')).catch(()=>setSyncStatus('err','Erro ao salvar'))}else{localStorage.setItem('rotogramas_data',JSON.stringify(routes))}}
-
-function loadLocal(){const c=localStorage.getItem('rotogramas_cache'),m=localStorage.getItem('rotogramas_data'),s=c||m;if(s){try{routes=JSON.parse(s);renderHome();return}catch(e){}}routes=JSON.parse(JSON.stringify(DEFAULTS));renderHome();}
-
-function setSyncStatus(t,txt){const el=document.getElementById('syncBar');if(!el)return;el.className='sync-bar'+(t==='on'?' on':t==='off'?' off':' err');el.textContent=txt;if(IS_DESKTOP())setTimeout(dUpdateTopbar,50);}
-
-
-
-
-
