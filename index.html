@@ -72,7 +72,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script>
-<link rel="stylesheet" href="app.css?v=18">
+<link rel="stylesheet" href="app.css?v=19">
 <link rel="stylesheet" href="app-postos.css?v=15">
 <link rel="stylesheet" href="app-informativos.css?v=3">
 </head>
@@ -152,37 +152,38 @@
 <!-- ═══ DESKTOP SHELL (oculto no mobile por padrão) ═══ -->
 <div id="dTopbar">
   <div class="dtb-left">
-    <div class="dtb-logo">🚛 <span>ROTO</span>GRAMAS</div>
+    <div class="dtb-logo"><span class="dtb-logo-ic"><i class="ti ti-truck" aria-hidden="true"></i></span><span><span class="dtb-red">ROTO</span>GRAMAS</span></div>
     <div class="dtb-div"></div>
     <div class="dtb-subtitle" id="dtbSubtitle">Confiança Transportes</div>
   </div>
   <div class="dtb-right">
-    <div class="dtb-sync" id="dtbSync">⏳ Conectando...</div>
-    <button class="dtb-notif" id="dtbNotifBtn" onclick="toggleNotifPanel()">🔔<div class="notif-badge" id="dtbBadge">0</div></button>
+    <div class="dtb-sync" id="dtbSync">Conectando...</div>
+    <button class="dtb-notif" id="dtbNotifBtn" onclick="toggleNotifPanel()" aria-label="Avisos"><i class="ti ti-bell" aria-hidden="true"></i><div class="notif-badge" id="dtbBadge">0</div></button>
     <div class="dtb-driver" id="dtbDriver"></div>
-    <button class="dtb-btn" id="dtbAdminBtn" onclick="showAdminLogin()">⚙️ Admin</button>
-    <button class="dtb-btn dtb-btn-red" id="dtbLogoutBtn" onclick="promptLogout()" style="display:none">↩ Sair</button>
+    <button class="dtb-btn" id="dtbAdminBtn" onclick="showAdminLogin()"><i class="ti ti-settings" aria-hidden="true"></i>Admin</button>
+    <button class="dtb-btn dtb-btn-red" id="dtbLogoutBtn" onclick="promptLogout()" style="display:none"><i class="ti ti-logout" aria-hidden="true"></i>Sair</button>
   </div>
 </div>
 <div class="d-body-row">
 <div id="dSidebar">
-  <div class="dsb-section">Postos</div>
-  <div class="dsb-item" onclick="showPostos()"><i class="ti ti-gas-station" aria-hidden="true"></i> Postos de abastecimento</div>
-  <div class="dsb-divider"></div>
+  <div class="dsb-section">Navegação</div>
+  <button type="button" class="dsb-item dsb-nav active" data-nav="rotas" onclick="dNavGo('rotas')"><i class="ti ti-map-2" aria-hidden="true"></i>Rotas</button>
+  <button type="button" class="dsb-item dsb-nav" data-nav="postos" onclick="dNavGo('postos')"><i class="ti ti-gas-station" aria-hidden="true"></i>Postos de abastecimento</button>
+  <button type="button" class="dsb-item dsb-nav" data-nav="informativos" onclick="dNavGo('informativos')"><i class="ti ti-info-circle" aria-hidden="true"></i>Informativos</button>
   <div class="dsb-section">Regiões</div>
-  <div class="dsb-item active" data-region="all" onclick="dSidebarFilter(this,'all')"><i class="ti ti-map" aria-hidden="true"></i> Todas as rotas<span class="dsb-count" id="dsbCountAll">—</span></div>
-  <div class="dsb-divider"></div>
-  <div class="dsb-item" data-region="Centro-Oeste" onclick="dSidebarFilter(this,'Centro-Oeste')"><i class="ti ti-map-pin" aria-hidden="true"></i> Centro-Oeste<span class="dsb-count" id="dsbCountCO">—</span></div>
-  <div class="dsb-item" data-region="Nordeste" onclick="dSidebarFilter(this,'Nordeste')"><i class="ti ti-map-pin" aria-hidden="true"></i> Nordeste<span class="dsb-count" id="dsbCountNE">—</span></div>
-  <div class="dsb-item" data-region="Sudeste" onclick="dSidebarFilter(this,'Sudeste')"><i class="ti ti-map-pin" aria-hidden="true"></i> Sudeste<span class="dsb-count" id="dsbCountSE">—</span></div>
-  <div class="dsb-item" data-region="Sul" onclick="dSidebarFilter(this,'Sul')"><i class="ti ti-map-pin" aria-hidden="true"></i> Sul<span class="dsb-count" id="dsbCountSU">—</span></div>
-  <div class="dsb-item" data-region="Norte" onclick="dSidebarFilter(this,'Norte')"><i class="ti ti-map-pin" aria-hidden="true"></i> Norte<span class="dsb-count" id="dsbCountNO">—</span></div>
-  <div class="dsb-item" data-region="Centro-Norte" onclick="dSidebarFilter(this,'Centro-Norte')"><i class="ti ti-map-pin" aria-hidden="true"></i> Centro-Norte<span class="dsb-count" id="dsbCountCN">—</span></div>
-  <div class="dsb-footer" id="dsbFooter">⏳ Sincronizando...</div>
+  <button type="button" class="dsb-item active" data-region="all" onclick="dSidebarFilter(this,'all')"><span class="dsb-dot" aria-hidden="true"></span>Todas as rotas<span class="dsb-count" id="dsbCountAll">—</span></button>
+  <button type="button" class="dsb-item" data-region="Centro-Oeste" onclick="dSidebarFilter(this,'Centro-Oeste')"><span class="dsb-dot" aria-hidden="true"></span>Centro-Oeste<span class="dsb-count" id="dsbCountCO">—</span></button>
+  <button type="button" class="dsb-item" data-region="Nordeste" onclick="dSidebarFilter(this,'Nordeste')"><span class="dsb-dot" aria-hidden="true"></span>Nordeste<span class="dsb-count" id="dsbCountNE">—</span></button>
+  <button type="button" class="dsb-item" data-region="Sudeste" onclick="dSidebarFilter(this,'Sudeste')"><span class="dsb-dot" aria-hidden="true"></span>Sudeste<span class="dsb-count" id="dsbCountSE">—</span></button>
+  <button type="button" class="dsb-item" data-region="Sul" onclick="dSidebarFilter(this,'Sul')"><span class="dsb-dot" aria-hidden="true"></span>Sul<span class="dsb-count" id="dsbCountSU">—</span></button>
+  <button type="button" class="dsb-item" data-region="Norte" onclick="dSidebarFilter(this,'Norte')"><span class="dsb-dot" aria-hidden="true"></span>Norte<span class="dsb-count" id="dsbCountNO">—</span></button>
+  <button type="button" class="dsb-item" data-region="Centro-Norte" onclick="dSidebarFilter(this,'Centro-Norte')"><span class="dsb-dot" aria-hidden="true"></span>Centro-Norte<span class="dsb-count" id="dsbCountCN">—</span></button>
+  <div class="dsb-footer" id="dsbFooter">Sincronizando...</div>
 </div>
 <div class="d-content">
 <div class="screen" id="screenHome">
 <div class="d-list-col">
+  <div class="d-list-head" id="dListHead"></div>
   <div class="home-top hm-head" style="position:relative">
     <div class="hm-row">
       <div class="logo-row"><div class="logo-box"><span>C</span></div><div><div class="logo-title">CONFIANÇA</div><div class="logo-sub">SEGURANÇA QUE MOVE</div></div></div>
@@ -201,6 +202,7 @@
     <div class="hm-status"><div class="sync-bar" id="syncBar">Conectando...</div><div class="home-subtext" id="routeCountText">Carregando...</div></div>
     <div class="search-wrap"><div class="search-icon"></div><input class="search-input" id="searchInput" placeholder="Buscar rota, cidade ou posto" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Buscar rota"><button class="search-clear" id="searchClear" onclick="clearSearch()" aria-label="Limpar busca">✕</button></div>
   </div>
+  <div class="hm-cardf" id="homeCardFilter" role="group" aria-label="Filtrar por cartão"></div>
   <div class="hm-chips" id="homeRegionChips" role="tablist" aria-label="Filtrar por região"></div>
   <div id="homeInfHighlight"></div>
   <div id="activeTripBanner" class="active-trip-banner" onclick="showMapLive()">
@@ -214,9 +216,9 @@
 <!-- ═══ PAINEL DETALHE DESKTOP ═══ -->
 <div id="dDetailPane">
   <div class="ddp-empty" id="ddpEmpty">
-    <div style="font-size:48px;margin-bottom:12px">🗺️</div>
-    <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;text-transform:uppercase;letter-spacing:.3px;color:#9a9894">Selecione uma rota</div>
-    <div style="font-size:12px;color:#b5b3af;margin-top:4px">O detalhe aparecerá aqui</div>
+    <i class="ti ti-map-2" aria-hidden="true"></i>
+    <div class="ddp-empty-t">Selecione uma rota</div>
+    <div class="ddp-empty-s">O roteiro, os postos e o contato de suporte aparecem aqui.</div>
   </div>
   <div id="ddpContent" style="display:none;flex-direction:column;height:100%;overflow:hidden">
     <div id="ddpRouteContent" style="flex:1;overflow-y:auto"></div>
@@ -379,24 +381,24 @@
   </button>
 </div>
 
-<script src="app-config.js?v=65"></script>
-<script src="app-state.js?v=65"></script>
-<script src="app-crypto.js?v=65"></script>
-<script src="app-firebase.js?v=65"></script>
-<script src="app-auth.js?v=65"></script>
-<script src="app-nav.js?v=65"></script>
-<script src="app-render.js?v=65"></script>
-<script src="app-admin.js?v=65"></script>
-<script src="app-map.js?v=65"></script>
-<script src="app-trip.js?v=65"></script>
-<script src="app-notifications.js?v=65"></script>
-<script src="app-desktop.js?v=65"></script>
-<script src="app-editor.js?v=65"></script>
-<script src="app-utils.js?v=65"></script>
-<script src="app-pwa.js?v=65"></script>
-<script src="app-postos.js?v=65"></script>
-<script src="app-informativos.js?v=65"></script>
-<script src="app-main.js?v=65"></script>
+<script src="app-config.js?v=68"></script>
+<script src="app-state.js?v=68"></script>
+<script src="app-crypto.js?v=68"></script>
+<script src="app-firebase.js?v=68"></script>
+<script src="app-auth.js?v=68"></script>
+<script src="app-nav.js?v=68"></script>
+<script src="app-render.js?v=68"></script>
+<script src="app-admin.js?v=68"></script>
+<script src="app-map.js?v=68"></script>
+<script src="app-trip.js?v=68"></script>
+<script src="app-notifications.js?v=68"></script>
+<script src="app-desktop.js?v=68"></script>
+<script src="app-editor.js?v=68"></script>
+<script src="app-utils.js?v=68"></script>
+<script src="app-pwa.js?v=68"></script>
+<script src="app-postos.js?v=68"></script>
+<script src="app-informativos.js?v=68"></script>
+<script src="app-main.js?v=68"></script>
 
 </html>
 

@@ -56,12 +56,23 @@ function _copyFallback(txt,btn){
   ta.remove();
 }
 
+function _routeShareRaw(r,stops){
+  const appUrl=location.origin+location.pathname+'#rota='+encodeURIComponent(r.id);
+  const _stopsList=stops.map((p,i)=>{const c=p.cartao?` [${p.cartao.toUpperCase()}]`:'';return `${i+1}. ${p.nome} — ${p.cidade}${p.km?' (KM '+p.km+')':''}${c}`;}).join('\n');
+  return `🚛 Rotograma: ${r.nome}\n📍 ${r.estados}\n📏 ${r.distancia||''} · ${r.tempo||''}\n⛽ ${stops.length} postos de abastecimento\n\n${_stopsList}\n\nAbra a rota: ${appUrl}`;
+}
+
+function _routeTimeline(r){const orig=r.paradas.find(p=>p.tipo==='origem'),dest=r.paradas.find(p=>p.tipo==='destino');const dc=(dest?dest.nome:'').split('—')[0].trim();
+  let h=`<div class="timeline-wrap"><div class="timeline-line"></div><div class="timeline-stops">`;
+  if(orig){let od=orig.detalhe?`<div class="scard-details"><div class="scard-detail">🛣️ ${orig.detalhe}</div></div>`:'';h+=`<div class="stop"><div class="stop-node"><div class="stop-node-dot"></div></div><div class="stop-km">KM 0</div><div class="scard"><div class="scard-body"><div class="scard-brand-row"><div class="scard-brand-dot" style="background:#1c1c1c"></div><span class="scard-brand-name">Origem</span></div><div class="scard-nome">${orig.nome}</div><div class="scard-cidade">${orig.cidade}</div>${od}</div></div></div>`}
+  for(const p of r.paradas){if(p.tipo==='origem'||p.tipo==='destino')continue;h+=renderStop(p);if(p.alternativa)h+=renderAlt(p.alternativa)}
+  if(dest)h+=`<div class="dest-stop"><div class="stop-node dest"><div class="stop-node-dot"></div></div><div class="dest-nome">Chegada · ${dc}</div></div>`;
+  return h+`</div></div>`}
+
 function renderRoute(r){const orig=r.paradas.find(p=>p.tipo==='origem'),dest=r.paradas.find(p=>p.tipo==='destino'),stops=r.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino');const oc=(orig?orig.nome:'').split('—')[0].trim(),dc=(dest?dest.nome:'').split('—')[0].trim();
   let h=`<div class="roto-top"><button class="back-btn" onclick="navPop(renderHome)">‹</button><div class="roto-header"><div class="roto-route-row"><div class="roto-chip"><div class="city">${oc}</div><div class="lbl">ORIGEM</div></div><span class="roto-arrow">→</span><div class="roto-chip"><div class="city">${dc}</div><div class="lbl">DESTINO</div></div></div><div class="roto-stats"><div class="roto-stat"><div class="val">${r.distancia||'—'}</div><div class="lbl">DISTÂNCIA</div></div><div class="roto-stat"><div class="val">${r.tempo||'—'}</div><div class="lbl">ESTIMADO</div></div><div class="roto-stat"><div class="val red">${stops.length}</div><div class="lbl">POSTOS</div></div></div>`;
   if(r.linkRota)h+=`<a class="rota-link" href="${r.linkRota}" target="_blank">📍 VER ROTA COMPLETA NO MAPS</a>`;
-  const appUrl=location.origin+location.pathname+'#rota='+encodeURIComponent(r.id);
-  const _stopsList=stops.map((p,i)=>{const c=p.cartao?` [${p.cartao.toUpperCase()}]`:'';return `${i+1}. ${p.nome} — ${p.cidade}${p.km?' (KM '+p.km+')':''}${c}`;}).join('\n');
-  window._lastShareRaw=`🚛 Rotograma: ${r.nome}\n📍 ${r.estados}\n📏 ${r.distancia||''} · ${r.tempo||''}\n⛽ ${stops.length} postos de abastecimento\n\n${_stopsList}\n\nAbra a rota: ${appUrl}`;
+  window._lastShareRaw=_routeShareRaw(r,stops);
   const shareRaw=window._lastShareRaw;
   const shareText=encodeURIComponent(shareRaw);
   h+=`<div style="display:flex;gap:8px;margin-top:10px"><a class="share-btn" style="flex:1;margin:0" href="https://wa.me/?text=${shareText}" target="_blank">📤 WHATSAPP</a><button class="share-btn" style="flex:1;margin:0;background:#3a3a3a;border:none;cursor:pointer;color:#fff" onclick="_copyRouteInfo(this)">📋 COPIAR</button></div>`;
@@ -69,14 +80,11 @@ function renderRoute(r){const orig=r.paradas.find(p=>p.tipo==='origem'),dest=r.p
   if(r.observacao)h+=`<div class="alert-banner"><span class="alert-icon">⚠️</span><div class="alert-content"><div class="alert-label">Aviso desta rota</div><div class="alert-text">${r.observacao}</div></div></div>`;
   h+=`<div class="emergency-bar"><div class="emergency-title">Contato de emergência — Abastecimento</div><div class="emergency-btns"><a class="emergency-btn whatsapp" href="https://wa.me/5562998780792" target="_blank">💬<div class="emergency-btn-info"><span class="emergency-btn-name">Pedro</span><span class="emergency-btn-sub">Seg a Sex</span></div></a><a class="emergency-btn whatsapp" href="https://wa.me/556299220160" target="_blank">💬<div class="emergency-btn-info"><span class="emergency-btn-name">Ismael</span><span class="emergency-btn-sub">Sáb e Dom</span></div></a></div></div>`;
   if(r.retorno)h+=`<div class="return-tag" style="margin:12px 20px 0"><span class="return-tag-icon">🔄</span><span class="return-tag-text">${r.retorno}</span></div>`;
-  h+=`<div class="roto-scroll"><div class="timeline-wrap"><div class="timeline-line"></div><div class="timeline-stops">`;
-  if(orig){let od=orig.detalhe?`<div class="scard-details"><div class="scard-detail">🛣️ ${orig.detalhe}</div></div>`:'';h+=`<div class="stop"><div class="stop-node"><div class="stop-node-dot"></div></div><div class="stop-km">KM 0</div><div class="scard"><div class="scard-body"><div class="scard-brand-row"><div class="scard-brand-dot" style="background:#1c1c1c"></div><span class="scard-brand-name">Origem</span></div><div class="scard-nome">${orig.nome}</div><div class="scard-cidade">${orig.cidade}</div>${od}</div></div></div>`}
-  for(const p of r.paradas){if(p.tipo==='origem'||p.tipo==='destino')continue;h+=renderStop(p);if(p.alternativa)h+=renderAlt(p.alternativa)}
-  if(dest)h+=`<div class="dest-stop"><div class="stop-node dest"><div class="stop-node-dot"></div></div><div class="dest-nome">Chegada · ${dc}</div></div>`;
-  return h+`</div></div></div>`}
+  h+=`<div class="roto-scroll">`+_routeTimeline(r)+`</div>`;
+  return h}
 
 // ═══ RENDER HOME (layout aprovado v63: header escuro, chips de região, destaque de informativo, cards com cartões) ═══
-var _homeRegion='all';
+var _homeRegion='all',_homeCard='all';
 const _HM_SVG={
   dist:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h7a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h7"/></svg>',
   clock:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
@@ -96,14 +104,26 @@ function filterRoutes(q){
   const n=norm(q.trim()),terms=n?n.split(/\s+/):[],reg=_homeRegionNow();
   if(cl)cl.classList.toggle('vis',!!n);
   let vis=0;
-  cards.forEach(c=>{const m=terms.every(x=>(c.dataset.search||'').includes(x))&&(reg==='all'||c.dataset.region===reg);c.style.display=m?'':'none';if(m)vis++});
+  const card=IS_DESKTOP()?_homeCard:'all';
+  cards.forEach(c=>{const m=terms.every(x=>(c.dataset.search||'').includes(x))&&(reg==='all'||c.dataset.region===reg)&&(card==='all'||(' '+(c.dataset.cards||'')+' ').includes(' '+card+' '));c.style.display=m?'':'none';if(m)vis++});
   if(nr)nr.style.display=vis?'none':'block';
   const t=document.getElementById('homeSectionTitle'),ct=document.getElementById('homeSectionCount');
   if(t)t.textContent=n?'Resultados da busca':(reg==='all'?'Todas as rotas':reg);
   if(ct)ct.textContent=vis+(vis===1?' rota':' rotas');
+  if(IS_DESKTOP()&&typeof dRenderListHead==='function')dRenderListHead();
 }
 
 function clearSearch(){const i=document.getElementById('searchInput');i.value='';filterRoutes('');i.focus()}
+
+function setHomeCard(c){_homeCard=c;renderHomeCardFilter();filterRoutes();}
+function renderHomeCardFilter(){
+  const el=document.getElementById('homeCardFilter');if(!el)return;
+  const used=[];routes.forEach(r=>_routeCards(r).forEach(c=>{if(used.indexOf(c)<0)used.push(c)}));
+  if(_homeCard!=='all'&&used.indexOf(_homeCard)<0)_homeCard='all';
+  if(used.length<2){el.innerHTML='';return;}
+  const b=(id,l)=>{const on=_homeCard===id;return `<button type="button" class="hm-cf${on?' on':''}" aria-pressed="${on}" onclick="setHomeCard('${id}')">${l}</button>`};
+  el.innerHTML=b('all','Todos')+used.map(c=>b(c,_HM_BADGE[c][1])).join('');
+}
 
 function setHomeRegion(r){_homeRegion=r;renderHomeChips();filterRoutes();}
 
@@ -132,7 +152,7 @@ function renderHome(){
   for(const{r,i}of list){
     const stops=r.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino').length;
     const badges=_routeCards(r).map(c=>`<span class="hm-badge ${_HM_BADGE[c][0]}">${_HM_BADGE[c][1]}</span>`).join('');
-    h+=`<div class="rcard hm-card" role="button" tabindex="0" data-search="${norm(searchText(r))}" data-region="${r.regiao||'Outras'}" data-route-idx="${i}" onclick="showRoute(${i})">`
+    h+=`<div class="rcard hm-card" role="button" tabindex="0" data-search="${norm(searchText(r))}" data-region="${r.regiao||'Outras'}" data-cards="${_routeCards(r).join(' ')}" data-route-idx="${i}" onclick="showRoute(${i})">`
       +`<div class="rcard-uf hm-num"><span class="hm-num-lbl">ROTA</span><span class="hm-num-val">${r.numero}</span></div>`
       +`<div class="rcard-info"><div class="rcard-nome">${r.nome}</div><div class="rcard-detail">${r.estados||''}</div>`
       +`<div class="hm-stats">${r.distancia?`<span>${_HM_SVG.dist}${r.distancia}</span>`:''}${r.tempo?`<span>${_HM_SVG.clock}${r.tempo}</span>`:''}<span class="hm-postos">${_HM_SVG.pump}${stops} posto${stops!==1?'s':''}</span></div>`
@@ -143,16 +163,14 @@ function renderHome(){
   h+=`<section class="hm-support" aria-label="Suporte de abastecimento"><div><div class="hm-sup-tit">PRECISA DE AJUDA?</div><div class="hm-sup-sub">Suporte de abastecimento no WhatsApp</div></div><div class="hm-sup-btns"><a class="hm-sup-btn primary" href="https://wa.me/5562998780792" target="_blank" rel="noopener">${_HM_SVG.chat}<span><span class="hm-sup-name">Pedro</span><span class="hm-sup-when">Seg a Sex</span></span></a><a class="hm-sup-btn" href="https://wa.me/556299220160" target="_blank" rel="noopener">${_HM_SVG.chat}<span><span class="hm-sup-name">Ismael</span><span class="hm-sup-when">Sáb e Dom</span></span></a></div></section>`;
   el.innerHTML=h;
   document.getElementById('routeCountText').textContent=`${routes.length} rotas ativas`;
-  renderHomeChips();renderHomeInf();filterRoutes();
+  renderHomeChips();renderHomeCardFilter();renderHomeInf();filterRoutes();
   verifyDriverSession();checkActiveTrip();updateActiveTripBanner();
   const logoutBtn=document.getElementById('logoutBtn');const greeting=document.getElementById('driverGreeting');
   if(logoutBtn){logoutBtn.classList.add('show');}
   if(greeting){if(currentDriver){greeting.textContent='Olá, '+currentDriver.nome.split(' ')[0]+'!';}else if(adminMode){greeting.textContent='Modo administrador';}else{greeting.textContent='';}}
   if(IS_DESKTOP()){
     dUpdateSidebar();dUpdateTopbar();
-    if(_dActiveRegion&&_dActiveRegion!=='all'){
-      const activeItem=document.querySelector(`.dsb-item[data-region="${_dActiveRegion}"]`);
-      if(activeItem)dSidebarFilter(activeItem,_dActiveRegion);
-    }
+    document.querySelectorAll('#dSidebar .dsb-item[data-region]').forEach(it=>it.classList.toggle('active',it.dataset.region===(_dActiveRegion||'all')));
+    if(typeof dRestoreSelection==='function')dRestoreSelection();
   }
 }
