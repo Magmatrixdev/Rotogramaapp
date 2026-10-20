@@ -322,70 +322,8 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
   .dauth-inner{flex:0 0 auto}
 }
 
-/* ═══ ACTIVE TRIP BANNER ═══ */
-.active-trip-banner{display:none;margin:12px 22px 0;padding:12px 16px;background:#1a6fb5;border-radius:12px;align-items:center;gap:10px;cursor:pointer}
-.active-trip-banner.show{display:flex}
-.active-trip-banner-txt{flex:1;font-family:'Barlow',sans-serif;font-size:13px;color:#fff;font-weight:600}
-.active-trip-banner-arr{color:rgba(255,255,255,.7);font-size:20px}
-
-/* ═══ DRIVER TRIP BAR (bottom of route screen) ═══ */
-.driver-trip-bar{display:none;padding:14px 20px calc(14px + env(safe-area-inset-bottom, 0px));background:#f4f4f2;border-top:1px solid #e4e2dd;gap:10px}
-.driver-trip-bar.show{display:flex}
+/* ═══ ROUTE SCREEN (respiro para a barra inferior) ═══ */
 #screenRoute{padding-bottom:64px}
-.btn-start-trip{flex:1;padding:15px;background:#1a7a3c;color:#fff;border:none;border-radius:12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;cursor:pointer;min-height:52px}
-.btn-start-trip:active{background:#145f2e}
-.btn-view-static{flex:1;padding:15px;background:#eae8e3;color:#1c1c1c;border:none;border-radius:12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;cursor:pointer;min-height:52px}
-
-/* ═══ LIVE MAP SCREEN ═══ */
-#screenMapLive{background:#e8f0e8;overflow:hidden;display:block!important}
-.maplive-overlay{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;pointer-events:none}
-.maplive-header{padding:52px 14px 10px;padding-top:calc(env(safe-area-inset-top, 52px) + 8px);display:flex;align-items:center;gap:10px;flex-shrink:0;background:linear-gradient(to bottom,rgba(0,0,0,.7) 0%,rgba(0,0,0,.0) 100%);pointer-events:auto}
-.maplive-route-name{font-weight:700;font-size:14px;color:#fff;text-transform:uppercase;line-height:1.1}
-.live-pill{display:flex;align-items:center;gap:5px;background:rgba(31,138,61,.25);border:1px solid rgba(31,138,61,.5);border-radius:8px;padding:5px 10px;flex-shrink:0;backdrop-filter:blur(4px)}
-.live-pill-dot{width:7px;height:7px;border-radius:50%;background:#1f8a3d;animation:livepulse 1.4s ease-in-out infinite}
-@keyframes livepulse{0%,100%{opacity:1}50%{opacity:.3}}
-.live-pill-txt{font-family:'Barlow',sans-serif;font-weight:700;font-size:10px;color:#4ddb7a;letter-spacing:.06em}
-.driver-map-container{flex:0 0 46vh;height:46vh;min-height:220px;background:#e8eef0;overflow:hidden}
-.maplive-panel{flex:0 0 auto;overflow-y:auto;background:#fff;display:flex;flex-direction:column;max-height:58vh;pointer-events:auto;border-radius:16px 16px 0 0;box-shadow:0 -4px 20px rgba(0,0,0,.15)}
-.trip-stats-bar{display:flex;background:#1c1c1c;flex-shrink:0}
-.trip-stat-item{flex:1;padding:10px 8px;text-align:center;border-right:1px solid #2e2e2c}
-.trip-stat-item:last-child{border:none}
-.trip-stat-val{font-weight:700;font-size:20px;color:#fff;line-height:1}
-.trip-stat-val.green{color:#1f8a3d}
-.trip-stat-val.yellow{color:#e8a020}
-.trip-stat-lbl{font-family:'Barlow',sans-serif;font-size:8px;color:#666;letter-spacing:.1em;text-transform:uppercase;margin-top:3px}
-.next-stop-card{margin:14px 14px 0;background:#fff3cd;border:1.5px solid #f0c850;border-radius:14px;padding:12px 14px;flex-shrink:0}
-.next-stop-card-label{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;color:#856404;letter-spacing:.1em;margin-bottom:6px}
-.next-stop-card-name{font-weight:700;font-size:16px;color:#1c1c1c;text-transform:uppercase}
-.next-stop-card-city{font-family:'Barlow',sans-serif;font-size:12px;color:#6a6866;margin-top:2px}
-.next-stop-card-dist{font-family:'Barlow',sans-serif;font-size:12px;color:#856404;margin-top:6px;display:flex;align-items:center;gap:5px}
-.maplive-stops-list{padding:12px 14px 4px;flex-shrink:0}
-.maplive-stop-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #f4f4f2}
-.maplive-stop-row:last-child{border:none}
-.maplive-stop-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0}
-.maplive-stop-num.done{background:#1f8a3d;color:#fff}
-.maplive-stop-num.next{background:#e8a020;color:#fff}
-.maplive-stop-num.todo{background:#eae8e3;color:#9a9894}
-.maplive-stop-info{flex:1;min-width:0}
-.maplive-stop-name{font-weight:700;font-size:13px;color:#1c1c1c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.maplive-stop-name.done{text-decoration:line-through;color:#9a9894}
-.maplive-stop-city{font-family:'Barlow',sans-serif;font-size:11px;color:#9a9894;margin-top:1px}
-.maplive-stop-km{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;color:#b0aea9;flex-shrink:0}
-.maplive-action-row{display:flex;gap:10px;padding:12px 14px calc(22px + 64px + env(safe-area-inset-bottom, 0px));flex-shrink:0;background:#fff;position:sticky;bottom:0;border-top:1px solid #f0eeea}
-.btn-fuel-confirm{flex:2;padding:14px;background:#1f8a3d;color:#fff;border:none;border-radius:12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;cursor:pointer;min-height:50px;display:none}
-.btn-fuel-confirm.show{display:block}
-.btn-fuel-confirm:active{background:#177030}
-.btn-end-trip{flex:1;padding:14px;background:#1c1c1c;color:#fff;border:none;border-radius:12px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;cursor:pointer;min-height:50px}
-.btn-end-trip:active{background:#333}
-/* Mapa real (Leaflet) */
-@keyframes truckpulse{0%,100%{box-shadow:0 3px 10px rgba(26,111,181,.6)}50%{box-shadow:0 3px 18px rgba(26,111,181,.9),0 0 0 6px rgba(26,111,181,.15)}}
-@keyframes nextpulse{0%,100%{box-shadow:0 3px 8px rgba(232,160,32,.5)}50%{box-shadow:0 3px 14px rgba(232,160,32,.8),0 0 0 5px rgba(232,160,32,.15)}}
-.mapboxgl-popup-content{border-radius:12px!important;font-family:'Barlow',sans-serif;font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,.15);padding:12px 14px}
-.mapboxgl-popup-close-button{font-size:16px;color:#9a9894}
-.mapboxgl-ctrl-group{border:none!important;box-shadow:0 2px 8px rgba(0,0,0,.2)!important;border-radius:10px!important;overflow:hidden}
-.mapboxgl-ctrl-group button{border-radius:0!important;font-size:16px}
-.mapboxgl-ctrl-attrib{display:none}
-.mapboxgl-ctrl-logo{display:none!important}
 
 /* ═══ ADMIN TABS ═══ */
 .admin-tab-bar{display:flex;background:#f4f4f2;border-bottom:1px solid #e4e2dd;flex-shrink:0}
@@ -407,7 +345,6 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .status-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 .status-active{background:rgba(31,138,61,.12);color:#1f8a3d}.status-active .status-dot{background:#1f8a3d}
 .status-blocked{background:rgba(254,38,39,.12);color:#fe2627}.status-blocked .status-dot{background:#fe2627}
-.status-traveling{background:rgba(26,111,181,.12);color:#1a6fb5}.status-traveling .status-dot{background:#1a6fb5}
 .driver-card-meta{font-family:'Barlow',sans-serif;font-size:11px;color:#b0aea9;margin-top:6px}
 .driver-card-actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
 .driver-btn{flex:1 1 30%;padding:9px;border-radius:8px;border:none;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;cursor:pointer;min-height:38px}
@@ -423,54 +360,15 @@ body{background:#f4f4f2;font-family:'Barlow Condensed',sans-serif;color:#1c1c1c;
 .driver-card-lockmeta{font-family:'Barlow',sans-serif;font-size:11.5px;font-weight:600;color:#b8791a;margin-top:4px;display:flex;align-items:center;gap:5px}
 .driver-card-lockmeta.warn{color:#a07c1a}
 
-/* ═══ MONITORING ═══ */
-.monitor-stats{display:flex;gap:8px;padding:14px 20px 0;flex-shrink:0}
-.monitor-stat{flex:1;background:#fff;border:1px solid #e8e6e1;border-radius:12px;padding:10px 8px;text-align:center}
-.monitor-stat-val{font-weight:700;font-size:22px;color:#1c1c1c}
-.monitor-stat-val.green{color:#1f8a3d}
-.monitor-stat-val.blue{color:#1a6fb5}
-.monitor-stat-lbl{font-family:'Barlow',sans-serif;font-size:9px;color:#9a9894;letter-spacing:.08em;text-transform:uppercase;margin-top:2px}
-.monitor-toggle{display:flex;margin:12px 20px 0;background:#eae8e3;border-radius:10px;padding:3px}
-.monitor-toggle-btn{flex:1;padding:9px;border:none;border-radius:8px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;color:#9a9894;background:transparent;cursor:pointer}
-.monitor-toggle-btn.active{background:#fff;color:#1c1c1c;box-shadow:0 2px 6px rgba(0,0,0,.08)}
-.monitor-cards-view{flex:1;overflow-y:auto;padding:12px 20px 20px}
-.monitor-map-view{flex:1;display:none}
-.monitor-map-view.active{display:flex;flex-direction:column}
-.monitor-map-container{flex:1;min-height:0}
-.monitor-driver-card{background:#fff;border:1.5px solid #e8e6e1;border-radius:14px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;gap:12px}
-.monitor-driver-dot{width:10px;height:10px;border-radius:50%;background:#1f8a3d;flex-shrink:0}
-.monitor-driver-dot.offline{background:#e4e2dd}
-.monitor-driver-info{flex:1}
-.monitor-driver-name{font-weight:700;font-size:14px;color:#1c1c1c}
-.monitor-driver-route{font-family:'Barlow',sans-serif;font-size:11px;color:#9a9894;margin-top:2px}
-.monitor-driver-time{font-family:'Barlow',sans-serif;font-size:10px;color:#b0aea9;margin-top:2px}
-.monitor-no-trips{text-align:center;padding:40px 20px;color:#9a9894;font-family:'Barlow',sans-serif}
-
 @keyframes fadeInSuccess{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
 @keyframes slideUpIn{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 
-/* ═══ BI / ANÁLISE ═══ */
-.bi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px 20px 0}
-.bi-card{background:#fff;border:1.5px solid #e8e6e1;border-radius:14px;padding:14px;text-align:center}
-.bi-val{font-weight:700;font-size:30px;color:#1c1c1c;line-height:1}
-.bi-val.green{color:#1f8a3d}
-.bi-val.red{color:#fe2627}
-.bi-val.blue{color:#1a6fb5}
-.bi-lbl{font-family:'Barlow',sans-serif;font-size:10px;color:#9a9894;letter-spacing:.06em;text-transform:uppercase;margin-top:5px}
-.bi-section{margin:16px 20px 0}
-.bi-section-title{font-weight:700;font-size:12px;letter-spacing:.12em;color:#9a9894;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px}
-.bi-section-title .bar{width:4px;height:13px;background:#fe2627;border-radius:2px}
-.bi-row{background:#fff;border:1px solid #e8e6e1;border-radius:10px;padding:10px 14px;margin-bottom:8px}
-.bi-row-name{font-weight:700;font-size:13px;color:#1c1c1c}
-.bi-row-detail{font-family:'Barlow',sans-serif;font-size:11px;color:#9a9894;margin-top:3px}
-.bi-empty{font-family:'Barlow',sans-serif;font-size:13px;color:#9a9894;text-align:center;padding:20px}
 /* ══════════════════════════════════════════════
    DESKTOP SHELL — sempre oculto por padrão, ativado via JS
    ══════════════════════════════════════════════ */
 #dTopbar,#dSidebar,#dDetailPane{display:none}
 .d-body-row{display:contents}/* sem layout proprio — só agrupa HTML */
 .d-content{display:contents}
-
 
 /* ── Admin Postos Cards ── */
 .ap-topbar{display:flex;align-items:center;gap:10px;margin-bottom:14px}
@@ -598,14 +496,11 @@ body.desktop-mode #screenHome .search-wrap{margin:0}
 /* ── Coluna lista ── */
 body.desktop-mode .d-list-col{width:320px;flex-shrink:0;border-right:1.5px solid #e4e2dd;display:flex!important;flex-direction:column;background:#f4f4f2;overflow:hidden}
 body.desktop-mode .home-scroll{flex:1;overflow-y:auto}
-body.desktop-mode #activeTripBanner{margin:8px 10px 0;border-radius:10px;padding:10px 14px}
 
 /* ── Painel detalhe ── */
 body.desktop-mode #dDetailPane{display:flex!important;flex:1;overflow:hidden;flex-direction:column;background:#f4f4f2;min-width:0}
 .ddp-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#9a9894}
 #ddpContent{display:flex}
-.ddp-trip-bar{display:none;padding:12px 16px;background:#fff;border-top:1.5px solid #e4e2dd}
-.ddp-trip-bar.show{display:block}
 body.desktop-mode #ddpRouteContent .back-btn{display:none!important}
 body.desktop-mode #routeList .rcard.d-selected{border-color:#fe2627;background:#fff8f8}
 
@@ -613,7 +508,6 @@ body.desktop-mode #routeList .rcard.d-selected{border-color:#fe2627;background:#
 body.desktop-mode #screenAdmin,
 body.desktop-mode #screenEditor,
 body.desktop-mode #screenRoute,
-body.desktop-mode #screenMapLive,
 body.desktop-mode #screenPostos,
 body.desktop-mode #screenDriverLogin,
 body.desktop-mode #screenDriverReg{z-index:10}
@@ -641,7 +535,7 @@ body.desktop-mode .admin-tab-content{grid-column:2;grid-row:2;overflow:hidden!im
 body.desktop-mode .admin-tab-pane.active{overflow-y:auto!important;padding:20px 24px!important}
 body.desktop-mode .admin-scroll{padding:0!important}
 body.desktop-mode .admin-stats-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
-body.desktop-mode #adminDriversStats{grid-template-columns:repeat(4,1fr)}
+body.desktop-mode #adminDriversStats{grid-template-columns:repeat(3,1fr)}
 .admin-stat-card{background:#fff;border-radius:10px;padding:16px 18px;border:1px solid #e8e6e1}
 .admin-stat-val{font-size:26px;font-weight:800;color:#1c1c1c;line-height:1}
 .admin-stat-lbl{font-size:12px;color:#9a9894;margin-top:4px;font-family:'Barlow',sans-serif}
@@ -688,31 +582,6 @@ body.desktop-mode .driver-card-actions{order:5;margin-top:0;flex-shrink:0;gap:6p
 body.desktop-mode .driver-btn{width:30px;height:30px;min-height:30px;flex:none;padding:0;border-radius:7px;display:flex;align-items:center;justify-content:center}
 body.desktop-mode .driver-btn-label{display:none}
 
-/* ═══ DESKTOP — ABA MONITOR ═══ */
-body.desktop-mode #monitorStats{display:grid!important;grid-template-columns:repeat(3,1fr)!important;gap:14px!important;padding:0 0 16px!important}
-body.desktop-mode .monitor-stat{padding:20px 16px!important;border-radius:14px!important;border:1.5px solid #e8e6e1!important}
-body.desktop-mode .monitor-stat-val{font-size:42px!important;line-height:1!important}
-body.desktop-mode .monitor-stat-lbl{font-size:11px!important;margin-top:8px!important;font-weight:700!important;letter-spacing:.08em!important;text-transform:uppercase!important;color:#9a9894!important}
-body.desktop-mode .monitor-toggle{display:none!important}
-body.desktop-mode #monitorCardsView{display:grid!important;grid-template-columns:1fr 1fr!important;gap:12px!important;align-content:start!important}
-body.desktop-mode .monitor-driver-card{margin-bottom:0!important;border-radius:12px!important;padding:14px 18px!important;transition:box-shadow .15s!important;align-items:flex-start!important}
-body.desktop-mode .monitor-driver-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.08)!important;border-color:#d0cdc8!important}
-body.desktop-mode .monitor-driver-info{flex:1}
-body.desktop-mode .monitor-driver-name{font-size:15px!important;font-weight:700!important}
-body.desktop-mode .monitor-driver-route{font-size:13px!important;margin-top:3px}
-
-/* ═══ DESKTOP — ABA ANÁLISE ═══ */
-body.desktop-mode .bi-grid{grid-template-columns:repeat(4,1fr)!important;gap:14px!important;padding:0 0 4px!important}
-body.desktop-mode .bi-card{border-radius:14px!important;padding:22px 16px!important;border:1.5px solid #e8e6e1!important}
-body.desktop-mode .bi-val{font-size:48px!important;line-height:1!important}
-body.desktop-mode .bi-lbl{font-size:11px!important;margin-top:10px!important;letter-spacing:.07em!important;text-transform:uppercase!important;font-weight:700!important;color:#9a9894!important}
-body.desktop-mode .bi-section{margin:22px 0 0!important}
-body.desktop-mode .bi-section-title{font-size:11px!important;letter-spacing:.12em!important;margin-bottom:12px!important;padding-bottom:10px!important;border-bottom:1px solid #e8e6e1!important}
-body.desktop-mode .bi-row{padding:10px 0!important;display:flex!important;align-items:center!important;justify-content:space-between!important;border-bottom:1px solid #f0ede8!important}
-body.desktop-mode .bi-row-name{font-size:14px!important;font-weight:600!important}
-body.desktop-mode .bi-row-detail{font-size:12px!important;color:#9a9894!important;text-align:right}
-body.desktop-mode #biContent{padding:0}
-
 /* ─── autocomplete postos ─── */
 .stop-ac-wrap{position:relative}
 .stop-ac-drop{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #d5d3cf;border-radius:8px;z-index:300;max-height:200px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.15);margin-top:2px;display:none}
@@ -721,8 +590,6 @@ body.desktop-mode #biContent{padding:0}
 .stop-ac-item:active,.stop-ac-item:hover{background:#f8f7f4}
 .stop-ac-nome{font-size:13px;font-weight:600;color:#1c1c1c}
 .stop-ac-cidade{font-size:11px;color:#9a9894;margin-top:2px}
-
-
 
 /* ═══════════════════════════════════════════════════════════
    ADMIN — NOVO VISUAL DA ABA ROTAS (v16)
@@ -1025,5 +892,4 @@ body.desktop-mode #ddpRouteContent{padding:20px 24px 90px}
 .dd-ret{background:#eaf2fb;border-color:#c9dcf2;color:#173f6b}
 .dd-ret i{color:#1a5a99}
 .dd-side .hm-support{margin:0}
-body.desktop-mode .ddp-trip-bar{border-top:1px solid #e4e2de}
 @media(max-width:1280px){.dd-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.dd-side{position:static}}

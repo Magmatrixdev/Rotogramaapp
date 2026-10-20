@@ -310,9 +310,8 @@ function renderDriverStats(){
   const list=Object.values(drivers);
   const total=list.length;
   const blocked=list.filter(d=>d.bloqueado).length;
-  const traveling=list.filter(d=>!d.bloqueado&&Object.values(viagens).some(v=>v.motoristaId===d.id&&v.status==='em_viagem')).length;
-  const active=total-blocked-traveling;
-  el.innerHTML=`<div class="admin-stat-card"><div class="admin-stat-val">${total}</div><div class="admin-stat-lbl">Motoristas</div></div><div class="admin-stat-card"><div class="admin-stat-val" style="color:#1f8a3d">${active}</div><div class="admin-stat-lbl">Ativos</div></div><div class="admin-stat-card"><div class="admin-stat-val" style="color:#1a6fb5">${traveling}</div><div class="admin-stat-lbl">Em viagem</div></div><div class="admin-stat-card"><div class="admin-stat-val" style="color:#fe2627">${blocked}</div><div class="admin-stat-lbl">Bloqueados</div></div>`;
+  const active=total-blocked;
+  el.innerHTML=`<div class="admin-stat-card"><div class="admin-stat-val">${total}</div><div class="admin-stat-lbl">Motoristas</div></div><div class="admin-stat-card"><div class="admin-stat-val" style="color:#1f8a3d">${active}</div><div class="admin-stat-lbl">Ativos</div></div><div class="admin-stat-card"><div class="admin-stat-val" style="color:#fe2627">${blocked}</div><div class="admin-stat-lbl">Bloqueados</div></div>`;
 }
 
 async function renderDriverCards(){
@@ -330,13 +329,11 @@ async function renderDriverCards(){
   let h='';
   for(const d of filtered){
     const initials=d.nome.split(' ').slice(0,2).map(n=>n[0]).join('').toUpperCase();
-    const isOnTrip=Object.values(viagens).some(v=>v.motoristaId===d.id&&v.status==='em_viagem');
     const lastAccess=d.ultimoAcesso?new Date(d.ultimoAcesso).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'Nunca';
     const lock=_driverLockState(d);
     let statusClass='status-active',statusTxt='Ativo';
     if(d.bloqueado){statusClass='status-blocked';statusTxt='Bloqueado';}
     else if(lock.locked){statusClass='status-lockedrate';statusTxt='🔒 Login travado';}
-    else if(isOnTrip){statusClass='status-traveling';statusTxt='Em viagem';}
     let lockMeta='';
     if(lock.locked){lockMeta=`<div class="driver-card-lockmeta">🔒 Travado por tentativas · libera em ~${lock.waitMin} min (${lock.attemptsUsed}/${_RL_MAX} erros)</div>`;}
     else if(lock.warning){lockMeta=`<div class="driver-card-lockmeta warn">⚠️ ${lock.attemptsUsed} de ${_RL_MAX} tentativas de PIN usadas · restam ${_RL_MAX-lock.attemptsUsed}</div>`;}
@@ -447,94 +444,12 @@ async function deleteDriver(id){
 
 async function confirmDeleteDriver(id){if(db)await db.ref('motoristas/'+id).remove();}
 
-// ═══ RENDER MONITORING ═══
-function renderMonitoring(){
-  const activeTrips=Object.values(viagens).filter(v=>v.status==='em_viagem');
-  const totalDrivers=Object.values(drivers).length;
-  const onlineNow=Object.values(posicoes).filter(p=>(Date.now()-p.timestamp)<5*60*1000).length;
-  const statsEl=document.getElementById('monitorStats');
-  if(statsEl)statsEl.innerHTML=`
-    <div class="monitor-stat"><div class="monitor-stat-val green">${activeTrips.length}</div><div class="monitor-stat-lbl">Em viagem</div></div>
-    <div class="monitor-stat"><div class="monitor-stat-val blue">${onlineNow}</div><div class="monitor-stat-lbl">Online agora</div></div>
-    <div class="monitor-stat"><div class="monitor-stat-val">${totalDrivers}</div><div class="monitor-stat-lbl">Motoristas</div></div>`;
-  const cardsEl=document.getElementById('monitorCardsView');
-  if(!cardsEl)return;
-  if(activeTrips.length===0){cardsEl.innerHTML=`<div class="monitor-no-trips"><span style="font-size:36px">🛑</span><p style="margin-top:8px;font-weight:700">Nenhuma viagem ativa</p></div>`;return;}
-  let h='';
-  activeTrips.forEach(v=>{
-    const pos=posicoes[v.motoristaId];
-    const lastSeen=pos?new Date(pos.timestamp).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'—';
-    const online=pos&&(Date.now()-pos.timestamp)<5*60*1000;
-    const elapsed=Math.floor((Date.now()-v.iniciadaEm)/1000/60);
-    const hh=Math.floor(elapsed/60),mm=elapsed%60;
-    const timeStr=hh>0?hh+'h'+String(mm).padStart(2,'0')+'m':mm+'min';
-    const confirmed=(v.postosConfirmados||[]).length;
-    const route=routes.find(r=>r.id===v.rotaId);
-    const totalStops=route?route.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino').length:0;
-    h+=`<div class="monitor-driver-card">
-      <div class="monitor-driver-dot ${online?'':'offline'}"></div>
-      <div class="monitor-driver-info">
-        <div class="monitor-driver-name">${v.motoristaNome}</div>
-        <div class="monitor-driver-route">${v.rotaNome}</div>
-        <div class="monitor-driver-time">⏱ ${timeStr} em viagem · ⛽ ${confirmed}/${totalStops} postos · 📡 ${online?'Online':'Último: '+lastSeen}</div>
-      </div>
-    </div>`;
-  });
-  cardsEl.innerHTML=h;
-}
-
-function switchMonitorView(view,el){
-  document.querySelectorAll('.monitor-toggle-btn').forEach(b=>b.classList.remove('active'));
-  el.classList.add('active');
-  const cardsView=document.getElementById('monitorCardsView');
-  const mapView=document.getElementById('monitorMapView');
-  if(view==='cards'){cardsView.style.display='';mapView.classList.remove('active');}
-  else{cardsView.style.display='none';mapView.classList.add('active');setTimeout(()=>{initMonitorMap();if(monitorMap)monitorMap.invalidateSize();},100);}
-}
-
-// ═══ RENDER BI ═══
-function renderBI(){
-  const el=document.getElementById('biContent');if(!el)return;
-  const allDrivers=Object.values(drivers);
-  const allTrips=Object.values(viagens);
-  const activeTrips=allTrips.filter(v=>v.status==='em_viagem');
-  const completedTrips=allTrips.filter(v=>v.status==='finalizada');
-  const blockedDrivers=allDrivers.filter(d=>d.bloqueado);
-  const now=Date.now();
-  const recentActive=allDrivers.filter(d=>d.ultimoAcesso&&(now-d.ultimoAcesso)<24*60*60*1000);
-  const incompleteTrips=completedTrips.filter(v=>{
-    const route=routes.find(r=>r.id===v.rotaId);if(!route)return false;
-    const stops=route.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino').length;
-    return stops>(v.postosConfirmados?.length||0);
-  });
-  let h=`<div class="bi-grid">
-    <div class="bi-card"><div class="bi-val">${allDrivers.length}</div><div class="bi-lbl">Motoristas cadastrados</div></div>
-    <div class="bi-card"><div class="bi-val green">${activeTrips.length}</div><div class="bi-lbl">Em viagem agora</div></div>
-    <div class="bi-card"><div class="bi-val blue">${allTrips.length}</div><div class="bi-lbl">Total de viagens</div></div>
-    <div class="bi-card"><div class="bi-val red">${blockedDrivers.length}</div><div class="bi-lbl">Bloqueados</div></div>
-  </div>
-  <div class="bi-section">
-    <div class="bi-section-title"><span class="bar"></span>Atividade recente (24h)</div>`;
-  if(recentActive.length===0){h+=`<div class="bi-empty">Nenhum acesso nas últimas 24h</div>`;}
-  else{recentActive.forEach(d=>{const isOnTrip=activeTrips.some(v=>v.motoristaId===d.id);h+=`<div class="bi-row"><div class="bi-row-name">${d.nome} ${isOnTrip?'🚛':''}</div><div class="bi-row-detail">Último acesso: ${new Date(d.ultimoAcesso).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</div></div>`;});}
-  h+=`</div><div class="bi-section">
-    <div class="bi-section-title"><span class="bar"></span>Postos não confirmados</div>`;
-  if(incompleteTrips.length===0){h+=`<div class="bi-empty">✅ Todos os postos foram confirmados nas viagens concluídas</div>`;}
-  else{incompleteTrips.slice(0,10).forEach(v=>{const route=routes.find(r=>r.id===v.rotaId);const total=route?route.paradas.filter(p=>p.tipo!=='origem'&&p.tipo!=='destino').length:0;const confirmed=(v.postosConfirmados?.length||0);h+=`<div class="bi-row"><div class="bi-row-name">${v.motoristaNome}</div><div class="bi-row-detail">${v.rotaNome} · ${confirmed}/${total} postos confirmados · ${new Date(v.iniciadaEm).toLocaleDateString('pt-BR')}</div></div>`;});}
-  h+=`</div><div class="bi-section" style="padding-bottom:24px">
-    <div class="bi-section-title"><span class="bar"></span>Viagens concluídas</div>`;
-  if(completedTrips.length===0){h+=`<div class="bi-empty">Nenhuma viagem concluída ainda</div>`;}
-  else{completedTrips.slice(-5).reverse().forEach(v=>{const dur=v.finalizadaEm?Math.floor((v.finalizadaEm-v.iniciadaEm)/1000/60):null;const durStr=dur?Math.floor(dur/60)+'h'+String(dur%60).padStart(2,'0')+'m':'—';h+=`<div class="bi-row"><div class="bi-row-name">${v.motoristaNome}</div><div class="bi-row-detail">${v.rotaNome} · ${durStr} · ${new Date(v.iniciadaEm).toLocaleDateString('pt-BR')}</div></div>`;});}
-  h+=`</div>`;
-  el.innerHTML=h;
-}
-
 // ═══ ADMIN TAB SWITCH ═══
 function switchAdminTab(tab,el){
   document.querySelectorAll('.admin-tab-btn').forEach(b=>b.classList.remove('active'));
   el.classList.add('active');
   document.querySelectorAll('.admin-tab-pane').forEach(p=>p.classList.remove('active'));
-  const paneMap={routes:'adminTabRoutes',drivers:'adminTabDrivers',monitor:'adminTabMonitor',bi:'adminTabBI',postos:'adminTabPostos'};
+  const paneMap={routes:'adminTabRoutes',drivers:'adminTabDrivers',postos:'adminTabPostos'};
   const pane=document.getElementById(paneMap[tab]);if(pane)pane.classList.add('active');
   if(tab==='routes')renderAdmin();
   else if(tab==='drivers'){
@@ -550,8 +465,6 @@ function switchAdminTab(tab,el){
       renderDriverManager();
     }
   }
-  else if(tab==='monitor'){renderMonitoring();}
-  else if(tab==='bi')renderBI();
   else if(tab==='postos'){if(!_postosListenerInit){initPostosListener();_postosListenerInit=true;}renderAdminPostos();}
 }
 

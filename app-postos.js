@@ -85,8 +85,6 @@ function bnavGoPostos(){
   showPostos();
 }
 
-function bnavGoViagem(){showMapLive();}
-
 function hideBottomNav(){
   const nav=document.getElementById('bottomNav');
   if(nav)nav.style.display='none';

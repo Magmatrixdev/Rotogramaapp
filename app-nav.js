@@ -65,8 +65,6 @@ function _navResetOrig(id,setupFn){
     s.style.visibility='hidden';
     s.scrollTop=0;
   });
-  const dme=document.getElementById('driverMapEl');
-  if(dme)dme.style.cssText='position:absolute;inset:0;z-index:1;background:#e8f0e8';
   _navStack=[id];
   const el=document.getElementById(id);
   if(el){
@@ -144,13 +142,11 @@ function navPop(setupFn){
 function navReset(id,setupFn){
   if(IS_DESKTOP()&&id==='screenHome'){
     _blur();
-    const overlays=['screenAdmin','screenEditor','screenRoute','screenMapLive','screenPostos','screenDriverLogin','screenDriverReg'];
+    const overlays=['screenAdmin','screenEditor','screenRoute','screenPostos','screenInformativos','screenDriverLogin','screenDriverReg'];
     overlays.forEach(sid=>{
       const el=document.getElementById(sid);
       if(el){el.style.cssText='';el.style.visibility='hidden';el.style.transform='translateX(100%)';el.classList.remove('active','behind');}
     });
-    const dme=document.getElementById('driverMapEl');
-    if(dme)dme.style.cssText='position:absolute;inset:0;z-index:1;background:#e8f0e8';
     _navStack=['screenHome'];
     const home=document.getElementById('screenHome');
     if(home){home.style.visibility='visible';home.style.transform='none';home.classList.add('active');home.classList.remove('behind');}
@@ -188,35 +184,14 @@ function showHome(){
   if(typeof updateBottomNav==='function')updateBottomNav('Rotas');
 }
 
-function showMapLive(){
-  if(!currentTrip){showToast('Nenhuma viagem ativa — inicie uma viagem primeiro');return;}
-  const route=currentRouteIdx>=0?routes[currentRouteIdx]:null;
-  if(_navStack.includes('screenMapLive')){
-    const mapEl=document.getElementById('screenMapLive');
-    if(mapEl){mapEl.classList.add('active');mapEl.classList.remove('behind');}
-    return;
+// ═══ ROTA (tela mobile) ═══
+function showRoute(i){
+  if(IS_DESKTOP()&&(_navStack.length<=1||_navStack[_navStack.length-1]==='screenHome')){
+    dShowRouteDetail(i);return;
   }
-  navPush('screenMapLive',()=>{
-    const nameEl=document.getElementById('mapLiveRouteName');
-    const statesEl=document.getElementById('mapLiveStates');
-    if(nameEl&&route)nameEl.textContent=route.nome;
-    if(statesEl&&route)statesEl.textContent=route.estados||'';
-    const ep=document.getElementById('tsPerc');if(ep)ep.textContent='—';
-    const er=document.getElementById('tsRest');if(er)er.textContent=route?route.distancia||'—':'—';
-    const et=document.getElementById('tsElapsed');if(et)et.textContent=route?route.tempo||'—':'—';
-    updateNextStopUI();
-    setTimeout(async()=>{
-      try{ await loadMapboxGL(); }
-      catch(e){
-        const el=document.getElementById('driverMapEl');
-        if(el)el.innerHTML='<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#fe2627;font-family:Barlow,sans-serif;font-size:13px;text-align:center;padding:20px"><span style="font-size:28px">❌</span><span>Falha ao carregar o mapa.<br>Verifique sua conexão com a internet.</span></div>';
-        startTracking();if(!tripTimerInterval&&tripStartTs)startTripTimer();return;
-      }
-      await initDriverMap();
-      setTimeout(()=>{if(_mbMap)_mbMap.resize();},350);
-      startTracking();
-      if(!tripTimerInterval&&tripStartTs)startTripTimer();
-    },400);
+  const r=routes[i];currentRouteIdx=i;
+  _navPushOrig('screenRoute',()=>{
+    document.getElementById('routeContent').innerHTML=renderRoute(r);
   });
 }
 

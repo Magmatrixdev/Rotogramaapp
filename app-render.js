@@ -164,7 +164,7 @@ function renderHome(){
   el.innerHTML=h;
   document.getElementById('routeCountText').textContent=`${routes.length} rotas ativas`;
   renderHomeChips();renderHomeCardFilter();renderHomeInf();filterRoutes();
-  verifyDriverSession();checkActiveTrip();updateActiveTripBanner();
+  verifyDriverSession();
   const logoutBtn=document.getElementById('logoutBtn');const greeting=document.getElementById('driverGreeting');
   if(logoutBtn){logoutBtn.classList.add('show');}
   if(greeting){if(currentDriver){greeting.textContent='Olá, '+currentDriver.nome.split(' ')[0]+'!';}else if(adminMode){greeting.textContent='Modo administrador';}else{greeting.textContent='';}}

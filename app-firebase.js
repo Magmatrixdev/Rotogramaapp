@@ -110,7 +110,7 @@ function setSyncStatus(t,txt){const el=document.getElementById('syncBar');if(!el
 // (auth !== null) recusavam a leitura e o RTDB cancelava o listener para sempre —
 // por isso no 1º login aparecia "Erro Firebase — dados locais" até reabrir o app.
 let _dataListenersOn=false,_dataListenersAdmin=false;
-const _DATA_PATHS=['rotogramas','motoristas','viagens','posicoes','postos','informativos','notifications'];
+const _DATA_PATHS=['rotogramas','motoristas','postos','informativos','notifications'];
 function _detachDataListeners(){
   if(!db)return;
   _DATA_PATHS.forEach(p=>{try{db.ref(p).off();}catch(e){}});
@@ -140,11 +140,9 @@ function _attachDataListeners(isAdmin){
       Object.values(localPending).forEach(d=>{if(!fbData[d.id]){db.ref('motoristas/'+d.id).set(d).then(()=>{const lp=JSON.parse(localStorage.getItem('drivers_local')||'{}');delete lp[d.id];localStorage.setItem('drivers_local',JSON.stringify(lp));}).catch(()=>{});}else{const lp=JSON.parse(localStorage.getItem('drivers_local')||'{}');delete lp[d.id];localStorage.setItem('drivers_local',JSON.stringify(lp));}});
       drivers={...fbData,...localPending};
       Object.keys(drivers).forEach(k=>{const dr=drivers[k];if(dr&&typeof dr==='object'&&!dr.id)dr.id=k;});
-      if(adminMode)renderDriverManager();renderMonitoring();renderBI();
+      if(adminMode)renderDriverManager();
     });
 
-    db.ref('viagens').on('value',snap=>{const d=snap.val();viagens=d||{};checkActiveTrip();renderMonitoring();renderBI();});
-    db.ref('posicoes').on('value',snap=>{const d=snap.val();posicoes=d||{};updateMonitorMap();renderMonitoring();});
     }
     db.ref('postos').on('value',snap=>{postosAvulsos=snap.val()||{};if(typeof renderPostosList==='function')renderPostosList();});
     db.ref('informativos').on('value',snap=>{informativos=snap.val()||{};if(typeof renderInformativos==='function')renderInformativos();if(typeof renderHomeInf==='function')renderHomeInf();});

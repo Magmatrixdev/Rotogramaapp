@@ -72,7 +72,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script>
-<link rel="stylesheet" href="app.css?v=19">
+<link rel="stylesheet" href="app.css?v=20">
 <link rel="stylesheet" href="app-postos.css?v=15">
 <link rel="stylesheet" href="app-informativos.css?v=3">
 </head>
@@ -205,11 +205,6 @@
   <div class="hm-cardf" id="homeCardFilter" role="group" aria-label="Filtrar por cartão"></div>
   <div class="hm-chips" id="homeRegionChips" role="tablist" aria-label="Filtrar por região"></div>
   <div id="homeInfHighlight"></div>
-  <div id="activeTripBanner" class="active-trip-banner" onclick="showMapLive()">
-    <span style="font-size:20px">🚛</span>
-    <div class="active-trip-banner-txt" id="activeTripBannerTxt">Viagem em andamento</div>
-    <span class="active-trip-banner-arr">›</span>
-  </div>
   <div class="hm-section"><h2 class="hm-section-title" id="homeSectionTitle">Todas as rotas</h2><span class="hm-section-count" id="homeSectionCount"></span></div>
   <div class="home-scroll" id="routeList"></div>
 </div><!-- /.d-list-col -->
@@ -222,9 +217,6 @@
   </div>
   <div id="ddpContent" style="display:none;flex-direction:column;height:100%;overflow:hidden">
     <div id="ddpRouteContent" style="flex:1;overflow-y:auto"></div>
-    <div class="ddp-trip-bar" id="ddpTripBar">
-      <button class="btn-start-trip" id="ddpStartTrip">🚛 Iniciar Viagem</button>
-    </div>
   </div>
 </div>
 </div><!-- /#screenHome -->
@@ -253,62 +245,6 @@
 <!-- ═══ ROTA (estático) ═══ -->
 <div class="screen" id="screenRoute">
   <div id="routeContent"></div>
-  <div class="driver-trip-bar" id="driverTripBar">
-    <button class="btn-start-trip" id="btnStartTrip" onclick="startTrip()">🚛 Iniciar Viagem</button>
-  </div>
-</div>
-
-<!-- ═══ MAPA AO VIVO ═══ -->
-<div class="screen" id="screenMapLive">
-  <!-- Mapa ocupa 100% da tela (Leaflet precisa disso no iOS) -->
-  <div id="driverMapEl" style="position:absolute;inset:0;z-index:1;background:#e8f0e8"></div>
-
-  <!-- UI em overlay sobre o mapa -->
-  <div class="maplive-overlay">
-
-    <!-- Header topo -->
-    <div class="maplive-header">
-      <button class="back-btn" style="background:rgba(0,0,0,.45);color:#fff;backdrop-filter:blur(8px)" onclick="navPop()">‹</button>
-      <div style="flex:1;min-width:0">
-        <div class="maplive-route-name" id="mapLiveRouteName">Em Viagem</div>
-        <div style="font-family:'Barlow',sans-serif;font-size:10px;color:rgba(255,255,255,.6);margin-top:1px" id="mapLiveStates"></div>
-      </div>
-      <div class="live-pill"><div class="live-pill-dot"></div><span class="live-pill-txt">AO VIVO</span></div>
-    </div>
-
-    <!-- Espaço transparente (mapa visível) -->
-    <div style="flex:1;min-height:0;pointer-events:none"></div>
-
-    <!-- Painel inferior -->
-    <div class="maplive-panel">
-      <div class="trip-stats-bar">
-        <div class="trip-stat-item">
-          <div class="trip-stat-val green" id="tsPerc">—</div>
-          <div class="trip-stat-lbl">Percorrido</div>
-        </div>
-        <div class="trip-stat-item">
-          <div class="trip-stat-val" id="tsRest">—</div>
-          <div class="trip-stat-lbl">Restante</div>
-        </div>
-        <div class="trip-stat-item">
-          <div class="trip-stat-val yellow" id="tsElapsed">00:00</div>
-          <div class="trip-stat-lbl">Estimado</div>
-        </div>
-      </div>
-      <div id="nextStopCard" class="next-stop-card">
-        <div class="next-stop-card-label">⚡ PRÓXIMO ABASTECIMENTO</div>
-        <div class="next-stop-card-name" id="nextStopName">Calculando...</div>
-        <div class="next-stop-card-city" id="nextStopCity"></div>
-        <div class="next-stop-card-dist" id="nextStopDist"></div>
-      </div>
-      <div id="stopsList" class="maplive-stops-list"></div>
-      <div class="maplive-action-row">
-        <button class="btn-fuel-confirm" id="btnFuelConfirm" onclick="confirmFuelStop()">⛽ Confirmar Abastecimento</button>
-        <button class="btn-end-trip" onclick="promptEndTrip()">⛔ Encerrar</button>
-      </div>
-    </div>
-
-  </div>
 </div>
 
 <!-- ═══ ADMIN ═══ -->
@@ -318,8 +254,6 @@
     <div class="admin-dsb-section">Painel Admin</div>
     <button class="admin-tab-btn active" onclick="switchAdminTab('routes',this)"><i class="ti ti-route" aria-hidden="true"></i> Rotas<span class="admin-tab-count" id="adminTabRoutesCount"></span></button>
     <button class="admin-tab-btn" onclick="switchAdminTab('drivers',this)"><i class="ti ti-users" aria-hidden="true"></i> Motoristas</button>
-    <button class="admin-tab-btn" onclick="switchAdminTab('monitor',this)"><i class="ti ti-activity" aria-hidden="true"></i> Monitor</button>
-    <button class="admin-tab-btn" onclick="switchAdminTab('bi',this)"><i class="ti ti-chart-bar" aria-hidden="true"></i> Análise</button>
     <button class="admin-tab-btn" onclick="switchAdminTab('postos',this)"><i class="ti ti-gas-station" aria-hidden="true"></i> Postos</button>
   </div>
   <div class="admin-tab-content">
@@ -328,20 +262,6 @@
     </div>
     <div id="adminTabDrivers" class="admin-tab-pane">
       <div class="admin-scroll" id="adminDriversList"></div>
-    </div>
-    <div id="adminTabMonitor" class="admin-tab-pane">
-      <div class="monitor-stats" id="monitorStats"></div>
-      <div class="monitor-toggle">
-        <button class="monitor-toggle-btn active" id="monTogCards" onclick="switchMonitorView('cards',this)">📋 Cards</button>
-        <button class="monitor-toggle-btn" id="monTogMap" onclick="switchMonitorView('map',this)">🗺️ Mapa</button>
-      </div>
-      <div class="monitor-cards-view" id="monitorCardsView"></div>
-      <div class="monitor-map-view" id="monitorMapView">
-        <div id="monitorMapEl" class="monitor-map-container"></div>
-      </div>
-    </div>
-    <div id="adminTabBI" class="admin-tab-pane" style="overflow-y:auto">
-      <div id="biContent"></div>
     </div>
     <div id="adminTabPostos" class="admin-tab-pane">
       <div class="admin-scroll" id="adminPostosList"></div>
@@ -381,24 +301,22 @@
   </button>
 </div>
 
-<script src="app-config.js?v=68"></script>
-<script src="app-state.js?v=68"></script>
-<script src="app-crypto.js?v=68"></script>
-<script src="app-firebase.js?v=68"></script>
-<script src="app-auth.js?v=68"></script>
-<script src="app-nav.js?v=68"></script>
-<script src="app-render.js?v=68"></script>
-<script src="app-admin.js?v=68"></script>
-<script src="app-map.js?v=68"></script>
-<script src="app-trip.js?v=68"></script>
-<script src="app-notifications.js?v=68"></script>
-<script src="app-desktop.js?v=68"></script>
-<script src="app-editor.js?v=68"></script>
-<script src="app-utils.js?v=68"></script>
-<script src="app-pwa.js?v=68"></script>
-<script src="app-postos.js?v=68"></script>
-<script src="app-informativos.js?v=68"></script>
-<script src="app-main.js?v=68"></script>
+<script src="app-config.js?v=69"></script>
+<script src="app-state.js?v=69"></script>
+<script src="app-crypto.js?v=69"></script>
+<script src="app-firebase.js?v=69"></script>
+<script src="app-auth.js?v=69"></script>
+<script src="app-nav.js?v=69"></script>
+<script src="app-render.js?v=69"></script>
+<script src="app-admin.js?v=69"></script>
+<script src="app-notifications.js?v=69"></script>
+<script src="app-desktop.js?v=69"></script>
+<script src="app-editor.js?v=69"></script>
+<script src="app-utils.js?v=69"></script>
+<script src="app-pwa.js?v=69"></script>
+<script src="app-postos.js?v=69"></script>
+<script src="app-informativos.js?v=69"></script>
+<script src="app-main.js?v=69"></script>
 
 </html>
 

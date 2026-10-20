@@ -27,7 +27,7 @@ function toggleDesktopMode(){
 }
 
 function _dActivateHomeLayout(){
-  const overlays=['screenAdmin','screenEditor','screenRoute','screenMapLive','screenPostos','screenInformativos','screenDriverLogin','screenDriverReg'];
+  const overlays=['screenAdmin','screenEditor','screenRoute','screenPostos','screenInformativos','screenDriverLogin','screenDriverReg'];
   overlays.forEach(id=>{
     const el=document.getElementById(id);
     if(el){el.style.visibility='hidden';el.style.transform='translateX(100%)';el.classList.remove('active','behind');}
@@ -168,14 +168,6 @@ function dShowRouteDetail(i){
   content.scrollTop=st;
   if(empty)empty.style.display='none';
   pane.style.display='flex';
-  const tripBar=document.getElementById('ddpTripBar');
-  const tripBtn=document.getElementById('ddpStartTrip');
-  if(tripBar&&tripBtn&&currentDriver){
-    tripBar.classList.add('show');
-    if(currentTrip&&currentTrip.rotaId===r.id){tripBtn.textContent='🗺️ Ver Mapa ao Vivo';tripBtn.style.background='#1a6fb5';tripBtn.onclick=showMapLive;tripBtn.disabled=false;}
-    else if(currentTrip){tripBtn.textContent='🚛 Em outra viagem';tripBtn.style.background='#9a9894';tripBtn.disabled=true;}
-    else{tripBtn.textContent='🚛 Iniciar Viagem';tripBtn.style.background='#1a7a3c';tripBtn.onclick=startTrip;tripBtn.disabled=false;}
-  }else if(tripBar){tripBar.classList.remove('show');}
   document.querySelectorAll('#routeList .rcard').forEach(c=>c.classList.toggle('d-selected',+c.dataset.routeIdx===i));
 }
 
