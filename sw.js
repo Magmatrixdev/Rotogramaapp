@@ -1,4 +1,4 @@
-const CACHE = 'rotograma-v14';
+const CACHE = 'rotograma-v15';
 const STATIC = [
   './manifest.json',
   './icon-192.png',
