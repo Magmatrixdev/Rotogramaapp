@@ -72,7 +72,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script>
-<link rel="stylesheet" href="app.css?v=17">
+<link rel="stylesheet" href="app.css?v=18">
 <link rel="stylesheet" href="app-postos.css?v=15">
 <link rel="stylesheet" href="app-informativos.css?v=3">
 </head>
@@ -85,38 +85,67 @@
 <!-- ═══ TELA LOGIN MOTORISTA ═══ -->
 <div class="screen active dauth-screen" id="screenDriverLogin">
   <div class="dauth-top-bg">
+    <svg class="dauth-road" aria-hidden="true" width="260" height="250" viewBox="0 0 260 250">
+      <path d="M250 0 C 170 60, 230 120, 140 170 S 40 220, 0 250" fill="none" stroke="#2e2e2e" stroke-width="34" stroke-linecap="round"/>
+      <path d="M250 0 C 170 60, 230 120, 140 170 S 40 220, 0 250" fill="none" stroke="#fe2627" stroke-width="2.5" stroke-dasharray="10 12" stroke-linecap="round"/>
+      <circle cx="182" cy="96" r="7" fill="#1c1c1c" stroke="#fff" stroke-width="2.5"/>
+      <circle cx="96" cy="196" r="7" fill="#fe2627" stroke="#fff" stroke-width="2.5"/>
+    </svg>
     <div class="dauth-logo-row">
-      <div class="logo-box"><span>C</span></div>
-      <div><div class="logo-title" style="color:#fff">CONFIANÇA</div><div class="logo-sub">SEGURANÇA QUE MOVE</div></div>
+      <div class="dauth-logo-c">C</div>
+      <div><div class="dauth-brand">CONFIANÇA</div><div class="dauth-brand-sub">SEGURANÇA QUE MOVE</div></div>
     </div>
-    <div class="dauth-title">Rotogramas</div>
-    <div class="dauth-sub">Plataforma de abastecimento</div>
+    <div class="dauth-hero-txt">
+      <div class="dauth-kicker">PLATAFORMA DE ABASTECIMENTO</div>
+      <div class="dauth-title">Rotogramas</div>
+      <div class="dauth-sub">Rotas, postos e cartões da frota na palma da mão.</div>
+    </div>
   </div>
   <div class="dauth-card" id="dauthCard">
+    <div class="dauth-inner">
     <div class="dauth-tabs">
-      <button class="dauth-tab active" id="tabLoginBtn" onclick="switchAuthTab('login')">Entrar</button>
-      <button class="dauth-tab" id="tabRegisterBtn" onclick="switchAuthTab('register')">Criar conta</button>
+      <button type="button" class="dauth-tab active" id="tabLoginBtn" onclick="switchAuthTab('login')">Entrar</button>
+      <button type="button" class="dauth-tab" id="tabRegisterBtn" onclick="switchAuthTab('register')">Criar conta</button>
     </div>
     <div id="dauthLoginForm">
-      <div class="dauth-field"><label>CPF</label><input type="text" id="dLoginCPF" placeholder="000.000.000-00" maxlength="14" oninput="fmtCPF(this)"></div>
-      <div class="dauth-field"><label>PIN (4 dígitos)</label><input type="password" id="dLoginPIN" placeholder="••••" maxlength="4" inputmode="numeric"></div>
+      <div class="dauth-head"><div class="dauth-h2">Bem-vindo de volta</div><div class="dauth-p">Entre com seu CPF e o PIN de 4 dígitos.</div></div>
+      <div class="dauth-field"><label for="dLoginCPF">CPF</label><div class="dauth-iwrap"><i class="ti ti-id" aria-hidden="true"></i><input type="text" id="dLoginCPF" placeholder="000.000.000-00" maxlength="14" inputmode="numeric" autocomplete="username" oninput="fmtCPF(this)"></div></div>
+      <div class="dauth-field">
+        <div class="dauth-lblrow"><span class="dauth-lbl" id="lblLoginPIN">PIN</span><button type="button" class="pin-show" data-for="dLoginPIN"><i class="ti ti-eye" aria-hidden="true"></i><span>Mostrar</span></button></div>
+        <input type="hidden" id="dLoginPIN">
+        <div class="pin-boxes" role="group" aria-labelledby="lblLoginPIN" data-target="dLoginPIN" data-enter="doDriverLogin"></div>
+      </div>
       <div class="save-creds-row">
         <input type="checkbox" id="saveCreds" checked>
-        <label for="saveCreds">Lembrar credenciais neste dispositivo</label>
+        <label for="saveCreds">Lembrar neste dispositivo</label>
       </div>
-      <button class="dauth-btn" onclick="doDriverLogin()">ENTRAR</button>
-      <div class="dauth-error" id="dLoginError">CPF ou PIN incorretos</div>
+      <div class="dauth-error" id="dLoginError" role="alert">CPF ou PIN incorretos</div>
+      <button type="button" class="dauth-btn" onclick="doDriverLogin()">ENTRAR</button>
+      <div class="dauth-hint">Esqueceu o PIN? Peça ao gestor da frota para redefinir.</div>
     </div>
     <div id="dauthRegisterForm" style="display:none">
-      <div class="dauth-field"><label>Nome completo</label><input type="text" id="dRegNome" placeholder="João da Silva"></div>
-      <div class="dauth-field"><label>CPF</label><input type="text" id="dRegCPF" placeholder="000.000.000-00" maxlength="14" oninput="fmtCPF(this)"></div>
-      <div class="dauth-field"><label>PIN (4 dígitos)</label><input type="password" id="dRegPIN" placeholder="••••" maxlength="4" inputmode="numeric"></div>
-      <div class="dauth-field"><label>Confirmar PIN</label><input type="password" id="dRegPIN2" placeholder="••••" maxlength="4" inputmode="numeric"></div>
-      <button class="dauth-btn" onclick="doDriverRegister()">CRIAR CONTA</button>
-      <div class="dauth-error" id="dRegError">Preencha todos os campos</div>
+      <div class="dauth-head"><div class="dauth-h2">Primeiro acesso</div><div class="dauth-p">Cadastre-se com seus dados e escolha um PIN.</div></div>
+      <div class="dauth-field"><label for="dRegNome">Nome completo</label><div class="dauth-iwrap"><i class="ti ti-user" aria-hidden="true"></i><input type="text" id="dRegNome" placeholder="João da Silva" autocomplete="name"></div></div>
+      <div class="dauth-field"><label for="dRegCPF">CPF</label><div class="dauth-iwrap"><i class="ti ti-id" aria-hidden="true"></i><input type="text" id="dRegCPF" placeholder="000.000.000-00" maxlength="14" inputmode="numeric" oninput="fmtCPF(this)"></div></div>
+      <div class="dauth-field">
+        <div class="dauth-lblrow"><span class="dauth-lbl" id="lblRegPIN">Crie seu PIN (4 dígitos)</span><button type="button" class="pin-show" data-for="dRegPIN,dRegPIN2"><i class="ti ti-eye" aria-hidden="true"></i><span>Mostrar</span></button></div>
+        <input type="hidden" id="dRegPIN">
+        <div class="pin-boxes" role="group" aria-labelledby="lblRegPIN" data-target="dRegPIN" data-next="dRegPIN2"></div>
+      </div>
+      <div class="dauth-field">
+        <span class="dauth-lbl" id="lblRegPIN2">Confirme o PIN</span>
+        <input type="hidden" id="dRegPIN2">
+        <div class="pin-boxes" role="group" aria-labelledby="lblRegPIN2" data-target="dRegPIN2" data-enter="doDriverRegister"></div>
+      </div>
+      <div class="dauth-tip"><i class="ti ti-lock" aria-hidden="true"></i>Evite sequências óbvias, como 1234 ou 0000.</div>
+      <div class="dauth-error" id="dRegError" role="alert">Preencha todos os campos</div>
+      <button type="button" class="dauth-btn" onclick="doDriverRegister()">CRIAR CONTA</button>
+    </div>
+    <div class="dauth-foot">
+      <button type="button" class="dauth-admin-link" onclick="showAdminLogin()"><i class="ti ti-shield-half" aria-hidden="true"></i>Acesso administrativo</button>
+    </div>
     </div>
   </div>
-  <button class="dauth-admin-link" onclick="showAdminLogin()">⚙️ Acesso administrativo</button>
 </div>
 
 <!-- ═══ HOME ═══ -->

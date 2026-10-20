@@ -280,7 +280,7 @@ function switchAuthTab(tab){
 function showAdminLogin(){
   document.querySelector('.login-overlay')?.remove();
   const ov=document.createElement('div');ov.className='login-overlay';
-  ov.innerHTML=`<div class="login-box"><div class="login-logo"><div class="lb"><span>C</span></div><span class="lt">CONFIANÇA</span></div><div class="login-title">Área Restrita</div><div class="login-sub">Credenciais de administrador</div><div class="login-field"><label>Usuário</label><input type="text" id="loginUser" placeholder="Usuário" autocomplete="off"></div><div class="login-field"><label>Senha</label><input type="password" id="loginPass" placeholder="Senha"></div><button class="login-btn" onclick="doAdminLogin()">ENTRAR</button><div class="login-error" id="loginError">Usuário ou senha incorretos</div><button class="login-cancel" onclick="this.closest('.login-overlay').remove()">Cancelar</button></div>`;
+  ov.innerHTML=`<div class="login-box" role="dialog" aria-modal="true" aria-labelledby="adlTitle"><div class="adl-hero"><svg class="adl-rings" aria-hidden="true" width="300" height="300" viewBox="0 0 300 300"><circle cx="150" cy="150" r="140" fill="none" stroke="#3a3a3a" stroke-width="1.5"/><circle cx="150" cy="150" r="100" fill="none" stroke="#3a3a3a" stroke-width="1.5"/><circle cx="150" cy="150" r="60" fill="none" stroke="#fe2627" stroke-width="1.5" stroke-dasharray="6 8"/></svg><div class="adl-top"><button type="button" class="adl-back" aria-label="Voltar" onclick="this.closest('.login-overlay').remove()"><i class="ti ti-chevron-left" aria-hidden="true"></i></button><span class="adl-brand">CONFIANÇA</span></div><div class="adl-icon"><i class="ti ti-shield-check" aria-hidden="true"></i></div><div class="adl-kicker">ÁREA RESTRITA</div><div class="login-title" id="adlTitle">Administração</div><div class="login-sub">Rotas, postos, motoristas e informativos.</div></div><div class="adl-body"><div class="login-field"><label for="loginUser">E-mail</label><div class="adl-iwrap"><i class="ti ti-mail" aria-hidden="true"></i><input type="email" id="loginUser" placeholder="nome@empresa.com.br" autocomplete="username"></div></div><div class="login-field"><label for="loginPass">Senha</label><div class="adl-iwrap"><i class="ti ti-lock" aria-hidden="true"></i><input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password"><button type="button" class="adl-eye" aria-label="Mostrar senha" onclick="const i=document.getElementById('loginPass');const s=i.type==='password';i.type=s?'text':'password';this.querySelector('i').className='ti '+(s?'ti-eye-off':'ti-eye');this.setAttribute('aria-label',s?'Ocultar senha':'Mostrar senha')"><i class="ti ti-eye" aria-hidden="true"></i></button></div></div><button type="button" class="login-btn" onclick="doAdminLogin()">ENTRAR</button><div class="login-error" id="loginError" role="alert">Usuário ou senha incorretos</div><div class="adl-note"><i class="ti ti-clock" aria-hidden="true"></i><span>Por segurança, a sessão é encerrada após 30 minutos sem uso.</span></div><button type="button" class="login-cancel" onclick="this.closest('.login-overlay').remove()">Sou motorista — voltar ao login</button></div></div>`;
   document.body.appendChild(ov);setTimeout(()=>document.getElementById('loginUser')?.focus(),100);
   ov.addEventListener('keydown',e=>{if(e.key==='Enter')doAdminLogin();});
 }
@@ -350,5 +350,70 @@ async function doAdminLogin(){
   }
 }
 
-
-
+// ═══ PIN EM CAIXAS (tela de login modernizada) ═══
+// Cada .pin-boxes[data-target] gera 4 caixas e mantém o input hidden #target
+// sincronizado — doDriverLogin()/doDriverRegister() continuam lendo .value.
+function _pinSync(group){
+  const t=document.getElementById(group.dataset.target);
+  const boxes=[...group.querySelectorAll('.pin-box')];
+  if(t)t.value=boxes.map(b=>b.value).join('');
+  boxes.forEach(b=>b.classList.toggle('filled',!!b.value));
+}
+function _pinFocusNext(group){
+  if(group.dataset.next){
+    const g=document.querySelector('.pin-boxes[data-target="'+group.dataset.next+'"]');
+    const f=g&&g.querySelector('.pin-box');if(f){f.focus();return;}
+  }
+  const fn=group.dataset.enter&&window[group.dataset.enter];
+  if(typeof fn==='function'){document.activeElement?.blur();fn();}
+}
+function initPinBoxes(){
+  document.querySelectorAll('.pin-boxes[data-target]').forEach(group=>{
+    if(group.dataset.ready)return;group.dataset.ready='1';
+    const label=document.getElementById(group.getAttribute('aria-labelledby'))?.textContent||'PIN';
+    for(let i=0;i<4;i++){
+      const b=document.createElement('input');
+      b.type='password';b.inputMode='numeric';b.maxLength=1;b.className='pin-box';
+      b.autocomplete='off';b.setAttribute('pattern','[0-9]*');
+      b.setAttribute('aria-label',label+' — dígito '+(i+1));
+      group.appendChild(b);
+    }
+    const boxes=[...group.querySelectorAll('.pin-box')];
+    boxes.forEach((b,i)=>{
+      b.addEventListener('input',()=>{
+        const d=b.value.replace(/\D/g,'');
+        if(d.length>1){ // colagem/autofill de vários dígitos
+          d.slice(0,4-i).split('').forEach((c,k)=>{boxes[i+k].value=c;});
+          _pinSync(group);
+          const nx=Math.min(i+d.length,3);
+          if(i+d.length>=4)_pinFocusNext(group);else boxes[nx].focus();
+          return;
+        }
+        b.value=d;_pinSync(group);
+        if(d){if(i<3)boxes[i+1].focus();else _pinFocusNext(group);}
+      });
+      b.addEventListener('keydown',e=>{
+        if(e.key==='Backspace'&&!b.value&&i>0){boxes[i-1].value='';boxes[i-1].focus();_pinSync(group);e.preventDefault();}
+        else if(e.key==='ArrowLeft'&&i>0){boxes[i-1].focus();e.preventDefault();}
+        else if(e.key==='ArrowRight'&&i<3){boxes[i+1].focus();e.preventDefault();}
+        else if(e.key==='Enter'){e.preventDefault();_pinFocusNext(group);}
+      });
+      b.addEventListener('focus',()=>b.select());
+    });
+    // pré-preenche se o hidden já tiver valor
+    const t=document.getElementById(group.dataset.target);
+    if(t&&t.value){t.value.slice(0,4).split('').forEach((c,k)=>boxes[k].value=c);_pinSync(group);}
+  });
+  document.querySelectorAll('.pin-show[data-for]').forEach(btn=>{
+    if(btn.dataset.ready)return;btn.dataset.ready='1';
+    btn.addEventListener('click',()=>{
+      const show=btn.dataset.on!=='1';btn.dataset.on=show?'1':'0';
+      btn.dataset.for.split(',').forEach(id=>{
+        document.querySelectorAll('.pin-boxes[data-target="'+id+'"] .pin-box').forEach(b=>b.type=show?'text':'password');
+      });
+      btn.querySelector('i').className='ti '+(show?'ti-eye-off':'ti-eye');
+      btn.querySelector('span').textContent=show?'Ocultar':'Mostrar';
+    });
+  });
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initPinBoxes);else initPinBoxes();
