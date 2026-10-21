@@ -26,13 +26,26 @@ function _syncNotifsToLocal(){try{localStorage.setItem('notif_cache',JSON.string
 function _loadNotifsFromLocal(){try{notifications=JSON.parse(localStorage.getItem('notif_cache')||'[]')}catch(e){notifications=[];}}
 function _unreadCount(){const read=_getReadIds();return notifications.filter(n=>!read.includes(n.id)).length}
 
+let _lastBadgeCount=null;
 function renderNotifBadge(){
   const badge=document.getElementById('notifBadge');if(!badge)return;
   const c=_unreadCount();
-  badge.textContent=c>99?'99+':c;
-  badge.className='notif-badge'+(c>0?' show':'');
-  const db2=document.getElementById('dtbBadge');
-  if(db2){db2.textContent=badge.textContent;db2.className=badge.className;}
+  const txt=c>99?'99+':String(c);
+  const cls='notif-badge'+(c>0?' show':'');
+  const aria=c>0?('Avisos, '+(c>99?'mais de 99':c)+(c===1?' não lido':' não lidos')):'Avisos';
+  const grew=_lastBadgeCount!==null&&c>_lastBadgeCount;
+  _lastBadgeCount=c;
+  [['notifBell','notifBadge'],['dtbNotifBtn','dtbBadge']].forEach(([bId,bdId])=>{
+    const b=document.getElementById(bdId);if(b){b.textContent=txt;b.className=cls;}
+    const btn=document.getElementById(bId);if(!btn)return;
+    btn.classList.toggle('has-unread',c>0);
+    btn.setAttribute('aria-label',aria);
+    if(grew&&c>0){
+      btn.classList.remove('nb-new');void btn.offsetWidth;btn.classList.add('nb-new');
+      clearTimeout(btn._nbT);btn._nbT=setTimeout(()=>btn.classList.remove('nb-new'),3000);
+    }
+  });
+  if(notifPanelOpen)_renderNotifHead();
 }
 
 function toggleNotifPanel(){
@@ -47,7 +60,7 @@ function toggleNotifPanel(){
     const topbar=document.getElementById('dTopbar');
     if(topbar&&!topbar.contains(panel))topbar.appendChild(panel);
     if(notifPanelOpen){
-      panel.style.cssText='display:block;position:absolute;top:52px;right:8px;width:320px;max-height:400px;overflow-y:auto;z-index:9999;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.35);background:#fff;animation:notifSlide .22s ease-out';
+      panel.style.cssText='display:block;position:absolute;top:64px;right:8px;width:380px;max-height:600px;overflow-y:auto;z-index:9999;border-radius:20px;box-shadow:0 18px 48px rgba(0,0,0,.35);background:#fff;animation:notifSlide .22s ease-out';
       renderNotifList();
     }else{
       panel.style.display='none';
@@ -64,23 +77,81 @@ function toggleNotifPanel(){
   }
 }
 
+// ─── Caixa de avisos v2 ───
+let _notifFilter='all';
+const _NTF_SVG={
+  edit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4"/><path d="M13.5 6.5l4 4"/></svg>',
+  route:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 19a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"/><path d="M19 7a2 2 0 1 0 0 -4a2 2 0 0 0 0 4z"/><path d="M11 19h5.5a3.5 3.5 0 0 0 0 -7h-8a3.5 3.5 0 0 1 0 -7h4.5"/></svg>',
+  posto:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 11h1a2 2 0 0 1 2 2v3a1.5 1.5 0 0 0 3 0v-7l-3 -3"/><path d="M4 20v-14a2 2 0 0 1 2 -2h6a2 2 0 0 1 2 2v14"/><path d="M3 20l12 0"/><path d="M18 7v1a1 1 0 0 0 1 1h1"/><path d="M4 11l10 0"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5l10 -10"/></svg>',
+  checks:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12l5 5l10 -10"/><path d="M2 12l5 5m5 -5l5 -5"/></svg>'
+};
+// Separa "Posto adicionado: Posto X - BR-135" em ação + detalhe e define o tipo visual
+function _notifParts(n){
+  const msg=String(n.msg||'');
+  const i=msg.indexOf(':');
+  const action=(i>0?msg.slice(0,i):msg).trim();
+  const detail=i>0?msg.slice(i+1).trim().replace(/\s+-\s+/g,' · '):'';
+  const a=action.toLowerCase();
+  let kind='edit';
+  if(a.startsWith('posto adicionado'))kind='add';
+  else if(a.startsWith('posto removido'))kind='rem';
+  else if(n.type==='new'||a.startsWith('nova rota'))kind='route';
+  else if(n.type==='alert')kind='rem';
+  return {action:action||'Atualização',detail,kind};
+}
+function _notifGroup(ts){
+  const d=Date.now()-(ts||0);
+  if(d<86400000)return 'Hoje';
+  if(d<7*86400000)return 'Últimos 7 dias';
+  if(d<30*86400000)return 'Últimos 30 dias';
+  return 'Mais antigos';
+}
+function setNotifFilter(f){_notifFilter=f;renderNotifList();}
+function _renderNotifHead(){
+  const head=document.getElementById('notifHead');if(!head)return;
+  const c=_unreadCount();
+  head.innerHTML=`<div class="ntf-top">
+      <div class="ntf-title-wrap"><span class="ntf-title">Avisos</span>${c>0?`<span class="ntf-chip">${c>99?'99+':c} ${c===1?'novo':'novos'}</span>`:''}</div>
+      <button class="ntf-readall" ${c>0?'':'disabled'} onclick="event.stopPropagation();markAllNotifRead()">${_NTF_SVG.checks}Marcar tudo como lido</button>
+    </div>
+    <div class="ntf-tabs" role="tablist">
+      <button role="tab" aria-selected="${_notifFilter==='all'}" class="ntf-tab${_notifFilter==='all'?' on':''}" onclick="event.stopPropagation();setNotifFilter('all')">Todos</button>
+      <button role="tab" aria-selected="${_notifFilter==='unread'}" class="ntf-tab${_notifFilter==='unread'?' on':''}" onclick="event.stopPropagation();setNotifFilter('unread')">Não lidos · ${c}</button>
+    </div>`;
+}
 function renderNotifList(){
+  _renderNotifHead();
   const el=document.getElementById('notifList');if(!el)return;
-  if(notifications.length===0){el.innerHTML='<div class="notif-empty">🔔<br>Nenhuma notificação ainda</div>';return;}
   const read=_getReadIds();
-  let h='';
-  notifications.forEach(n=>{
+  const list=notifications.filter(n=>_notifFilter==='all'||!read.includes(n.id));
+  if(list.length===0){
+    el.innerHTML=notifications.length===0
+      ?`<div class="ntf-empty"><div class="ntf-empty-ic ntf-k-edit">${_NTF_SVG.edit}</div><strong>Nenhum aviso ainda</strong><span>Você será avisado quando uma rota ou posto mudar.</span></div>`
+      :`<div class="ntf-empty"><div class="ntf-empty-ic ntf-k-add">${_NTF_SVG.check}</div><strong>Tudo em dia</strong><span>Nenhum aviso pendente.</span></div>`;
+    return;
+  }
+  let h='',lastGroup='';
+  list.forEach(n=>{
+    const g=_notifGroup(n.ts);
+    if(g!==lastGroup){h+=`<div class="ntf-group">${g}</div>`;lastGroup=g;}
     const isRead=read.includes(n.id);
-    const icon=n.type==='new'?'📍':n.type==='edit'?'✏️':'⛽';
-    const iconCls=n.type==='new'?'notif-icon-new':n.type==='edit'?'notif-icon-edit':'notif-icon-alert';
+    const p=_notifParts(n);
+    const icon=p.kind==='add'||p.kind==='rem'?_NTF_SVG.posto:p.kind==='route'?_NTF_SVG.route:_NTF_SVG.edit;
+    const sign=p.kind==='add'?'+':p.kind==='rem'?'−':'';
+    const route=n.route||'';
     const ago=_timeAgo(n.ts);
-    h+=`<div class="notif-item${isRead?'':' unread'}" onclick="event.stopPropagation();markNotifRead('${n.id}')">
-      <div class="notif-dot${isRead?' read':''}"></div>
-      <div class="notif-icon ${iconCls}">${icon}</div>
-      <div style="flex:1;min-width:0">
-        <div class="notif-text"><strong>${esc(n.route||'')}</strong> — ${esc(n.msg||'')}</div>
-        <div class="notif-time">${ago}</div>
-      </div></div>`;
+    const aria=route+': '+p.action+(p.detail?', '+p.detail:'')+(ago?', '+ago:'')+(isRead?'':', não lido');
+    h+=`<button class="ntf-item${isRead?'':' unread'}" aria-label="${esc(aria)}" onclick="event.stopPropagation();markNotifRead('${n.id}')">
+      <span class="ntf-ic ntf-k-${p.kind}">${icon}${sign?'<span class="ntf-sign"></span>':''}</span>
+      <span class="ntf-body">
+        <span class="ntf-route" title="${esc(route)}">${esc(route)}</span>
+        <span class="ntf-action">${esc(p.action)}</span>
+        ${p.detail?`<span class="ntf-detail">${esc(p.detail)}</span>`:''}
+        <span class="ntf-time">${esc(ago)}</span>
+      </span>
+      ${isRead?'':'<span class="ntf-dot"></span>'}
+    </button>`;
   });
   el.innerHTML=h;
 }
