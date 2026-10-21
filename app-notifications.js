@@ -20,8 +20,45 @@ function _maybeShowNative(notif){
   }).catch(()=>{});
 }
 
-function _getReadIds(){try{return JSON.parse(localStorage.getItem('notif_read')||'[]')}catch(e){return[]}}
-function _saveReadIds(ids){localStorage.setItem('notif_read',JSON.stringify(ids))}
+// ═══ LIDAS POR USUÁRIO ═══
+// Fonte da verdade: Firebase /notifRead/{uid}. O localStorage (chave por uid) é só
+// cache para o contador funcionar offline. Assim a leitura sobrevive a logout/login,
+// troca de aparelho, navegador x PWA e reinstalação do app.
+let _remoteReadIds=new Set(), _notifReadSynced=false;
+function _notifUid(){try{return (typeof firebase!=='undefined'&&firebase.auth().currentUser?.uid)||null}catch(e){return null}}
+function _readKey(){const u=_notifUid();return u?'notif_read_'+u:'notif_read'}
+function _getReadIds(){
+  let a=[];
+  try{
+    const k=_readKey();let raw=localStorage.getItem(k);
+    // Migração única: aproveita as lidas antigas (chave compartilhada) no 1º login do usuário
+    if(raw===null&&k!=='notif_read'){raw=localStorage.getItem('notif_read');if(raw!==null)localStorage.setItem(k,raw);}
+    a=JSON.parse(raw||'[]');
+  }catch(e){a=[];}
+  if(_remoteReadIds.size){const s=new Set(a);_remoteReadIds.forEach(i=>s.add(i));a=[...s];}
+  return a;
+}
+function _saveReadIds(ids){try{localStorage.setItem(_readKey(),JSON.stringify(ids.slice(-300)))}catch(e){}}
+function _pushReadRemote(ids){
+  const u=_notifUid();if(!db||!u||!ids||!ids.length)return;
+  const upd={},now=Date.now();
+  ids.forEach(id=>{id=String(id||'');if(id&&!id.startsWith('local_')&&!/[.#$\[\]\/]/.test(id)&&!_remoteReadIds.has(id))upd[id]=now;});
+  if(!Object.keys(upd).length)return;
+  Object.keys(upd).forEach(id=>_remoteReadIds.add(id));
+  db.ref('notifRead/'+u).update(upd).catch(e=>console.warn('notifRead save err:',e));
+}
+// Chamado pelo listener de /notifRead/{uid} (app-firebase.js)
+function _onRemoteRead(obj){
+  _remoteReadIds=new Set(Object.keys(obj||{}));
+  if(!_notifReadSynced){
+    _notifReadSynced=true;
+    // Sobe o que foi lido neste aparelho e ainda não está no Firebase (ex.: lido offline)
+    let local=[];try{local=JSON.parse(localStorage.getItem(_readKey())||'[]')}catch(e){}
+    _pushReadRemote(local);
+  }
+  renderNotifBadge();if(notifPanelOpen)renderNotifList();
+}
+function _resetRemoteRead(){_remoteReadIds=new Set();_notifReadSynced=false;}
 function _syncNotifsToLocal(){try{localStorage.setItem('notif_cache',JSON.stringify(notifications))}catch(e){}}
 function _loadNotifsFromLocal(){try{notifications=JSON.parse(localStorage.getItem('notif_cache')||'[]')}catch(e){notifications=[];}}
 function _unreadCount(){const read=_getReadIds();return notifications.filter(n=>!read.includes(n.id)).length}
@@ -159,11 +196,14 @@ function renderNotifList(){
 function markNotifRead(id){
   const read=_getReadIds();
   if(!read.includes(id)){read.push(id);_saveReadIds(read);}
+  _pushReadRemote([id]);
   renderNotifBadge();renderNotifList();
 }
 
 function markAllNotifRead(){
-  const ids=notifications.map(n=>n.id);_saveReadIds(ids);
+  const ids=notifications.map(n=>n.id);
+  _saveReadIds([...new Set([..._getReadIds(),...ids])]);
+  _pushReadRemote(ids);
   renderNotifBadge();renderNotifList();
 }
 

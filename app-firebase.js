@@ -109,12 +109,14 @@ function setSyncStatus(t,txt){const el=document.getElementById('syncBar');if(!el
 // Ligados só depois do onAuthStateChanged confirmar o usuário. Antes, as rules
 // (auth !== null) recusavam a leitura e o RTDB cancelava o listener para sempre —
 // por isso no 1º login aparecia "Erro Firebase — dados locais" até reabrir o app.
-let _dataListenersOn=false,_dataListenersAdmin=false;
+let _dataListenersOn=false,_dataListenersAdmin=false,_notifReadUid=null;
 const _DATA_PATHS=['rotogramas','motoristas','postos','informativos','notifications'];
 function _detachDataListeners(){
   if(!db)return;
   _DATA_PATHS.forEach(p=>{try{db.ref(p).off();}catch(e){}});
   try{db.ref('notifications').limitToLast(30).off();}catch(e){}
+  if(_notifReadUid){try{db.ref('notifRead/'+_notifReadUid).off();}catch(e){}_notifReadUid=null;}
+  if(typeof _resetRemoteRead==='function')_resetRemoteRead();
   _dataListenersOn=false;_dataListenersAdmin=false;
 }
 function _attachDataListeners(isAdmin){
@@ -165,5 +167,14 @@ function _attachDataListeners(isAdmin){
         });
       }
     },err=>{console.warn('Notif listener err:',err);});
+
+    // ═══ LIDAS DO USUÁRIO (persistem entre logins/aparelhos) ═══
+    const _nu=firebase.auth().currentUser;
+    if(_nu){
+      _notifReadUid=_nu.uid;
+      db.ref('notifRead/'+_nu.uid).on('value',snap=>{
+        if(typeof _onRemoteRead==='function')_onRemoteRead(snap.val()||{});
+      },err=>{console.warn('notifRead listener err:',err);});
+    }
 
 }
