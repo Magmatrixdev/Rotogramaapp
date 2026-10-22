@@ -48,7 +48,7 @@ function showInformativos(){
 function bnavGoInformativos(){
   const top=_navStack[_navStack.length-1];
   if(top==='screenInformativos'){updateBottomNav('Informativos');return;}
-  if(top!=='screenHome')showHome();
+  if(top!=='screenHome'){window._homeInstant=true;try{showHome();}finally{window._homeInstant=false;}}
   showInformativos();
 }
 
@@ -187,15 +187,23 @@ function renderInfSenhas(){
 
 function openInfSenha(k){
   if(INF_OPS[k])_infOp=k;
-  closeInfSenha();
+  document.querySelectorAll('.inf-senha-ov').forEach(o=>o.remove());
   const ov=document.createElement('div');
   ov.className='inf-sheet-ov inf-senha-ov';
   ov.onclick=e=>{if(e.target===ov)closeInfSenha();};
   ov.innerHTML=`<section class="inf-sheet inf-senha-sheet" role="dialog" aria-modal="true" aria-label="Senha da operadora"><div class="inf-sheet-grip"></div><div id="infSenhaBody"></div></section>`;
   document.body.appendChild(ov);
   _infRenderSenhaBody();
+  void ov.offsetWidth; // ponto de partida (folha fora da tela) antes de deslizar
+  ov.classList.add('is-open');
 }
-function closeInfSenha(){document.querySelector('.inf-senha-ov')?.remove();}
+// Fecha com slide para baixo; remove do DOM ao fim da animação
+function closeInfSenha(){
+  const ov=document.querySelector('.inf-senha-ov:not(.is-closing)');
+  if(!ov)return;
+  ov.classList.add('is-closing');ov.classList.remove('is-open');
+  setTimeout(()=>ov.remove(),300);
+}
 function setInfOp(k){if(INF_OPS[k]){_infOp=k;_infRenderSenhaBody();}}
 
 function _infRenderSenhaBody(){

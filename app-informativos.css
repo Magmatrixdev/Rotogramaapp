@@ -150,3 +150,12 @@
 
 /* desktop mode: overlay */
 body.desktop-mode #screenInformativos{position:absolute;z-index:10}
+
+/* pop-up da senha: slide de baixo para cima (abre) e de volta (fecha) */
+.inf-senha-ov{background:rgba(20,20,19,0);transition:background .28s ease}
+.inf-senha-ov.is-open{background:rgba(20,20,19,.55)}
+.inf-senha-ov .inf-sheet{transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1)}
+.inf-senha-ov.is-open .inf-sheet{transform:translateY(0)}
+.inf-senha-ov.is-closing{pointer-events:none}
+.inf-senha-ov.is-closing .inf-sheet{transition-duration:.24s;transition-timing-function:cubic-bezier(.4,0,1,1)}
+@media (prefers-reduced-motion: reduce){.inf-senha-ov,.inf-senha-ov .inf-sheet{transition:none}}

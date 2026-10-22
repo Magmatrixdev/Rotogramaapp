@@ -162,11 +162,12 @@ function navReset(id,setupFn){
 function showScreen(id){navReset(id);}
 function showDriverLogin(){navReset('screenDriverLogin');}
 
-// Volta suave para a Home (aba Rotas): a tela de cima (Postos, Informativos...)
-// some com fade + leve deslize e a Home desliza de -22% de volta para o lugar.
+// Volta para a Home (aba Rotas) com o mesmo slide do "voltar": a tela de cima
+// (Postos, Informativos...) desliza para a direita e a Home volta de -22% para o lugar.
 // Telas intermediárias da pilha são escondidas na hora (ficam por baixo).
 function _homeTransitionBack(homeEl,extra){
-  const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // _homeInstant: troca Postos↔Informativos passa pela Home sem animar (evita telas se cruzando)
+  const reduce=window._homeInstant||(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const topId=extra.length?extra[extra.length-1]:null;
   const topEl=topId?document.getElementById(topId):null;
   const ease='cubic-bezier(.4,0,.2,1)';
@@ -176,17 +177,16 @@ function _homeTransitionBack(homeEl,extra){
     if(el){el.classList.remove('active','behind');el.style.cssText='';el.style.visibility='hidden';}
   });
   if(topEl&&!reduce){
+    // mesmo slide do "voltar" (navPop): a tela de cima sai deslizando para a direita
     topEl.classList.remove('active','behind');
     topEl.style.zIndex='20';
     topEl.style.visibility='visible';
-    topEl.style.transform='translateX(0)';
-    topEl.style.opacity='1';
     topEl.style.pointerEvents='none';
-    requestAnimationFrame(()=>{
-      topEl.style.transition=`opacity ${NAV_DUR}ms ${ease}, transform ${NAV_DUR}ms ${ease}`;
-      topEl.style.opacity='0';
-      topEl.style.transform='translateX(12%)';
-    });
+    topEl.style.transition='none';
+    topEl.style.transform='translateX(0)';
+    void topEl.offsetWidth; // fixa o ponto de partida antes de animar
+    topEl.style.transition=`transform ${NAV_DUR}ms ${ease}`;
+    topEl.style.transform='translateX(100%)';
     setTimeout(()=>{
       if(topEl.classList.contains('active'))return; // usuário já voltou para essa aba
       topEl.style.cssText='';topEl.style.visibility='hidden';topEl.scrollTop=0;

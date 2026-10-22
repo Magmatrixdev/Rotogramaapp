@@ -116,7 +116,7 @@ function bnavGoRotas(){
 function bnavGoPostos(){
   const top=_navStack[_navStack.length-1];
   if(top==='screenPostos'){updateBottomNav('Postos');return;}
-  if(top!=='screenHome')showHome();
+  if(top!=='screenHome'){window._homeInstant=true;try{showHome();}finally{window._homeInstant=false;}}
   showPostos();
 }
 
