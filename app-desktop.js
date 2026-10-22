@@ -102,6 +102,7 @@ function dNavGo(t){
 function _dSyncNav(){
   const top=_navStack[_navStack.length-1];
   const cur=top==='screenPostos'?'postos':top==='screenInformativos'?'informativos':top==='screenHome'?'rotas':'';
+  document.body.classList.toggle('d-inf-on',cur==='informativos'); // troca as regiões da sidebar pelas dos informativos
   document.querySelectorAll('#dSidebar .dsb-nav').forEach(b=>{
     const on=b.dataset.nav===cur;b.classList.toggle('active',on);
     if(on)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');

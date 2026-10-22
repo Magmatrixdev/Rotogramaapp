@@ -82,7 +82,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script>
 <link rel="stylesheet" href="app.css?v=23">
 <link rel="stylesheet" href="app-postos.css?v=16">
-<link rel="stylesheet" href="app-informativos.css?v=7">
+<link rel="stylesheet" href="app-informativos.css?v=8">
 </head>
 <body>
 <!-- Botão alternância desktop/mobile — só visível em telas ≥ 1024px -->
@@ -178,7 +178,7 @@
   <button type="button" class="dsb-item dsb-nav active" data-nav="rotas" onclick="dNavGo('rotas')"><i class="ti ti-map-2" aria-hidden="true"></i>Rotas</button>
   <button type="button" class="dsb-item dsb-nav" data-nav="postos" onclick="dNavGo('postos')"><i class="ti ti-gas-station" aria-hidden="true"></i>Postos de abastecimento</button>
   <button type="button" class="dsb-item dsb-nav" data-nav="informativos" onclick="dNavGo('informativos')"><i class="ti ti-info-circle" aria-hidden="true"></i>Informativos</button>
-  <div class="dsb-section">Regiões</div>
+  <div class="dsb-section" id="dsbRegSec">Regiões</div>
   <button type="button" class="dsb-item active" data-region="all" onclick="dSidebarFilter(this,'all')"><span class="dsb-dot" aria-hidden="true"></span>Todas as rotas<span class="dsb-count" id="dsbCountAll">—</span></button>
   <button type="button" class="dsb-item" data-region="Centro-Oeste" onclick="dSidebarFilter(this,'Centro-Oeste')"><span class="dsb-dot" aria-hidden="true"></span>Centro-Oeste<span class="dsb-count" id="dsbCountCO">—</span></button>
   <button type="button" class="dsb-item" data-region="Nordeste" onclick="dSidebarFilter(this,'Nordeste')"><span class="dsb-dot" aria-hidden="true"></span>Nordeste<span class="dsb-count" id="dsbCountNE">—</span></button>
@@ -186,6 +186,7 @@
   <button type="button" class="dsb-item" data-region="Sul" onclick="dSidebarFilter(this,'Sul')"><span class="dsb-dot" aria-hidden="true"></span>Sul<span class="dsb-count" id="dsbCountSU">—</span></button>
   <button type="button" class="dsb-item" data-region="Norte" onclick="dSidebarFilter(this,'Norte')"><span class="dsb-dot" aria-hidden="true"></span>Norte<span class="dsb-count" id="dsbCountNO">—</span></button>
   <button type="button" class="dsb-item" data-region="Centro-Norte" onclick="dSidebarFilter(this,'Centro-Norte')"><span class="dsb-dot" aria-hidden="true"></span>Centro-Norte<span class="dsb-count" id="dsbCountCN">—</span></button>
+  <div id="dsbInfRegions"></div>
   <div class="dsb-footer" id="dsbFooter">Sincronizando...</div>
 </div>
 <div class="d-content">
@@ -287,15 +288,16 @@
   <div class="editor-scroll" id="editorContent"></div>
   <div class="editor-save"><button class="cancel" onclick="cancelEdit()">Cancelar</button><button class="save" onclick="saveRoute()">Salvar Rota</button></div>
 </div>
-</div><!-- /.d-content -->
-</div><!-- /.d-body-row -->
-
-
 
 <!-- ═══ INFORMATIVOS ═══ -->
 <div class="screen" id="screenInformativos">
   <div id="informativosList"></div>
 </div>
+</div><!-- /.d-content -->
+</div><!-- /.d-body-row -->
+
+
+
 
 <!-- ═══ BOTTOM NAV ═══ -->
 <div id="bottomNav" style="display:none">
@@ -313,7 +315,7 @@
   </button>
 </div>
 
-<script src="app-config.js?v=83"></script>
+<script src="app-config.js?v=84"></script>
 <script src="app-state.js?v=81"></script>
 <script src="app-crypto.js?v=81"></script>
 <script src="app-firebase.js?v=81"></script>
@@ -322,12 +324,12 @@
 <script src="app-render.js?v=81"></script>
 <script src="app-admin.js?v=81"></script>
 <script src="app-notifications.js?v=81"></script>
-<script src="app-desktop.js?v=81"></script>
+<script src="app-desktop.js?v=84"></script>
 <script src="app-editor.js?v=81"></script>
 <script src="app-utils.js?v=81"></script>
 <script src="app-pwa.js?v=81"></script>
 <script src="app-postos.js?v=81"></script>
-<script src="app-informativos.js?v=81"></script>
+<script src="app-informativos.js?v=84"></script>
 <script src="app-main.js?v=81"></script>
 
 </html>

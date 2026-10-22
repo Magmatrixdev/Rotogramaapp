@@ -159,3 +159,80 @@ body.desktop-mode #screenInformativos{position:absolute;z-index:10}
 .inf-senha-ov.is-closing{pointer-events:none}
 .inf-senha-ov.is-closing .inf-sheet{transition-duration:.24s;transition-timing-function:cubic-bezier(.4,0,1,1)}
 @media (prefers-reduced-motion: reduce){.inf-senha-ov,.inf-senha-ov .inf-sheet{transition:none}}
+
+/* ═══════════════════════════════════════════════
+   INFORMATIVOS WEB (desktop-mode) — mockup aprovado "Informativos Web — Tela modernizada" (22/10/2026)
+   ═══════════════════════════════════════════════ */
+/* barra lateral: regiões dos informativos substituem as das rotas com a tela aberta */
+#dsbInfRegions{display:none}
+body.desktop-mode.d-inf-on #dsbInfRegions{display:flex;flex-direction:column;gap:2px}
+body.desktop-mode.d-inf-on #dsbRegSec,
+body.desktop-mode.d-inf-on #dSidebar .dsb-item[data-region]{display:none!important}
+#dSidebar .dsb-lbl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+body.desktop-mode #screenInformativos{background:#f4f3f1}
+#informativosList .inf-main.infw{padding:20px 24px 48px;display:flex;flex-direction:column;gap:16px}
+.infw>*{max-width:1180px;width:100%;box-sizing:border-box}
+/* cabeçalho */
+.infw-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+#informativosList .infw-crumb{font:700 12px 'Barlow',sans-serif;letter-spacing:1.2px;color:#5e5e5e;text-transform:uppercase}
+#informativosList .infw-title{margin:3px 0 0;font:800 34px/1 'Barlow Condensed',sans-serif;text-transform:uppercase;color:#141414}
+.infw-actions{display:flex;gap:8px;flex-wrap:wrap}
+.infw-search{height:42px;width:280px;max-width:100%;box-sizing:border-box;border:1px solid #dad8d3;background:#fff;border-radius:12px;display:flex;align-items:center;gap:8px;padding:0 12px;color:#5e5e5e;cursor:text}
+.infw-search:focus-within{border-color:#141414}
+#informativosList .infw-search input{border:0;outline:0;flex:1;min-width:0;height:100%;font:500 15px 'Barlow',sans-serif;background:transparent;color:#141414}
+#informativosList .infw-new{height:42px;padding:0 16px;border-radius:12px;border:0;background:#d91f26;color:#fff;font:700 14px 'Barlow',sans-serif;align-items:center;gap:7px;cursor:pointer;box-shadow:0 4px 12px rgba(217,31,38,.25)}
+#informativosList .infw-new:hover{background:#b8191f}
+/* faixa escura: resumo + senhas */
+.infw-band{background:#111214;color:#fff;border-radius:20px;padding:20px 22px;display:flex;flex-wrap:wrap;gap:18px}
+.infw-sum{flex:1 1 220px;display:flex;flex-direction:column;justify-content:space-between;gap:14px}
+#informativosList .infw-band-l{font:700 11px 'Barlow',sans-serif;letter-spacing:1.5px;color:#9ea1a8}
+#informativosList .infw-sum-t{margin-top:4px;font:700 22px/1.1 'Barlow Condensed',sans-serif;color:#fff}
+.infw-stats{display:flex;gap:8px}
+.infw .inf-stat{background:#1c1e22;border:0;border-radius:14px;padding:10px 14px;min-width:86px}
+.infw .inf-stat-n{font-size:28px;color:#fff}
+.infw .inf-stat-l{font-size:11px;color:#9ea1a8}
+.infw-opsbox{flex:3 1 520px;min-width:0}
+.infw-opsbox .infw-band-l{margin-bottom:10px}
+.infw-ops{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+#informativosList .infw-op{background:#1c1e22;border:1px solid #2c2e33;border-radius:14px;padding:12px;display:flex;flex-direction:column;align-items:stretch;gap:10px;color:#fff;text-align:left;cursor:pointer;min-width:0;font-family:'Barlow',sans-serif;transition:background .15s,border-color .15s}
+#informativosList .infw-op:hover{background:#26282d;border-color:#3a3c42}
+#informativosList .infw-op:focus-visible{outline:2px solid #fe2627;outline-offset:2px}
+.infw-op-top{display:flex;align-items:center;gap:10px}
+.infw-op .inf-op-ic{width:32px;height:32px}
+.infw-op-n{font:800 20px/1 'Barlow Condensed',sans-serif}
+.infw-op-r{font-size:13px;color:#c9cbd0;line-height:1.35;flex:1}
+.infw-op-go{display:flex;align-items:center;justify-content:space-between;font-size:12px;font-weight:700;letter-spacing:.4px}
+/* filtros */
+.infw-filters{display:flex;flex-wrap:wrap;align-items:center;gap:7px}
+#informativosList .infw-flabel{font:700 13px 'Barlow',sans-serif;letter-spacing:1.2px;color:#5e5e5e;margin-right:6px}
+.infw .inf-filters{flex-wrap:wrap;overflow:visible;padding:0}
+.infw .inf-chip{border-color:#dad8d3;color:#4a4846}
+.infw .inf-chip:hover{border-color:#9a9894}
+.infw .inf-chip.active{background:#111214;border-color:#111214;color:#fff}
+/* grade de cards */
+.infw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px;align-items:start}
+.infw-grid .inf-card{margin:0;transition:box-shadow .15s}
+.infw-grid .inf-card:hover{box-shadow:0 8px 24px rgba(40,38,34,.10)}
+.infw-grid .inf-empty{grid-column:1/-1}
+.infw .inf-photo{height:160px}
+.infw .inf-loc:hover{background:#f4f4f2}
+.infw .inf-del:hover{background:#f4f4f2;color:#1c1c1c}
+.infw .inf-photo-adm .inf-del:hover{background:#fff;color:#1c1c1c}
+@media (max-width:1100px){.infw-ops{grid-template-columns:1fr}}
+
+/* janelas no centro da tela (senha e formulário) em vez de folha inferior */
+body.desktop-mode .inf-sheet-ov{justify-content:center;align-items:center;padding:24px}
+body.desktop-mode .inf-sheet{border-radius:22px;max-height:calc(100vh - 48px);padding:20px 24px 22px;box-shadow:0 24px 70px rgba(0,0,0,.35)}
+body.desktop-mode .inf-sheet-grip{display:none}
+body.desktop-mode .inf-senha-sheet{max-width:580px}
+body.desktop-mode .inf-senha-ov .inf-sheet{transform:translateY(16px) scale(.97);opacity:0;transition:transform .22s cubic-bezier(.32,.72,0,1),opacity .18s ease}
+body.desktop-mode .inf-senha-ov.is-open .inf-sheet{transform:none;opacity:1}
+body.desktop-mode form.inf-sheet{max-width:720px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:14px;align-content:start}
+body.desktop-mode form.inf-sheet>.inf-sheet-head,
+body.desktop-mode form.inf-sheet>.inf-fld--full,
+body.desktop-mode form.inf-sheet>.inf-sheet-err,
+body.desktop-mode form.inf-sheet>.inf-sheet-save{grid-column:1/-1}
+body.desktop-mode form.inf-sheet .inf-fld textarea{min-height:110px;resize:vertical}
+body.desktop-mode .inf-sheet-save{justify-self:end;width:auto;padding:0 28px}
+body.desktop-mode .inf-sheet-x:hover{background:#e8e6e1}

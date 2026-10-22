@@ -6,6 +6,7 @@
 var informativos = {};
 var _infFilter = 'Todas';
 var _infOp = 'truck';
+var _infSearch = ''; // busca (versão web)
 
 const INF_PAY_OPTS = ['Cartão Rede Frota','Truckpag','Shell Experts'];
 const INF_OPS = {
@@ -77,11 +78,16 @@ function _infMapUrl(loc){
 function _infNl2br(s){return esc(s).replace(/\n/g,'<br>');}
 
 // ─── render ───
-function renderInformativos(){
-  const el=document.getElementById('informativosList');
-  if(!el)return;
-  if(!el.querySelector('.inf-main')){
-    el.innerHTML=`<header class="inf-hero">
+// Celular: hero + lista (mockup "Avisos — Senhas").
+// Web (desktop-mode): cabeçalho + faixa escura (resumo/senhas) + grade de cards
+// e regiões na barra lateral (mockup "Informativos Web — Tela modernizada", 22/10/2026).
+_INF_SVG.search='<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>';
+_INF_SVG.chev='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
+const _INF_OP_SUM={truck:'Senha = 4 primeiros dígitos do CPF',shell:'Matrícula e senha = 6 primeiros dígitos, pulando o 0 inicial',frota:'Cartão virtual · placa, CPF e senha (4 últimos dígitos)'};
+function _infIsWeb(){return typeof IS_DESKTOP==='function'&&!!IS_DESKTOP();}
+
+function _infMobileShell(){
+  return `<header class="inf-hero">
       <svg class="inf-hero-road" width="390" height="200" viewBox="0 0 390 200" aria-hidden="true"><path d="M250 200 L330 0" stroke="#2f2f2d" stroke-width="70"/><path d="M290 200 L370 0" stroke="#fe2627" stroke-width="3" stroke-dasharray="16 14"/></svg>
       <div class="inf-hero-row">
         <button class="inf-hero-back" onclick="bnavGoRotas()" aria-label="Voltar">${_INF_SVG.back}</button>
@@ -100,10 +106,41 @@ function renderInformativos(){
       <div class="inf-filters" id="infFilters"></div>
       <div id="infCards"></div>
     </main>`;
+}
+
+function _infWebShell(){
+  return `<main class="inf-main infw">
+    <div class="infw-head">
+      <div class="infw-head-txt"><div class="infw-crumb" id="infwCrumb"></div><h1 class="infw-title">Informativos de postos</h1></div>
+      <div class="infw-actions">
+        <label class="infw-search">${_INF_SVG.search}<input id="infwSearch" type="search" placeholder="Buscar posto ou região" aria-label="Buscar posto ou região" autocomplete="off" value="${esc(_infSearch)}" oninput="setInfSearch(this.value)"></label>
+        <button class="infw-new" id="infAddBtn" onclick="showAddInformativoForm()">${_INF_SVG.plus}<span>Novo informativo</span></button>
+      </div>
+    </div>
+    <section class="infw-band">
+      <div class="infw-sum">
+        <div><div class="infw-band-l">RESUMO</div><div class="infw-sum-t">O que o motorista precisa saber antes de parar</div></div>
+        <div class="infw-stats" id="infStats"></div>
+      </div>
+      <div class="infw-opsbox"><div class="infw-band-l">SENHAS POR OPERADORA · CLIQUE PARA VER COMO MONTAR</div><div id="infSenhas"></div></div>
+    </section>
+    <div class="infw-filters"><span class="infw-flabel">POSTOS POR REGIÃO</span><div class="inf-filters" id="infFilters"></div></div>
+    <div class="infw-grid" id="infCards"></div>
+  </main>`;
+}
+
+function renderInformativos(){
+  const el=document.getElementById('informativosList');
+  if(!el)return;
+  const web=_infIsWeb(), mode=web?'w':'m';
+  if(el.dataset.mode!==mode||!el.querySelector('.inf-main')){
+    el.dataset.mode=mode;
+    el.innerHTML=web?_infWebShell():_infMobileShell();
   }
   const items=_infList();
   const regions=_infRegions(items);
   if(_infFilter!=='Todas'&&regions.indexOf(_infFilter)<0)_infFilter='Todas';
+  const q=web?_infNorm(_infSearch):'';
 
   document.getElementById('infStats').innerHTML=
     `<div class="inf-stat"><div class="inf-stat-n">${items.length}</div><div class="inf-stat-l">POSTOS</div></div>
@@ -115,14 +152,31 @@ function renderInformativos(){
   document.getElementById('infFilters').innerHTML=['Todas'].concat(regions).map(r=>
     `<button class="inf-chip${r===_infFilter?' active':''}" data-r="${esc(r)}" onclick="setInfFilter(this.dataset.r)">${esc(r)}</button>`).join('');
 
-  const cards=items.filter(it=>_infFilter==='Todas'||(it.regiao||'').trim()===_infFilter);
+  const cards=items.filter(it=>(_infFilter==='Todas'||(it.regiao||'').trim()===_infFilter)
+    &&(!q||_infNorm([it.posto,it.regiao,it.descricao,it.formaPagamento].join(' ')).indexOf(q)>=0));
   document.getElementById('infCards').innerHTML=cards.length
     ?cards.map(buildInformativoCard).join('')
-    :`<div class="inf-empty">${items.length?'Nenhum informativo nesta região.':'Nenhum informativo publicado.'}</div>`;
+    :`<div class="inf-empty">${q?'Nenhum informativo encontrado para a busca.':(items.length?'Nenhum informativo nesta região.':'Nenhum informativo publicado.')}</div>`;
 
+  if(web){
+    const cr=document.getElementById('infwCrumb');
+    if(cr)cr.textContent='Avisos · Abastecimento · '+(_infFilter==='Todas'?'Todas as regiões':_infFilter)+' · '+cards.length+(cards.length===1?' posto':' postos');
+  }
+  _infRenderSidebar(items,regions);
   renderInfSenhas();
   if(typeof renderAdminInformativos==='function')renderAdminInformativos();
 }
+
+// regiões dos informativos na barra lateral do desktop (aparece só com a tela aberta — classe d-inf-on)
+function _infRenderSidebar(items,regions){
+  const box=document.getElementById('dsbInfRegions');if(!box)return;
+  const cnt=r=>items.filter(it=>(it.regiao||'').trim()===r).length;
+  const row=(r,label,n)=>{const on=r===_infFilter;
+    return `<button type="button" class="dsb-item${on?' active':''}${n?'':' zero'}" data-infreg="${esc(r)}" onclick="setInfFilter(this.dataset.infreg)"${on?' aria-current="true"':''}><span class="dsb-dot" aria-hidden="true"></span><span class="dsb-lbl">${esc(label)}</span><span class="dsb-count">${n}</span></button>`;};
+  box.innerHTML='<div class="dsb-section">Regiões dos informativos</div>'+row('Todas','Todos os informativos',items.length)+regions.map(r=>row(r,r,cnt(r))).join('');
+}
+
+function setInfSearch(v){_infSearch=String(v||'');renderInformativos();}
 
 // ─── fotos do posto (mesma base da tela de Postos: avulsos → paradas das rotas) ───
 var _infFotoCache={};
@@ -179,6 +233,13 @@ function setInfFilter(r){_infFilter=r;renderInformativos();}
 function renderInfSenhas(){
   const el=document.getElementById('infSenhas');
   if(!el)return;
+  if(_infIsWeb()){
+    el.innerHTML=`<div class="infw-ops">${Object.keys(INF_OPS).map(k=>{
+      const o=INF_OPS[k];
+      return `<button class="infw-op" onclick="openInfSenha('${k}')"><span class="infw-op-top"><span class="inf-op-ic" style="background:${o.color}">${_INF_SVG.lock}</span><span class="infw-op-n">${o.name}</span></span><span class="infw-op-r">${_INF_OP_SUM[k]||o.rule}</span><span class="infw-op-go">VER DETALHES${_INF_SVG.chev}</span></button>`;
+    }).join('')}</div>`;
+    return;
+  }
   el.innerHTML=`<div class="inf-ops">${Object.keys(INF_OPS).map(k=>{
     const o=INF_OPS[k];
     return `<button class="inf-op" onclick="openInfSenha('${k}')"><span class="inf-op-ic" style="background:${o.color}">${_INF_SVG.lock}</span><span class="inf-op-n">${o.name}</span></button>`;
@@ -261,7 +322,7 @@ function showAddInformativoForm(editId){
     <label class="inf-fld stop-ac-wrap"><span>POSTO</span><input id="ifPosto" value="${v('posto')}" maxlength="200" placeholder="Digite o nome — sugestões dos postos cadastrados" autocomplete="off" oninput="_infValidate();_infPostoInput(this.value)" onblur="setTimeout(_infCloseAC,200)"><div class="stop-ac-drop" id="ifPostoAC"></div></label>
     <label class="inf-fld"><span>LOCALIZAÇÃO</span><input id="ifLocalizacao" value="${v('localizacao')}" maxlength="500" placeholder="Endereço ou link do Google Maps"></label>
     <label class="inf-fld"><span>FORMA DE PAGAMENTO</span><select id="ifPagamento">${INF_PAY_OPTS.map(p=>`<option value="${p}"${cur.formaPagamento===p?' selected':''}>${p}</option>`).join('')}</select></label>
-    <label class="inf-fld"><span>DESCRIÇÃO</span><textarea id="ifDescricao" rows="3" maxlength="4000" placeholder="Ex.: difícil achar vaga para pernoite, tem lavagem e borracharia…">${v('descricao')}</textarea></label>
+    <label class="inf-fld inf-fld--full"><span>DESCRIÇÃO</span><textarea id="ifDescricao" rows="3" maxlength="4000" placeholder="Ex.: difícil achar vaga para pernoite, tem lavagem e borracharia…">${v('descricao')}</textarea></label>
     <div class="inf-sheet-err" id="ifError" style="display:none"></div>
     <button type="submit" class="inf-sheet-save" id="ifSave" disabled>${_infEditId?'SALVAR ALTERAÇÕES':'PUBLICAR INFORMATIVO'}</button>
   </form>`;
@@ -296,7 +357,7 @@ function _infPickPosto(i){
   document.getElementById('ifDescricao')?.focus();
 }
 
-function closeInfSheet(){document.querySelector('.inf-sheet-ov')?.remove();}
+function closeInfSheet(){document.querySelector('.inf-sheet-ov:not(.inf-senha-ov)')?.remove();}
 
 function _infValidate(){
   const ok=!!((document.getElementById('ifRegiao')?.value||'').trim()&&(document.getElementById('ifPosto')?.value||'').trim());
@@ -366,3 +427,10 @@ function deleteInformativo(id){
   db.ref('informativos/'+id).remove()
     .catch(e=>{alert('Erro ao excluir: '+((e&&e.message)||e));});
 }
+
+// Esc fecha a janela aberta (senha ou formulário) — útil no computador
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Escape')return;
+  if(document.querySelector('.inf-senha-ov:not(.is-closing)')){closeInfSenha();return;}
+  if(document.querySelector('.inf-sheet-ov:not(.inf-senha-ov)'))closeInfSheet();
+});
