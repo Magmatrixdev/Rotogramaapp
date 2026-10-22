@@ -1,4 +1,4 @@
-const CACHE = 'rotograma-v15';
+const CACHE = 'rotograma-v16';
 const STATIC = [
   './manifest.json',
   './icon-192.png',
@@ -89,6 +89,19 @@ self.addEventListener('fetch', e => {
   // só cai pro cache se estiver offline). Evita ficar preso em versão
   // antiga de app-*.js mesmo depois de bump de APP_VERSION + hard refresh,
   // já que o Service Worker intercepta o fetch antes do cache HTTP do navegador.
+  // JS e CSS versionados (?v=N): cache-first. O ?v muda a cada deploy, então a URL
+  // nova nunca está no cache e vem da rede; a mesma versão abre instantânea
+  // (antes eram ~19 idas à rede a cada abertura do app).
+  if ((p.endsWith('.js') || p.endsWith('.css')) && url.searchParams.has('v')) {
+    e.respondWith(
+      caches.match(e.request).then(cached => cached || fetch(e.request).then(res => {
+        if (res.ok) caches.open(CACHE).then(c => c.put(e.request, res.clone()));
+        return res;
+      })).catch(() => new Response('Offline', { status: 503, statusText: 'Service Unavailable' }))
+    );
+    return;
+  }
+
   if (p.endsWith('.js') || p.endsWith('.css')) {
     e.respondWith(
       fetch(e.request, { cache: 'no-cache' }).then(res => {

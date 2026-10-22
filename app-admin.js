@@ -479,7 +479,7 @@ function _adminPostoCard(p,actionsHtml,mapsHtml){
   let thumbHtml;
   if(allFotos.length>0){
     const badge=allFotos.length>1?`<div class="ap-photo-badge"><i class="ti ti-photo" aria-hidden="true"></i>${allFotos.length}</div>`:'';
-    thumbHtml=`<img class="ap-thumb-img" src="${allFotos[0]}" alt="${esc(p.nome)}">${badge}`;
+    thumbHtml=`<img class="ap-thumb-img" src="${allFotos[0]}" loading="lazy" decoding="async" alt="${esc(p.nome)}">${badge}`;
   }else{
     thumbHtml=`<div class="ap-thumb-icon"><i class="ti ti-gas-station" aria-hidden="true"></i></div>`;
   }

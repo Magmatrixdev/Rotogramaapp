@@ -44,11 +44,46 @@ function getFotosByNome(nome){
 
 // ─── Firebase listener (lazy) ───
 function initPostosListener(){
-  if(!db)return;
-  db.ref('postos').on('value',snap=>{
-    postosAvulsos=snap.val()||{};
-    renderPostosList(); // sempre re-renderiza; seguro mesmo com tela oculta
+  // O listener de /postos já é ligado em _attachDataListeners (app-firebase.js).
+  // Um segundo listener aqui duplicava o download e os redesenhos da lista.
+}
+// Só vale redesenhar a lista (e recriar as <img>) com a tela de Postos aberta
+function _postosVisivel(){
+  return typeof _navStack!=='undefined'&&_navStack[_navStack.length-1]==='screenPostos';
+}
+
+// ─── compressão de foto antes do upload ───
+// Fotos do celular chegam com 3–8 MB; reduz para no máx. 1600 px em JPEG 80%
+// (~150–400 KB). Se algo falhar, envia o arquivo original.
+const _FOTO_MAX=1600,_FOTO_Q=0.8;
+const _FOTO_META={contentType:'image/jpeg',cacheControl:'public,max-age=31536000'};
+function _comprimirFoto(file){
+  return new Promise(resolve=>{
+    try{
+      if(!file||!/^image\//.test(file.type)||/gif|svg/.test(file.type)){resolve(file);return;}
+      const url=URL.createObjectURL(file);
+      const img=new Image();
+      img.onload=()=>{
+        try{
+          let w=img.naturalWidth,h=img.naturalHeight;
+          const k=Math.min(1,_FOTO_MAX/Math.max(w,h));
+          w=Math.round(w*k);h=Math.round(h*k);
+          const c=document.createElement('canvas');c.width=w;c.height=h;
+          const ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);ctx.drawImage(img,0,0,w,h);
+          URL.revokeObjectURL(url);
+          c.toBlob(b=>resolve(b&&b.size<file.size?b:file),'image/jpeg',_FOTO_Q);
+        }catch(e){URL.revokeObjectURL(url);resolve(file);}
+      };
+      img.onerror=()=>{URL.revokeObjectURL(url);resolve(file);};
+      img.src=url;
+    }catch(e){resolve(file);}
   });
+}
+async function _uploadFoto(ref,file){
+  const blob=await _comprimirFoto(file);
+  const meta=blob===file?{cacheControl:_FOTO_META.cacheControl}:_FOTO_META;
+  const snap=await ref.put(blob,meta);
+  return snap.ref.getDownloadURL();
 }
 
 // ─── navegação ───
@@ -59,8 +94,8 @@ function showPostos(){
   // Reseta scroll do container interno para garantir que cards com foto (topo da lista) fiquem visíveis
   const _resetListScroll=()=>{const l=document.querySelector('#screenPostos .pst-main');if(l)l.scrollTop=0;};
   _resetListScroll();
-  // Re-render garantido após Firebase responder (async) — cobre casos de cache frio
-  setTimeout(()=>{renderPostosList();_resetListScroll();},600);
+  // Sem re-render de 600 ms: o listener de /postos redesenha sozinho quando os
+  // dados chegam e a tela está aberta (evita recriar todas as fotos 2x)
 }
 
 // ─── bottom nav ───
@@ -218,7 +253,7 @@ function buildPostoCard(p){
 
   const foto=fotos.length
     ?`<div class="pst-photo">
-        <img src="${_pstEsc(fotos[0])}" loading="lazy" alt="${_pstEsc(p.nome)}" onclick="showPostoGaleria('${gk}',0)">
+        <img src="${_pstEsc(fotos[0])}" loading="lazy" decoding="async" alt="${_pstEsc(p.nome)}" onclick="showPostoGaleria('${gk}',0)">
         <span class="pst-pill pst-pill--onphoto" style="color:${cc.fg}"><span class="pst-pill-dot" style="background:${cc.dot}"></span>${_pstEsc(lbl)}</span>
         <button class="pst-fotos-btn" onclick="showPostoGaleria('${gk}',0)" aria-label="Ver fotos"><i class="ti ti-camera" aria-hidden="true"></i>${fotos.length===1?'1 foto':fotos.length+' fotos'}</button>
       </div>`:'';
@@ -375,7 +410,7 @@ async function savePostoAvulso(){
     try{
       const uploads=pfSelectedFiles.map((file,idx)=>{
         const ref=storage.ref('postos/'+id+'/foto_'+(idx+1));
-        return ref.put(file).then(snap=>snap.ref.getDownloadURL());
+        return _uploadFoto(ref,file);
       });
       posto.fotos=await Promise.all(uploads);
     }catch(e){
@@ -471,7 +506,7 @@ async function pfHandlePhotosEdit(postoId,input){
   try{
     const uploads=files.map((file,idx)=>{
       const ref=storage.ref('postos/'+postoId+'/foto_'+(existentes+idx+1)+'_'+Date.now());
-      return ref.put(file).then(snap=>snap.ref.getDownloadURL());
+      return _uploadFoto(ref,file);
     });
     const newUrls=await Promise.all(uploads);
     const updFotos=[...(posto.fotos||[]),...newUrls];

@@ -37,9 +37,11 @@ function initFirebase(){
         if(typeof showToast==='function')showToast('Sessão expirada por inatividade. Faça login novamente.','#c2410c');
         return;
       }
-      // Verifica claim admin — forceRefresh=true garante que claims atualizados
-      // (setados via Admin SDK/Cloud Function) sejam refletidos mesmo em sessões ativas
-      const tok=await user.getIdTokenResult(true).catch(()=>null);
+      // Verifica claim admin com o token em cache (sem ida ao servidor). Só força a
+      // renovação se o app espera admin e o claim não veio — antes o refresh forçado
+      // atrasava a ligação dos listeners de rotas/informativos em toda abertura.
+      let tok=await user.getIdTokenResult().catch(()=>null);
+      if(!tok?.claims?.admin&&adminMode){tok=await user.getIdTokenResult(true).catch(()=>tok);}
       if(tok?.claims?.admin){
         adminMode=true; // já setado em doAdminLogin, mas garante aqui
         _attachDataListeners(true);
@@ -146,7 +148,7 @@ function _attachDataListeners(isAdmin){
     });
 
     }
-    db.ref('postos').on('value',snap=>{postosAvulsos=snap.val()||{};if(typeof renderPostosList==='function')renderPostosList();});
+    db.ref('postos').on('value',snap=>{postosAvulsos=snap.val()||{};if(typeof renderPostosList==='function'&&(typeof _postosVisivel!=='function'||_postosVisivel()))renderPostosList();});
     db.ref('informativos').on('value',snap=>{informativos=snap.val()||{};if(typeof renderInformativos==='function')renderInformativos();if(typeof renderHomeInf==='function')renderHomeInf();});
 
     // ═══ NOTIFICATIONS LISTENER ═══
