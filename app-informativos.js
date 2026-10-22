@@ -9,11 +9,11 @@ var _infOp = 'truck';
 
 const INF_PAY_OPTS = ['Cartão Rede Frota','Truckpag','Shell Experts'];
 const INF_OPS = {
-  truck:{name:'Truckpag',color:'#1a6fb5',tint:'#e7f0f9',rule:'4 primeiros dígitos do CPF',pass:'0123',hint:'dígitos 1 a 4',pick:[0,1,2,3],skip:[],label:'SENHA'},
-  shell:{name:'Shell Experts',color:'#b5651d',tint:'#fbeee2',rule:'6 primeiros dígitos, pulando o zero',pass:'123456',hint:'pula o 0 → dígitos 2 a 7',pick:[1,2,3,4,5,6],skip:[0],label:'MATRÍCULA E SENHA',
+  truck:{name:'Truckpag',color:'#1f8a3d',tint:'#e6f3ea',rule:'4 primeiros dígitos do CPF',pass:'0123',hint:'dígitos 1 a 4',pick:[0,1,2,3],skip:[],label:'SENHA'},
+  shell:{name:'Shell Experts',color:'#c62828',tint:'#fdecea',rule:'6 primeiros dígitos, pulando o zero',pass:'123456',hint:'pula o 0 → dígitos 2 a 7',pick:[1,2,3,4,5,6],skip:[0],label:'MATRÍCULA E SENHA',
     need:['Matrícula','Senha'],note:'Matrícula e senha são o <strong>mesmo número</strong>.',
     warn:'Se o <strong>primeiro dígito</strong> do CPF for <strong>0</strong>, ele é pulado. Se o CPF não começa com 0, use os 6 primeiros normalmente. Vale para a matrícula e para a senha.'},
-  frota:{name:'Rede Frota',color:'#1f8a3d',tint:'#e6f3ea',rule:'4 últimos dígitos do CPF',pass:'7890',hint:'dígitos 8 a 11',pick:[7,8,9,10],skip:[],label:'SENHA',
+  frota:{name:'Rede Frota',color:'#5f6368',tint:'#eeeff0',rule:'4 últimos dígitos do CPF',pass:'7890',hint:'dígitos 8 a 11',pick:[7,8,9,10],skip:[],label:'SENHA',
     virtual:true,need:['Placa do veículo','CPF','Senha']}
 };
 
@@ -63,9 +63,9 @@ function _infRegions(items){
 }
 function _infPayColor(p){
   const s=(p||'').toLowerCase();
-  if(s.indexOf('frota')>=0)return '#1f8a3d';
-  if(s.indexOf('truck')>=0)return '#1a6fb5';
-  if(s.indexOf('shell')>=0)return '#b5651d';
+  if(s.indexOf('frota')>=0)return '#5f6368';
+  if(s.indexOf('truck')>=0)return '#1f8a3d';
+  if(s.indexOf('shell')>=0)return '#c62828';
   return '#8a8886';
 }
 function _infIsAdmin(){return !!(adminMode&&!currentDriver);}
