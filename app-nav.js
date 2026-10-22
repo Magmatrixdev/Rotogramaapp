@@ -19,6 +19,7 @@ function _navPushOrig(id,setupFn){
     setTimeout(()=>{if(!prevEl.classList.contains('active'))prevEl.style.transition='';},NAV_DUR+20);
   }
   if(newEl){
+    newEl.style.opacity='';newEl.style.zIndex='';newEl.style.pointerEvents=''; // limpa resto do fade de volta à Home
     newEl.style.transition='none';
     newEl.style.transform='translateX(100%)';
     newEl.style.visibility='visible';
@@ -92,6 +93,7 @@ function navPush(id,setupFn){
       setTimeout(()=>{if(!prevEl.classList.contains('active'))prevEl.style.transition='';},NAV_DUR+20);
     }
     if(newEl){
+      newEl.style.opacity='';newEl.style.zIndex='';newEl.style.pointerEvents=''; // limpa resto do fade de volta à Home
       newEl.style.transition='none';
       newEl.style.transform='translateX(100%)';
       newEl.style.visibility='visible';
@@ -160,6 +162,47 @@ function navReset(id,setupFn){
 function showScreen(id){navReset(id);}
 function showDriverLogin(){navReset('screenDriverLogin');}
 
+// Volta suave para a Home (aba Rotas): a tela de cima (Postos, Informativos...)
+// some com fade + leve deslize e a Home desliza de -22% de volta para o lugar.
+// Telas intermediárias da pilha são escondidas na hora (ficam por baixo).
+function _homeTransitionBack(homeEl,extra){
+  const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const topId=extra.length?extra[extra.length-1]:null;
+  const topEl=topId?document.getElementById(topId):null;
+  const ease='cubic-bezier(.4,0,.2,1)';
+  extra.forEach(id=>{
+    if(id===topId&&!reduce)return;
+    const el=document.getElementById(id);
+    if(el){el.classList.remove('active','behind');el.style.cssText='';el.style.visibility='hidden';}
+  });
+  if(topEl&&!reduce){
+    topEl.classList.remove('active','behind');
+    topEl.style.zIndex='20';
+    topEl.style.visibility='visible';
+    topEl.style.transform='translateX(0)';
+    topEl.style.opacity='1';
+    topEl.style.pointerEvents='none';
+    requestAnimationFrame(()=>{
+      topEl.style.transition=`opacity ${NAV_DUR}ms ${ease}, transform ${NAV_DUR}ms ${ease}`;
+      topEl.style.opacity='0';
+      topEl.style.transform='translateX(12%)';
+    });
+    setTimeout(()=>{
+      if(topEl.classList.contains('active'))return; // usuário já voltou para essa aba
+      topEl.style.cssText='';topEl.style.visibility='hidden';topEl.scrollTop=0;
+    },NAV_DUR+40);
+  }
+  if(homeEl){
+    if(!reduce&&!IS_DESKTOP()&&homeEl.classList.contains('behind')){
+      homeEl.style.transition=`transform ${NAV_DUR}ms ${ease}`;
+      setTimeout(()=>{if(homeEl.classList.contains('active'))homeEl.style.transition='';},NAV_DUR+40);
+    }
+    homeEl.style.visibility='visible';
+    homeEl.classList.add('active');homeEl.classList.remove('behind');
+    homeEl.style.transform=IS_DESKTOP()?'none':'translateX(0)';
+  }
+}
+
 function showHome(){
   if(!currentDriver&&!adminMode){showDriverLogin();return;}
   try{localStorage.setItem('last_screen','screenHome');}catch(e){}
@@ -174,9 +217,8 @@ function showHome(){
   const homeIdx=_navStack.indexOf('screenHome');
   if(homeIdx>=0){
     const extra=_navStack.splice(homeIdx+1);
-    extra.forEach(id=>{const el=document.getElementById(id);if(el){el.classList.remove('active','behind');el.style.cssText='';el.style.visibility='hidden';}});
     const homeEl=document.getElementById('screenHome');
-    if(homeEl){homeEl.classList.add('active');homeEl.classList.remove('behind');homeEl.style.transform='translateX(0)';}
+    _homeTransitionBack(homeEl,extra);
   }else{
     navReset('screenHome');
   }
