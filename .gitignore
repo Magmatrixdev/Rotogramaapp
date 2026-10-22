@@ -27,3 +27,6 @@ index.html.old
 serviceAccountKey.json
 service-account.json
 serviceAccount*.json
+
+# Backup local das fotos originais (recomprimir-fotos.js)
+backup-fotos/
