@@ -1,11 +1,14 @@
-const CACHE = 'rotograma-v18';
+const CACHE = 'rotograma-v19';
 const STATIC = [
   './manifest.json',
   './icon-192.png',
   './icon-192-maskable.png',
   './icon-512.png',
   './icon-512-maskable.png',
-  './apple-touch-icon.png'
+  './apple-touch-icon.png',
+  './favicon.ico',
+  './favicon.svg',
+  './favicon-32.png'
 ];
 
 // ═══ FIREBASE CLOUD MESSAGING (push com o app fechado) ═══
