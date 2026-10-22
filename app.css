@@ -1036,6 +1036,7 @@ body.desktop-mode .dtb-notif .notif-badge{box-shadow:0 0 0 2.5px #111214}
 .ntf-k-add{background:rgba(46,160,67,.13);color:#1c7a43}
 .ntf-k-rem{background:rgba(217,31,38,.11);color:#c4161d}
 .ntf-k-route{background:rgba(37,99,235,.11);color:#1d4ed8}
+.ntf-k-info{background:rgba(124,58,237,.12);color:#6d28d9}
 .ntf-sign{position:absolute;right:-4px;bottom:-4px;width:17px;height:17px;border-radius:999px;background:currentColor;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px #fff;font-size:0}
 .ntf-k-add .ntf-sign::after,.ntf-k-rem .ntf-sign::after{color:#fff;font-size:13px;font-weight:700;line-height:1;font-family:'Barlow',sans-serif}
 .ntf-k-add .ntf-sign::after{content:'+'}

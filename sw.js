@@ -1,4 +1,4 @@
-const CACHE = 'rotograma-v16';
+const CACHE = 'rotograma-v17';
 const STATIC = [
   './manifest.json',
   './icon-192.png',
@@ -130,12 +130,13 @@ self.addEventListener('fetch', e => {
 self.addEventListener('notificationclick', e => {
   e.notification.close();
   const rota = e.notification.data?.rota || '';
-  const alvo = rota ? './#rota=' + encodeURIComponent(rota) : './';
+  const tipo = e.notification.data?.tipo || e.notification.data?.type || '';
+  const alvo = tipo === 'info' ? './#informativos' : rota ? './#rota=' + encodeURIComponent(rota) : './';
   e.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {
       if (clients.length > 0) {
         const c = clients[0];
-        if (rota && 'navigate' in c) return c.navigate(alvo).then(w => w && w.focus()).catch(() => c.focus());
+        if ((rota || tipo === 'info') && 'navigate' in c) return c.navigate(alvo).then(w => w && w.focus()).catch(() => c.focus());
         return c.focus();
       }
       return self.clients.openWindow(alvo);

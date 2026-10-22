@@ -226,12 +226,28 @@ function saveInformativo(){
   const rec={regiao,posto,formaPagamento,descricao,ts:Date.now()};
   if(localizacao)rec.localizacao=localizacao; // só grava se preenchido
   db.ref('informativos').push(rec)
-    .then(()=>{_infFilter='Todas';closeInfSheet();})
+    .then(()=>{
+      _infFilter='Todas';closeInfSheet();
+      _infNotify(rec);
+    })
     .catch(e=>{
       btn.disabled=false;btn.textContent='PUBLICAR INFORMATIVO';
       errEl.textContent='Erro ao publicar: '+((e&&e.message)||e);
       errEl.style.display='block';
     });
+}
+
+// ─── aviso + push para os motoristas ───
+// Grava em /notifications via pushNotification(); a Cloud Function
+// onNotificationCreated dispara o push FCM (chega mesmo com o app fechado).
+function _infNotify(rec){
+  if(typeof pushNotification!=='function')return;
+  try{
+    const desc=String(rec.descricao||'').replace(/\s+/g,' ').trim();
+    const parts=[rec.posto,rec.formaPagamento,desc.length>140?desc.slice(0,137)+'...':desc].filter(Boolean);
+    const titulo=('Informativo · '+(rec.regiao||'')).slice(0,100);
+    pushNotification('info',titulo,('Novo informativo: '+parts.join(' · ')).slice(0,480));
+  }catch(e){}
 }
 
 // ─── admin: excluir ───

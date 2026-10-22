@@ -15,7 +15,7 @@ function _maybeShowNative(notif){
   navigator.serviceWorker.ready.then(reg=>{
     reg.showNotification('Rotogramas — Confiança',{
       body,icon:'./icon-192.png',badge:'./icon-192.png',
-      tag:'rot-'+notif.id,data:{type:notif.type}
+      tag:'rot-'+notif.id,data:{type:notif.type,tipo:notif.type}
     });
   }).catch(()=>{});
 }
@@ -120,6 +120,7 @@ const _NTF_SVG={
   edit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4"/><path d="M13.5 6.5l4 4"/></svg>',
   route:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 19a2 2 0 1 0 4 0a2 2 0 0 0 -4 0"/><path d="M19 7a2 2 0 1 0 0 -4a2 2 0 0 0 0 4z"/><path d="M11 19h5.5a3.5 3.5 0 0 0 0 -7h-8a3.5 3.5 0 0 1 0 -7h4.5"/></svg>',
   posto:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 11h1a2 2 0 0 1 2 2v3a1.5 1.5 0 0 0 3 0v-7l-3 -3"/><path d="M4 20v-14a2 2 0 0 1 2 -2h6a2 2 0 0 1 2 2v14"/><path d="M3 20l12 0"/><path d="M18 7v1a1 1 0 0 0 1 1h1"/><path d="M4 11l10 0"/></svg>',
+  info:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a3 3 0 0 1 0 6"/><path d="M10 8v11a1 1 0 0 1 -1 1h-1a1 1 0 0 1 -1 -1v-5"/><path d="M12 8h0l4.524 -3.77a.9 .9 0 0 1 1.476 .692v12.156a.9 .9 0 0 1 -1.476 .692l-4.524 -3.77h-8a1 1 0 0 1 -1 -1v-4a1 1 0 0 1 1 -1h8"/></svg>',
   check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5l10 -10"/></svg>',
   checks:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 12l5 5l10 -10"/><path d="M2 12l5 5m5 -5l5 -5"/></svg>'
 };
@@ -131,7 +132,8 @@ function _notifParts(n){
   const detail=i>0?msg.slice(i+1).trim().replace(/\s+-\s+/g,' · '):'';
   const a=action.toLowerCase();
   let kind='edit';
-  if(a.startsWith('posto adicionado'))kind='add';
+  if(n.type==='info'||a.startsWith('novo informativo'))kind='info';
+  else if(a.startsWith('posto adicionado'))kind='add';
   else if(a.startsWith('posto removido'))kind='rem';
   else if(n.type==='new'||a.startsWith('nova rota'))kind='route';
   else if(n.type==='alert')kind='rem';
@@ -174,12 +176,12 @@ function renderNotifList(){
     if(g!==lastGroup){h+=`<div class="ntf-group">${g}</div>`;lastGroup=g;}
     const isRead=read.includes(n.id);
     const p=_notifParts(n);
-    const icon=p.kind==='add'||p.kind==='rem'?_NTF_SVG.posto:p.kind==='route'?_NTF_SVG.route:_NTF_SVG.edit;
+    const icon=p.kind==='add'||p.kind==='rem'?_NTF_SVG.posto:p.kind==='route'?_NTF_SVG.route:p.kind==='info'?_NTF_SVG.info:_NTF_SVG.edit;
     const sign=p.kind==='add'?'+':p.kind==='rem'?'−':'';
     const route=n.route||'';
     const ago=_timeAgo(n.ts);
     const aria=route+': '+p.action+(p.detail?', '+p.detail:'')+(ago?', '+ago:'')+(isRead?'':', não lido');
-    h+=`<button class="ntf-item${isRead?'':' unread'}" aria-label="${esc(aria)}" onclick="event.stopPropagation();markNotifRead('${n.id}')">
+    h+=`<button class="ntf-item${isRead?'':' unread'}" aria-label="${esc(aria)}" onclick="event.stopPropagation();_notifItemClick('${n.id}','${p.kind}')">
       <span class="ntf-ic ntf-k-${p.kind}">${icon}${sign?'<span class="ntf-sign"></span>':''}</span>
       <span class="ntf-body">
         <span class="ntf-route" title="${esc(route)}">${esc(route)}</span>
@@ -191,6 +193,20 @@ function renderNotifList(){
     </button>`;
   });
   el.innerHTML=h;
+}
+
+// Clique no aviso: marca como lido; se for informativo, abre a tela de Informativos
+function _notifItemClick(id,kind){
+  markNotifRead(id);
+  if(kind!=='info')return;
+  notifPanelOpen=false;
+  const panel=document.getElementById('notifPanel');
+  if(panel){panel.className='notif-panel';if(IS_DESKTOP())panel.style.display='none';}
+  _openInformativos();
+}
+function _openInformativos(){
+  if(IS_DESKTOP()&&typeof dNavGo==='function')dNavGo('informativos');
+  else if(typeof bnavGoInformativos==='function')bnavGoInformativos();
 }
 
 function markNotifRead(id){

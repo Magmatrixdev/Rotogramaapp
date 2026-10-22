@@ -207,6 +207,11 @@ function checkDeepLink(){return false;} // deep links desativados com nova naveg
 
 function _handleDeepLink(){
   const hash=location.hash||'';
+  if(hash==='#informativos'){
+    history.replaceState(null,'',location.pathname);
+    if(typeof _openInformativos==='function')_openInformativos();
+    return true;
+  }
   if(!hash.startsWith('#rota='))return false;
   const rotaId=decodeURIComponent(hash.replace('#rota=',''));
   if(!rotaId)return false;
