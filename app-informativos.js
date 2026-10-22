@@ -19,6 +19,7 @@ const _INF_SVG={
   plus:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
   pin:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
   trash:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>',
+  edit:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4"/><path d="M13.5 6.5l4 4"/></svg>',
   pump:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="10" height="18" rx="1.5"/><path d="M6 8h4"/><path d="M13 8h3l3 3v7a2 2 0 0 1-4 0v-5"/></svg>',
   loc:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l18-8-8 18-2-8-8-2z"/></svg>',
   chat:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8a8886" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
@@ -114,13 +115,14 @@ function renderInformativos(){
     :`<div class="inf-empty">${items.length?'Nenhum informativo nesta região.':'Nenhum informativo publicado.'}</div>`;
 
   renderInfSenhas();
+  if(typeof renderAdminInformativos==='function')renderAdminInformativos();
 }
 
 function buildInformativoCard(it){
   const regiao=(it.regiao||'').trim()
     ?`<span class="inf-region">${_INF_SVG.pin}<span>Região de ${esc(it.regiao)}</span></span>`:'';
   const del=_infIsAdmin()
-    ?`<button class="inf-del" onclick="deleteInformativo('${it.id}')" aria-label="Remover informativo">${_INF_SVG.trash}</button>`:'';
+    ?`<button class="inf-del inf-edit" onclick="showAddInformativoForm('${it.id}')" aria-label="Editar informativo">${_INF_SVG.edit}</button><button class="inf-del" onclick="deleteInformativo('${it.id}')" aria-label="Remover informativo">${_INF_SVG.trash}</button>`:'';
   const pay=it.formaPagamento
     ?`<div class="inf-pay"><span class="inf-pay-dot" style="background:${_infPayColor(it.formaPagamento)}"></span><span>Pagamento: <strong>${esc(it.formaPagamento)}</strong></span></div>`:'';
   const locTxt=(it.localizacao||'').trim();
@@ -180,28 +182,33 @@ function renderInfSenhas(){
 }
 
 // ─── admin: cadastrar (folha inferior) ───
-function showAddInformativoForm(){
+let _infEditId=null;
+function showAddInformativoForm(editId){
   if(!_infIsAdmin())return;
   closeInfSheet();
+  _infEditId=(editId&&informativos&&informativos[editId])?editId:null;
+  const cur=_infEditId?informativos[_infEditId]:{};
+  const v=k=>esc(cur[k]||'');
   const ov=document.createElement('div');
   ov.className='inf-sheet-ov';
   ov.onclick=e=>{if(e.target===ov)closeInfSheet();};
   ov.innerHTML=`<form class="inf-sheet" onsubmit="event.preventDefault();saveInformativo()">
     <div class="inf-sheet-grip"></div>
     <div class="inf-sheet-head">
-      <div class="inf-sheet-title">Novo informativo</div>
+      <div class="inf-sheet-title">${_infEditId?'Editar informativo':'Novo informativo'}</div>
       <button type="button" class="inf-sheet-x" onclick="closeInfSheet()" aria-label="Fechar">${_INF_SVG.close}</button>
     </div>
-    <label class="inf-fld"><span>REGIÃO</span><input id="ifRegiao" maxlength="100" placeholder="Ex.: Cuiabá - MT" oninput="_infValidate()"></label>
-    <label class="inf-fld stop-ac-wrap"><span>POSTO</span><input id="ifPosto" maxlength="200" placeholder="Digite o nome — sugestões dos postos cadastrados" autocomplete="off" oninput="_infValidate();_infPostoInput(this.value)" onblur="setTimeout(_infCloseAC,200)"><div class="stop-ac-drop" id="ifPostoAC"></div></label>
-    <label class="inf-fld"><span>LOCALIZAÇÃO</span><input id="ifLocalizacao" maxlength="500" placeholder="Endereço ou link do Google Maps"></label>
-    <label class="inf-fld"><span>FORMA DE PAGAMENTO</span><select id="ifPagamento">${INF_PAY_OPTS.map(p=>`<option value="${p}">${p}</option>`).join('')}</select></label>
-    <label class="inf-fld"><span>DESCRIÇÃO</span><textarea id="ifDescricao" rows="3" maxlength="4000" placeholder="Ex.: difícil achar vaga para pernoite, tem lavagem e borracharia…"></textarea></label>
+    <label class="inf-fld"><span>REGIÃO</span><input id="ifRegiao" value="${v('regiao')}" maxlength="100" placeholder="Ex.: Cuiabá - MT" oninput="_infValidate()"></label>
+    <label class="inf-fld stop-ac-wrap"><span>POSTO</span><input id="ifPosto" value="${v('posto')}" maxlength="200" placeholder="Digite o nome — sugestões dos postos cadastrados" autocomplete="off" oninput="_infValidate();_infPostoInput(this.value)" onblur="setTimeout(_infCloseAC,200)"><div class="stop-ac-drop" id="ifPostoAC"></div></label>
+    <label class="inf-fld"><span>LOCALIZAÇÃO</span><input id="ifLocalizacao" value="${v('localizacao')}" maxlength="500" placeholder="Endereço ou link do Google Maps"></label>
+    <label class="inf-fld"><span>FORMA DE PAGAMENTO</span><select id="ifPagamento">${INF_PAY_OPTS.map(p=>`<option value="${p}"${cur.formaPagamento===p?' selected':''}>${p}</option>`).join('')}</select></label>
+    <label class="inf-fld"><span>DESCRIÇÃO</span><textarea id="ifDescricao" rows="3" maxlength="4000" placeholder="Ex.: difícil achar vaga para pernoite, tem lavagem e borracharia…">${v('descricao')}</textarea></label>
     <div class="inf-sheet-err" id="ifError" style="display:none"></div>
-    <button type="submit" class="inf-sheet-save" id="ifSave" disabled>PUBLICAR INFORMATIVO</button>
+    <button type="submit" class="inf-sheet-save" id="ifSave" disabled>${_infEditId?'SALVAR ALTERAÇÕES':'PUBLICAR INFORMATIVO'}</button>
   </form>`;
   document.body.appendChild(ov);
-  setTimeout(()=>document.getElementById('ifRegiao')?.focus(),100);
+  _infValidate();
+  setTimeout(()=>document.getElementById(_infEditId?'ifDescricao':'ifRegiao')?.focus(),100);
 }
 
 // ─── auto-completar do posto (mesma base do editor: postos das rotas + avulsos) ───
@@ -209,9 +216,10 @@ let _infACList=[];
 const _INF_CARD2PAY={truckpag:'Truckpag',shell_expers:'Shell Experts',rede_frota:'Cartão Rede Frota'};
 function _infPostoInput(val){
   const drop=document.getElementById('ifPostoAC');if(!drop)return;
-  const q=(val||'').trim().toLowerCase();
+  const norm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+  const q=norm(val);
   if(q.length<2||typeof getAllKnownPostos!=='function'){_infCloseAC();return;}
-  _infACList=getAllKnownPostos().filter(p=>(p.nome||'').toLowerCase().includes(q)||(p.cidade||'').toLowerCase().includes(q)).slice(0,8);
+  _infACList=getAllKnownPostos().filter(p=>norm(p.nome).includes(q)||norm(p.cidade).includes(q)).slice(0,8);
   if(!_infACList.length){_infCloseAC();return;}
   drop.innerHTML=_infACList.map((p,i)=>`<div class="stop-ac-item" onmousedown="event.preventDefault();_infPickPosto(${i})"><div class="stop-ac-nome">${esc(p.nome)}</div><div class="stop-ac-cidade">${esc(p.cidade)}</div></div>`).join('');
   drop.style.display='block';
@@ -248,15 +256,20 @@ function saveInformativo(){
   const btn=document.getElementById('ifSave');
   if(!db||!firebaseReady){errEl.textContent='Sem conexão com o servidor. Tente novamente.';errEl.style.display='block';return;}
   btn.disabled=true;btn.textContent='PUBLICANDO...';
-  const rec={regiao,posto,formaPagamento,descricao,ts:Date.now()};
+  const editId=_infEditId;
+  const prevTs=editId&&informativos[editId]?informativos[editId].ts:0;
+  const rec={regiao,posto,formaPagamento,descricao,ts:prevTs||Date.now()};
   if(localizacao)rec.localizacao=localizacao; // só grava se preenchido
-  db.ref('informativos').push(rec)
+  const op=editId?db.ref('informativos/'+editId).set(rec):db.ref('informativos').push(rec);
+  op
     .then(()=>{
-      _infFilter='Todas';closeInfSheet();
-      _infNotify(rec);
+      closeInfSheet();
+      if(editId){if(typeof showToast==='function')showToast('Informativo atualizado','#1a7f37');}
+      else{_infFilter='Todas';_infNotify(rec);}
+      _infEditId=null;
     })
     .catch(e=>{
-      btn.disabled=false;btn.textContent='PUBLICAR INFORMATIVO';
+      btn.disabled=false;btn.textContent=editId?'SALVAR ALTERAÇÕES':'PUBLICAR INFORMATIVO';
       errEl.textContent='Erro ao publicar: '+((e&&e.message)||e);
       errEl.style.display='block';
     });
@@ -273,6 +286,17 @@ function _infNotify(rec){
     const titulo=('Informativo · '+(rec.regiao||'')).slice(0,100);
     pushNotification('info',titulo,('Novo informativo: '+parts.join(' · ')).slice(0,480));
   }catch(e){}
+}
+
+// ─── aba Informativos do painel Admin ───
+function renderAdminInformativos(){
+  const el=document.getElementById('adminInformativosList');if(!el)return;
+  const items=_infList();
+  el.innerHTML=`<div class="ap-topbar">
+      <div class="adm-inf-count">${items.length} informativo${items.length===1?'':'s'} publicado${items.length===1?'':'s'}</div>
+      <button class="ap-add-btn" onclick="showAddInformativoForm()"><i class="ti ti-plus" aria-hidden="true"></i>Novo informativo</button>
+    </div>
+    <div class="adm-inf-list">${items.length?items.map(buildInformativoCard).join(''):'<div class="inf-empty">Nenhum informativo publicado.</div>'}</div>`;
 }
 
 // ─── admin: excluir ───

@@ -39,6 +39,9 @@
 .inf-region{display:inline-flex;align-items:center;gap:5px;background:#fff0f0;color:#d41f20;border-radius:999px;padding:4px 10px 4px 8px;font-size:12px;font-weight:800;letter-spacing:.3px}
 .inf-del{width:34px;height:34px;border-radius:9px;border:none;background:transparent;color:#b0aea9;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .inf-del:active{background:#fdeaea;color:#d41f20}
+.inf-edit:active{background:#eef2fb;color:#1d4ed8}
+.adm-inf-count{flex:1;font-family:'Barlow',sans-serif;font-size:13px;font-weight:600;color:#6b6966}
+.adm-inf-list{font-family:'Barlow',system-ui,sans-serif;color:#1c1c1c;max-width:720px}
 .inf-card-body{display:flex;align-items:center;gap:12px;padding:8px 15px 0}
 .inf-pump{width:46px;height:46px;border-radius:13px;background:#1c1c1c;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .inf-posto{font-size:24px;font-weight:800;line-height:1;word-break:break-word}
