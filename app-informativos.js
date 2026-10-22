@@ -9,9 +9,12 @@ var _infOp = 'truck';
 
 const INF_PAY_OPTS = ['Cartão Rede Frota','Truckpag','Shell Experts'];
 const INF_OPS = {
-  truck:{name:'Truckpag',color:'#1a6fb5',tint:'#e7f0f9',rule:'4 primeiros dígitos do CPF',pass:'0123',hint:'dígitos 1 a 4',pick:[0,1,2,3],skip:[]},
-  shell:{name:'Shell Experts',color:'#b5651d',tint:'#fbeee2',rule:'6 primeiros dígitos, pulando o zero',pass:'123456',hint:'pula o 0 → dígitos 2 a 7',pick:[1,2,3,4,5,6],skip:[0]},
-  frota:{name:'Rede Frota',color:'#1f8a3d',tint:'#e6f3ea',rule:'4 últimos dígitos do CPF',pass:'7890',hint:'dígitos 8 a 11',pick:[7,8,9,10],skip:[]}
+  truck:{name:'Truckpag',color:'#1a6fb5',tint:'#e7f0f9',rule:'4 primeiros dígitos do CPF',pass:'0123',hint:'dígitos 1 a 4',pick:[0,1,2,3],skip:[],label:'SENHA'},
+  shell:{name:'Shell Experts',color:'#b5651d',tint:'#fbeee2',rule:'6 primeiros dígitos, pulando o zero',pass:'123456',hint:'pula o 0 → dígitos 2 a 7',pick:[1,2,3,4,5,6],skip:[0],label:'MATRÍCULA E SENHA',
+    need:['Matrícula','Senha'],note:'Matrícula e senha são o <strong>mesmo número</strong>.',
+    warn:'Se o <strong>primeiro dígito</strong> do CPF for <strong>0</strong>, ele é pulado. Se o CPF não começa com 0, use os 6 primeiros normalmente. Vale para a matrícula e para a senha.'},
+  frota:{name:'Rede Frota',color:'#1f8a3d',tint:'#e6f3ea',rule:'4 últimos dígitos do CPF',pass:'7890',hint:'dígitos 8 a 11',pick:[7,8,9,10],skip:[],label:'SENHA',
+    virtual:true,need:['Placa do veículo','CPF','Senha']}
 };
 
 const _INF_SVG={
@@ -25,6 +28,10 @@ const _INF_SVG={
   chat:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8a8886" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
   down:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#c2c0ba" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"/><path d="M6 13l6 6 6-6"/></svg>',
   warn:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#e8a020" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>',
+  lock:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>',
+  cam:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+  card:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/><path d="M6 15h4"/></svg>',
+  alert:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>',
   close:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1c1c1c" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>'
 };
 
@@ -84,15 +91,14 @@ function renderInformativos(){
       <div class="inf-hero-stats" id="infStats"></div>
     </header>
     <main class="inf-main">
+      <div class="inf-sec-label inf-sec-top">SENHAS POR OPERADORA</div>
+      <div id="infSenhas"></div>
       <div class="inf-sec-head">
         <span class="inf-sec-label">POSTOS POR REGIÃO</span>
         <button class="inf-add" id="infAddBtn" onclick="showAddInformativoForm()">${_INF_SVG.plus}<span>Adicionar</span></button>
       </div>
       <div class="inf-filters" id="infFilters"></div>
       <div id="infCards"></div>
-      <div class="inf-sec-label inf-sec-gap">SENHAS POR OPERADORA</div>
-      <div id="infSenhas"></div>
-      <p class="inf-footnote">CPF de exemplo fictício. Use sempre o CPF do motorista que está abastecendo.</p>
     </main>`;
   }
   const items=_infList();
@@ -118,9 +124,30 @@ function renderInformativos(){
   if(typeof renderAdminInformativos==='function')renderAdminInformativos();
 }
 
+// ─── fotos do posto (mesma base da tela de Postos: avulsos → paradas das rotas) ───
+var _infFotoCache={};
+function _infNorm(x){return String(x||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').trim();}
+function _infFotos(nome){
+  let f=(typeof getFotosByNome==='function')?(getFotosByNome(nome)||[]).filter(Boolean):[];
+  if(f.length)return f;
+  const n=_infNorm(nome);if(!n)return[];
+  const rs=(typeof routes!=='undefined'&&Array.isArray(routes))?routes:[];
+  for(const r of rs){for(const p of (r.paradas||[])){
+    if(_infNorm(p.nome)===n&&Array.isArray(p.fotos)){const g=p.fotos.filter(Boolean);if(g.length)return g;}
+  }}
+  return[];
+}
+function _infOpenFotos(id){
+  const f=_infFotoCache[id];
+  if(!f||!f.length||typeof showPostoGaleria!=='function')return;
+  _postoGaleriaCache['inf_'+id]=f;
+  showPostoGaleria('inf_'+id,0);
+}
+
 function buildInformativoCard(it){
-  const regiao=(it.regiao||'').trim()
-    ?`<span class="inf-region">${_INF_SVG.pin}<span>Região de ${esc(it.regiao)}</span></span>`:'';
+  const fotos=_infFotos(it.posto);
+  _infFotoCache[it.id]=fotos;
+  const regTxt=(it.regiao||'').trim();
   const del=_infIsAdmin()
     ?`<button class="inf-del inf-edit" onclick="showAddInformativoForm('${it.id}')" aria-label="Editar informativo">${_INF_SVG.edit}</button><button class="inf-del" onclick="deleteInformativo('${it.id}')" aria-label="Remover informativo">${_INF_SVG.trash}</button>`:'';
   const pay=it.formaPagamento
@@ -129,28 +156,50 @@ function buildInformativoCard(it){
   const loc=locTxt
     ?`<a class="inf-loc" href="${esc(_infMapUrl(locTxt))}" target="_blank" rel="noopener">${_INF_SVG.loc}<span>${/^https?:\/\//i.test(locTxt)?'Abrir localização no mapa':esc(locTxt)}</span></a>`:'';
   const desc=(it.descricao||'').trim()
-    ?`<div class="inf-desc">${_INF_SVG.chat}<p>${_infNl2br(it.descricao)}</p></div>`
-    :'<div style="height:14px"></div>';
-  return `<article class="inf-card">
-    <div class="inf-card-top">${regiao}<span style="flex:1"></span>${del}</div>
-    <div class="inf-card-body">
-      <div class="inf-pump">${_INF_SVG.pump}</div>
-      <div style="min-width:0">
-        <div class="inf-posto">${esc(it.posto||'')}</div>
-        ${pay}
-      </div>
-    </div>
-    ${loc}
-    ${desc}
-  </article>`;
+    ?`<div class="inf-desc"><div class="inf-desc-head">${_INF_SVG.alert}<span>ATENÇÃO MOTORISTA</span></div><p>${_infNl2br(it.descricao)}</p></div>`:'';
+  let top,body;
+  if(fotos.length){
+    top=`<div class="inf-photo">
+      <img src="${esc(fotos[0])}" loading="lazy" decoding="async" alt="Foto do posto ${esc(it.posto||'')}" onclick="_infOpenFotos('${it.id}')">
+      ${regTxt?`<span class="inf-region inf-region--photo">${_INF_SVG.pin}<span>Região de ${esc(regTxt)}</span></span>`:''}
+      ${del?`<div class="inf-photo-adm">${del}</div>`:''}
+      <button class="inf-fotos-btn" onclick="_infOpenFotos('${it.id}')" aria-label="Ver fotos do posto">${_INF_SVG.cam}<span>${fotos.length===1?'1 foto':fotos.length+' fotos'}</span></button>
+    </div>`;
+    body=`<div class="inf-card-body inf-card-body--photo"><div style="min-width:0"><div class="inf-posto">${esc(it.posto||'')}</div>${pay}</div></div>`;
+  }else{
+    top=`<div class="inf-card-top">${regTxt?`<span class="inf-region">${_INF_SVG.pin}<span>Região de ${esc(regTxt)}</span></span>`:''}<span style="flex:1"></span>${del}</div>`;
+    body=`<div class="inf-card-body"><div class="inf-pump">${_INF_SVG.pump}</div><div style="min-width:0"><div class="inf-posto">${esc(it.posto||'')}</div>${pay}</div></div>`;
+  }
+  return `<article class="inf-card">${top}${body}${desc}${loc}<div style="height:12px"></div></article>`;
 }
 
 function setInfFilter(r){_infFilter=r;renderInformativos();}
 
-function setInfOp(k){if(INF_OPS[k]){_infOp=k;renderInfSenhas();}}
-
+// ─── senhas: 3 botões na tela; o detalhe abre em pop-up (folha inferior) ───
 function renderInfSenhas(){
   const el=document.getElementById('infSenhas');
+  if(!el)return;
+  el.innerHTML=`<div class="inf-ops">${Object.keys(INF_OPS).map(k=>{
+    const o=INF_OPS[k];
+    return `<button class="inf-op" onclick="openInfSenha('${k}')"><span class="inf-op-ic" style="background:${o.color}">${_INF_SVG.lock}</span><span class="inf-op-n">${o.name}</span></button>`;
+  }).join('')}</div><p class="inf-ops-hint">Toque na operadora para ver como acessar e montar a senha.</p>`;
+}
+
+function openInfSenha(k){
+  if(INF_OPS[k])_infOp=k;
+  closeInfSenha();
+  const ov=document.createElement('div');
+  ov.className='inf-sheet-ov inf-senha-ov';
+  ov.onclick=e=>{if(e.target===ov)closeInfSenha();};
+  ov.innerHTML=`<section class="inf-sheet inf-senha-sheet" role="dialog" aria-modal="true" aria-label="Senha da operadora"><div class="inf-sheet-grip"></div><div id="infSenhaBody"></div></section>`;
+  document.body.appendChild(ov);
+  _infRenderSenhaBody();
+}
+function closeInfSenha(){document.querySelector('.inf-senha-ov')?.remove();}
+function setInfOp(k){if(INF_OPS[k]){_infOp=k;_infRenderSenhaBody();}}
+
+function _infRenderSenhaBody(){
+  const el=document.getElementById('infSenhaBody');
   if(!el)return;
   const o=INF_OPS[_infOp], seps={2:'.',5:'.',8:'-'};
   const tabs=Object.keys(INF_OPS).map(k=>{
@@ -163,22 +212,24 @@ function renderInfSenhas(){
     const st=on?`background:${o.color};box-shadow:0 3px 8px ${o.color}55`:'';
     return `<div class="inf-dg-wrap"><div class="${cls}" style="${st}">${ch}</div>${seps[i]?`<span class="inf-dg-sep">${seps[i]}</span>`:''}</div>`;
   }).join('');
-  el.innerHTML=`<div class="inf-tabs">${tabs}</div>
-  <section class="inf-senha">
-    <div class="inf-senha-head">
-      <span class="inf-senha-lbl">COMO MONTAR A SENHA</span>
-      <span class="inf-senha-chip" style="background:${o.tint};color:${o.color}">${o.name}</span>
+  const virt=o.virtual?`<div class="inf-virtual" style="background:${o.tint};color:${o.color}">${_INF_SVG.card}<span><strong>Cartão virtual</strong> — não existe cartão físico.</span></div>`:'';
+  const need=o.need?`<div class="inf-need"><div class="inf-senha-lbl">O QUE INFORMAR NO POSTO</div><div class="inf-need-row">${o.need.map((n,i)=>`<span class="inf-need-chip"><b style="background:${o.color}">${i+1}</b>${n}</span>`).join('')}</div>${o.note?`<div class="inf-need-note">${o.note}</div>`:''}</div>`:'';
+  el.innerHTML=`<div class="inf-sheet-head">
+      <div class="inf-ss-id"><span class="inf-op-ic inf-op-ic--lg" style="background:${o.color}">${_INF_SVG.lock}</span><div><div class="inf-senha-lbl">SENHA DA OPERADORA</div><div class="inf-sheet-title" style="line-height:1">${o.name}</div></div></div>
+      <button type="button" class="inf-sheet-x" onclick="closeInfSenha()" aria-label="Fechar">${_INF_SVG.close}</button>
     </div>
+    <div class="inf-tabs inf-tabs--sheet">${tabs}</div>
+    ${virt}${need}
+    <div class="inf-senha-lbl inf-ss-gap">COMO MONTAR ${o.label==='SENHA'?'A SENHA':'MATRÍCULA E SENHA'}</div>
     <div class="inf-senha-rule">${o.rule}</div>
     <div class="inf-digits">${digits}</div>
     <div class="inf-senha-cap"><span>CPF de exemplo</span><span>${o.hint}</span></div>
-    <div class="inf-senha-arrow">${_INF_SVG.down}</div>
     <div class="inf-senha-res" style="background:${o.color};box-shadow:0 6px 16px ${o.color}40">
-      <div class="inf-senha-res-l">SENHA</div>
+      <div class="inf-senha-res-l">${o.label}</div>
       <div class="inf-senha-res-v">${o.pass}</div>
     </div>
-    ${_infOp==='shell'?`<div class="inf-senha-warn">${_INF_SVG.warn}<span>O <strong>0</strong> do início do CPF é ignorado. Se o CPF não começa com 0, use os 6 primeiros normalmente.</span></div>`:''}
-  </section>`;
+    ${o.warn?`<div class="inf-senha-warn">${_INF_SVG.warn}<span>${o.warn}</span></div>`:''}
+    <p class="inf-footnote">CPF de exemplo fictício. Use sempre o CPF do motorista que está abastecendo.</p>`;
 }
 
 // ─── admin: cadastrar (folha inferior) ───

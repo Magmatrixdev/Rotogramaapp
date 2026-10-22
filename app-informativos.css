@@ -53,9 +53,11 @@
 .inf-loc span{word-break:break-word}
 .inf-loc:active{background:#f4f4f2}
 .inf-add[style*="none"]{display:none!important}
-.inf-desc{margin:12px;background:#f4f4f2;border-radius:12px;padding:11px 13px;display:flex;gap:10px}
-.inf-desc svg{flex-shrink:0;margin-top:1px}
-.inf-desc p{margin:0;font-size:13.5px;line-height:1.45;color:#3a3a38;word-break:break-word}
+/* descrição em destaque */
+.inf-desc{margin:14px 12px 0;background:#fff7e0;border:1.5px solid #f0c75e;border-radius:14px;padding:12px 14px 14px}
+.inf-desc-head{display:flex;align-items:center;gap:7px;color:#8a5a00;font-family:'Barlow Condensed',system-ui,sans-serif;font-size:13px;font-weight:800;letter-spacing:1px}
+.inf-desc-head svg{flex-shrink:0}
+.inf-desc p{margin:8px 0 0;font-size:16px;line-height:1.45;font-weight:500;color:#2a2620;word-break:break-word}
 .inf-empty{text-align:center;padding:28px 16px;border:1.5px dashed #d6d3cc;border-radius:16px;color:#9a9894;font-size:13px}
 
 /* senhas */
@@ -102,6 +104,49 @@
 .inf-sheet-err{margin-top:10px;font-size:13px;color:#b71c1c}
 .inf-sheet-save{margin-top:16px;width:100%;height:52px;border:none;border-radius:12px;color:#fff;cursor:pointer;background:#fe2627;box-shadow:0 6px 16px rgba(254,38,39,.3);font-size:17px;font-weight:800;letter-spacing:.5px}
 .inf-sheet-save:disabled{background:#c2c0ba;box-shadow:none;cursor:not-allowed}
+
+/* foto do posto no card */
+.inf-photo{position:relative;height:170px;background:#3a3936;overflow:hidden}
+.inf-photo img{width:100%;height:100%;object-fit:cover;display:block;cursor:pointer}
+.inf-region--photo{position:absolute;left:12px;top:12px;background:#fff;color:#c81d1e;box-shadow:0 2px 8px rgba(0,0,0,.18);max-width:calc(100% - 110px)}
+.inf-region--photo span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.inf-photo-adm{position:absolute;right:10px;top:10px;display:flex;gap:6px}
+.inf-photo-adm .inf-del{background:rgba(255,255,255,.94);color:#5a5856;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+.inf-fotos-btn{position:absolute;right:12px;bottom:12px;display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:999px;border:none;background:rgba(20,20,19,.75);color:#fff;font-family:'Barlow',sans-serif;font-size:13px;font-weight:600;cursor:pointer}
+.inf-card-body--photo{padding-top:14px}
+.inf-card-body--photo .inf-posto{font-size:26px}
+
+/* senhas: 3 botões */
+.inf-sec-top{margin:20px 2px 10px}
+.inf-ops{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.inf-op{height:74px;border-radius:14px;border:1.5px solid #e8e6e1;background:#fff;box-shadow:0 2px 8px rgba(40,38,34,.05);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:0 4px;cursor:pointer;color:#1c1c1c}
+.inf-op:active{transform:scale(.97);background:#f4f4f2}
+.inf-op-ic{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.inf-op-ic--lg{width:38px;height:38px;border-radius:11px}
+.inf-op-n{font-family:'Barlow Condensed',system-ui,sans-serif;font-size:15px;font-weight:800;line-height:1.05;text-align:center}
+.inf-ops-hint{margin:8px 2px 0;font-size:12px;color:#77756f}
+
+/* pop-up da senha */
+.inf-senha-sheet .inf-senha-lbl,.inf-senha-sheet .inf-tab,.inf-senha-sheet .inf-senha-rule,.inf-senha-sheet .inf-dg,.inf-senha-sheet .inf-dg-sep,
+.inf-senha-sheet .inf-senha-res-l,.inf-senha-sheet .inf-senha-res-v,.inf-need-chip{font-family:'Barlow Condensed',system-ui,sans-serif}
+.inf-senha-sheet button{font:inherit}
+.inf-senha-sheet .inf-sheet-title{font-family:'Barlow Condensed',system-ui,sans-serif}
+.inf-ss-id{display:flex;align-items:center;gap:10px}
+.inf-tabs--sheet{margin-top:14px}
+.inf-senha-sheet .inf-tab{font-family:'Barlow Condensed',system-ui,sans-serif;font-size:14px;font-weight:800}
+.inf-virtual{margin-top:12px;display:flex;align-items:center;gap:10px;border-radius:12px;padding:11px 13px;font-size:14px;line-height:1.35}
+.inf-virtual svg{flex-shrink:0}
+.inf-virtual span{color:#1c1c1c}
+.inf-virtual strong{color:inherit}
+.inf-need{margin-top:12px;border:1.5px solid #e8e6e1;border-radius:14px;padding:11px 12px 12px}
+.inf-need-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.inf-need-chip{display:inline-flex;align-items:center;gap:7px;background:#f4f4f2;border-radius:999px;padding:4px 12px 4px 4px;font-size:15px;font-weight:800;color:#1c1c1c}
+.inf-need-chip b{width:22px;height:22px;border-radius:50%;color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center}
+.inf-need-note{margin-top:9px;font-size:13px;color:#3a3a38;line-height:1.4}
+.inf-ss-gap{margin-top:16px}
+.inf-senha-sheet .inf-senha-rule{margin-top:4px}
+.inf-senha-sheet .inf-senha-res{margin-top:14px}
+.inf-senha-sheet .inf-footnote{margin:12px 2px 0}
 
 /* desktop mode: overlay */
 body.desktop-mode #screenInformativos{position:absolute;z-index:10}
