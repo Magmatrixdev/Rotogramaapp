@@ -193,7 +193,7 @@ function showAddInformativoForm(){
       <button type="button" class="inf-sheet-x" onclick="closeInfSheet()" aria-label="Fechar">${_INF_SVG.close}</button>
     </div>
     <label class="inf-fld"><span>REGIÃO</span><input id="ifRegiao" maxlength="100" placeholder="Ex.: Cuiabá - MT" oninput="_infValidate()"></label>
-    <label class="inf-fld"><span>POSTO</span><input id="ifPosto" maxlength="200" placeholder="Ex.: Posto São Matheus" oninput="_infValidate()"></label>
+    <label class="inf-fld stop-ac-wrap"><span>POSTO</span><input id="ifPosto" maxlength="200" placeholder="Digite o nome — sugestões dos postos cadastrados" autocomplete="off" oninput="_infValidate();_infPostoInput(this.value)" onblur="setTimeout(_infCloseAC,200)"><div class="stop-ac-drop" id="ifPostoAC"></div></label>
     <label class="inf-fld"><span>LOCALIZAÇÃO</span><input id="ifLocalizacao" maxlength="500" placeholder="Endereço ou link do Google Maps"></label>
     <label class="inf-fld"><span>FORMA DE PAGAMENTO</span><select id="ifPagamento">${INF_PAY_OPTS.map(p=>`<option value="${p}">${p}</option>`).join('')}</select></label>
     <label class="inf-fld"><span>DESCRIÇÃO</span><textarea id="ifDescricao" rows="3" maxlength="4000" placeholder="Ex.: difícil achar vaga para pernoite, tem lavagem e borracharia…"></textarea></label>
@@ -202,6 +202,31 @@ function showAddInformativoForm(){
   </form>`;
   document.body.appendChild(ov);
   setTimeout(()=>document.getElementById('ifRegiao')?.focus(),100);
+}
+
+// ─── auto-completar do posto (mesma base do editor: postos das rotas + avulsos) ───
+let _infACList=[];
+const _INF_CARD2PAY={truckpag:'Truckpag',shell_expers:'Shell Experts',rede_frota:'Cartão Rede Frota'};
+function _infPostoInput(val){
+  const drop=document.getElementById('ifPostoAC');if(!drop)return;
+  const q=(val||'').trim().toLowerCase();
+  if(q.length<2||typeof getAllKnownPostos!=='function'){_infCloseAC();return;}
+  _infACList=getAllKnownPostos().filter(p=>(p.nome||'').toLowerCase().includes(q)||(p.cidade||'').toLowerCase().includes(q)).slice(0,8);
+  if(!_infACList.length){_infCloseAC();return;}
+  drop.innerHTML=_infACList.map((p,i)=>`<div class="stop-ac-item" onmousedown="event.preventDefault();_infPickPosto(${i})"><div class="stop-ac-nome">${esc(p.nome)}</div><div class="stop-ac-cidade">${esc(p.cidade)}</div></div>`).join('');
+  drop.style.display='block';
+}
+function _infCloseAC(){const d=document.getElementById('ifPostoAC');if(d){d.innerHTML='';d.style.display='none';}}
+function _infPickPosto(i){
+  const p=_infACList[i];if(!p)return;
+  const set=(id,v,onlyEmpty)=>{const el=document.getElementById(id);if(el&&v&&(!onlyEmpty||!el.value.trim()))el.value=v;};
+  set('ifPosto',p.nome,false);
+  set('ifRegiao',p.cidade,true);       // não sobrescreve região já digitada
+  set('ifLocalizacao',p.link,true);    // link do Maps do posto
+  const pay=_INF_CARD2PAY[p.cartao];
+  if(pay)set('ifPagamento',pay,false);
+  _infCloseAC();_infValidate();
+  document.getElementById('ifDescricao')?.focus();
 }
 
 function closeInfSheet(){document.querySelector('.inf-sheet-ov')?.remove();}
