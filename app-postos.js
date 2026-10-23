@@ -571,6 +571,7 @@ var _pstModo=(function(){try{return localStorage.getItem('rotograma_postos_modo'
 const _PST_PINO={truckpag:'#3B82F6',shell:'#F59E0B',frota:'#14B8A6',antecipada:'#8B5CF6',outro:'#71717A'};
 const _PST_NOVO_MS=24*60*60*1000;
 var _postosGeo={};
+var _postosGeoArq={},_pstArqOn=false; // postos-geo.json: coordenadas já lidas, reserva até a função estar publicada
 var _pstGeoOn=false,_pstGeoNegado=false;
 var _pstMapa=null,_pstCluster=null,_pstCamada=null,_pstFundoIdx=0,_pstEu=null;
 var _pstMapaPontos=[],_pstMapaSem=[],_pstSel=null,_pstVistos=null;
@@ -594,14 +595,18 @@ function _geoParse(txt){
     new RegExp('!3d'+N+'!4d'+N),
     new RegExp('[?&](?:q|query|ll|sll|destination|daddr|center)=(?:loc:)?'+N+'\\s*,\\s*'+N),
     new RegExp('/place/'+N+'\\s*,\\s*'+N),
-    new RegExp('@'+N+','+N),
+    new RegExp('@'+N+','+N+',(\\d+(?:\\.\\d+)?)(z|m)'),
     new RegExp('^'+N+'\\s*[,;]\\s*'+N+'$')
   ];
   const busca=/\/maps\/search\//i.test(s); // link de pesquisa: "@" é só o centro da tela
   for(const re of pats){
     if(busca&&re.source.startsWith('@'))continue;
     const m=s.match(re);
-    if(m){const lat=parseFloat(m[1]),lng=parseFloat(m[2]);if(_geoOk(lat,lng))return{lat,lng};}
+    if(m){
+      // "@lat,lng,8z" é só a vista do mapa (link sem lugar marcado) — vale apenas com zoom de rua
+      if(m[4]&&(m[4]==='z'?parseFloat(m[3])<14:parseFloat(m[3])>3000))continue;
+      const lat=parseFloat(m[1]),lng=parseFloat(m[2]);if(_geoOk(lat,lng))return{lat,lng};
+    }
   }
   return null;
 }
@@ -610,12 +615,13 @@ function _geoLinkCurto(link){
 }
 // Coordenada de um posto (ou null) — veja a ordem no topo da seção
 function _pstCoord(p){
-  const g=_postosGeo[_geoKey(p.nome)];
-  const gOk=g&&!g.falhou&&_geoOk(g.lat,g.lng);
-  if(gOk&&g.fonte==='manual')return{lat:g.lat,lng:g.lng};
+  const k=_geoKey(p.nome),g=_postosGeo[k],a=_postosGeoArq[k];
+  const ok=x=>x&&!x.falhou&&_geoOk(x.lat,x.lng);
+  if(ok(g)&&g.fonte==='manual')return{lat:g.lat,lng:g.lng};
   const c=_geoParse(p.link);
   if(c)return c;
-  if(gOk)return{lat:g.lat,lng:g.lng};
+  if(ok(g))return{lat:g.lat,lng:g.lng};
+  if(ok(a)&&(!a.link||a.link===p.link))return{lat:a.lat,lng:a.lng};
   return null;
 }
 function _pstEhNovo(p){
@@ -644,6 +650,13 @@ function _pstAplicarModo(){
 
 // ─── /postosGeo (lido só quando o mapa é aberto) ───
 function _pstGeoListener(){
+  if(!_pstArqOn){
+    _pstArqOn=true;
+    fetch('postos-geo.json?v='+(typeof APP_VERSION!=='undefined'?APP_VERSION:0)).then(r=>r.ok?r.json():{}).then(j=>{
+      _postosGeoArq=j||{};
+      if(_pstModo==='mapa'&&_postosVisivel())renderPostosList();
+    }).catch(()=>{_pstArqOn=false;});
+  }
   if(_pstGeoOn||typeof db==='undefined'||!db)return;
   _pstGeoOn=true;
   db.ref('postosGeo').on('value',snap=>{
@@ -689,6 +702,7 @@ function _pstCriarMapa(){
   if(!el||_pstMapa)return;
   const web=typeof IS_DESKTOP==='function'&&IS_DESKTOP();
   _pstMapa=L.map(el,{zoomControl:false,attributionControl:true,worldCopyJump:true}).setView([-16.7,-49.3],6);
+  _pstMapa.attributionControl.setPrefix(false);
   if(web)L.control.zoom({position:'topright'}).addTo(_pstMapa);
   _pstUsarFundo(0);
   _pstCluster=L.markerClusterGroup({showCoverageOnHover:false,maxClusterRadius:45,spiderfyOnMaxZoom:true,
@@ -910,6 +924,8 @@ function _pstAutoResolver(todos){
     if(!p.link||!_geoLinkCurto(p.link)||_geoParse(p.link))return false;
     const g=_postosGeo[_geoKey(p.nome)];
     if(g&&(g.fonte==='manual'||g.link===p.link))return false; // já resolvido (ou já tentou esse link)
+    const a=_postosGeoArq[_geoKey(p.nome)];
+    if(a&&a.link===p.link)return false; // já lido no postos-geo.json
     return !_pstResolvendo[_geoKey(p.nome)];
   });
   if(!fila.length)return;
@@ -953,8 +969,9 @@ function _pstSemListaRender(){
   const sem=_pstColetar().filter(p=>!_pstCoord(p)).sort((a,b)=>(a.nome||'').localeCompare(b.nome||'','pt'));
   if(!sem.length){el.innerHTML='<div class="pst-sem-ok"><i class="ti ti-circle-check" aria-hidden="true"></i>Todos os postos têm localização.</div>';return;}
   el.innerHTML=sem.map(p=>{
-    const k=_geoKey(p.nome),g=_postosGeo[k];
-    const motivo=!p.link?'Sem link do Maps':(g&&g.falhou&&g.link===p.link)?'O link não traz a coordenada (link de pesquisa)':_geoLinkCurto(p.link)?'Link curto aguardando leitura':'O link não traz a coordenada';
+    const k=_geoKey(p.nome),g=_postosGeo[k],a=_postosGeoArq[k];
+    const quebrado=(g&&g.falhou&&g.link===p.link)||(a&&a.falhou&&a.link===p.link);
+    const motivo=!p.link?'Sem link do Maps':quebrado?'O link abre o Maps sem lugar marcado — copie o link de novo':_geoLinkCurto(p.link)?'Link curto aguardando leitura':'O link não traz a coordenada';
     return '<div class="pst-sem-it" data-k="'+k+'"><div class="pst-sem-nome">'+_pstEsc(p.nome)+'</div><div class="pst-sem-sub">'+_pstEsc(p.cidade||'—')+' · '+motivo+'</div>'
       +'<div class="pst-sem-row"><input aria-label="Link ou coordenadas de '+_pstEsc(p.nome)+'" placeholder="Link do Maps ou -16.82, -49.24"><button type="button" onclick="_pstSemSalvar(this,\''+encodeURIComponent(p.nome)+'\')">Salvar</button></div>'
       +'<div class="pst-sem-err" hidden></div></div>';

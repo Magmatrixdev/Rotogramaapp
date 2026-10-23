@@ -33,7 +33,7 @@ const URL_PATS = [
   new RegExp('!3d' + N + '!4d' + N),
   new RegExp('[?&](?:q|query|ll|sll|destination|daddr|center)=(?:loc:)?' + N + '\\s*,\\s*' + N),
   new RegExp('/place/' + N + '\\s*,\\s*' + N),
-  new RegExp('@' + N + ',' + N),
+  new RegExp('@' + N + ',' + N + ',(\\d+(?:\\.\\d+)?)(z|m)'),
 ];
 const BODY_PATS = [new RegExp('!3d' + N + '!4d' + N), new RegExp('markers=' + N + '(?:%2C|,)' + N)];
 const GOOGLE_HOST = /(^|\.)(google\.com(\.[a-z]{2})?|google\.[a-z]{2}|goo\.gl|g\.co)$/i;
@@ -41,6 +41,8 @@ const GOOGLE_HOST = /(^|\.)(google\.com(\.[a-z]{2})?|google\.[a-z]{2}|goo\.gl|g\
 function match(text, pats) {
   for (const re of pats) {
     const m = text.match(re);
+    // "@lat,lng,8z" é só a vista do mapa (link sem lugar marcado) — vale apenas com zoom de rua
+    if (m && m[4] && (m[4] === 'z' ? parseFloat(m[3]) < 14 : parseFloat(m[3]) > 3000)) continue;
     if (m) { const lat = parseFloat(m[1]), lng = parseFloat(m[2]); if (geoOk(lat, lng)) return { lat, lng }; }
   }
   return null;

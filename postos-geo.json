@@ -1,0 +1,63 @@
+{
+ "rede_sao_roque_sabia": {
+  "nome": "Rede São Roque — Sabiá",
+  "lat": -13.0729958,
+  "lng": -55.9317253,
+  "link": "https://maps.app.goo.gl/d8JaW8EZnRMyyaVR9",
+  "fonte": "arquivo"
+ },
+ "rede_sao_roque_29": {
+  "nome": "Rede São Roque — 29",
+  "lat": -13.8353431,
+  "lng": -56.0832947,
+  "link": "https://maps.app.goo.gl/Gg3S1rtRuDcJf7zZ6",
+  "fonte": "arquivo"
+ },
+ "rede_sao_roque_alvorada": {
+  "nome": "Rede São Roque — Alvorada",
+  "lat": -15.5752795,
+  "lng": -54.3263656,
+  "link": "https://maps.app.goo.gl/QGC9w92uvcmApJmc9",
+  "fonte": "arquivo"
+ },
+ "posto_irmao_caminhoneiro_ii": {
+  "nome": "Posto Irmão Caminhoneiro II",
+  "lat": -12.5204237,
+  "lng": -40.234435,
+  "link": "https://maps.app.goo.gl/CNqGn28QPT3yDFpd8",
+  "fonte": "arquivo"
+ },
+ "posto_sao_caetano": {
+  "nome": "Posto São Caetano",
+  "lat": -12.4615815,
+  "lng": -39.2718312,
+  "link": "https://maps.app.goo.gl/xtAuqcusfpnvVxuT7",
+  "fonte": "arquivo"
+ },
+ "posto_azul_atalaia": {
+  "nome": "Posto Azul — Atalaia",
+  "lat": -11.3336111,
+  "lng": -37.5837222,
+  "link": "https://maps.app.goo.gl/eApQPbcLipGX6tsi6",
+  "fonte": "arquivo"
+ },
+ "posto_cjcm": {
+  "nome": "Posto CJCM",
+  "lat": -7.8837721,
+  "lng": -34.9043247,
+  "link": "https://maps.app.goo.gl/ynhhNNWJTvuyi5Jt9",
+  "fonte": "arquivo"
+ },
+ "posto_petroconde": {
+  "nome": "Posto Petroconde",
+  "lat": -7.2404048,
+  "lng": -34.9283926,
+  "link": "https://maps.app.goo.gl/Xbqi8GrwEGvQgXV17",
+  "fonte": "arquivo"
+ },
+ "posto_cerradao": {
+  "nome": "Posto Cerradão",
+  "link": "https://maps.app.goo.gl/Z5kyJdDhnuRHzedv6",
+  "falhou": true
+ }
+}

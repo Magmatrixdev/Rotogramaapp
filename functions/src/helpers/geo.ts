@@ -20,7 +20,7 @@ const URL_PATS = [
   new RegExp('!3d' + N + '!4d' + N),
   new RegExp('[?&](?:q|query|ll|sll|destination|daddr|center)=(?:loc:)?' + N + '\\s*,\\s*' + N),
   new RegExp('/place/' + N + '\\s*,\\s*' + N),
-  new RegExp('@' + N + ',' + N),
+  new RegExp('@' + N + ',' + N + ',(\\d+(?:\\.\\d+)?)(z|m)'),
 ];
 // Padrões que aparecem dentro do HTML da página do Maps
 // (só os que marcam o PONTO do lugar — "center"/"@" no HTML podem ser apenas o
@@ -33,6 +33,8 @@ const BODY_PATS = [
 function match(text: string, pats: RegExp[]): LatLng | null {
   for (const re of pats) {
     const m = text.match(re);
+    // "@lat,lng,8z" é só a vista do mapa (link sem lugar marcado) — vale apenas com zoom de rua
+    if (m && m[4] && (m[4] === 'z' ? parseFloat(m[3]) < 14 : parseFloat(m[3]) > 3000)) continue;
     if (m) {
       const lat = parseFloat(m[1]), lng = parseFloat(m[2]);
       if (geoOk(lat, lng)) return { lat, lng };

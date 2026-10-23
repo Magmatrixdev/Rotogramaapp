@@ -219,8 +219,10 @@ body.desktop-mode .postos-form-save:hover{background:#333}
 #screenPostos.pst-modo-mapa .pst-hero{padding-bottom:12px}
 #screenPostos.pst-modo-mapa .pst-hero-stats,
 #screenPostos.pst-modo-mapa .pst-hero-road{display:none}
-#screenPostos.pst-modo-mapa .pst-hero-title{margin-top:10px;font-size:28px}
+#screenPostos.pst-modo-mapa .pst-hero-title{display:none}
 #screenPostos.pst-modo-mapa .pst-search{margin-top:12px;height:44px}
+#screenPostos.pst-modo-mapa .pst-hero-kicker{font-size:0}
+#screenPostos.pst-modo-mapa .pst-hero-kicker::before{content:'POSTOS · MAPA';font-size:15px;letter-spacing:1px;color:#fff}
 #screenPostos.pst-modo-mapa .pst-main{flex:none;overflow:visible;padding-bottom:0}
 #screenPostos.pst-modo-mapa .pst-filters{padding:10px 0 10px}
 #screenPostos.pst-modo-mapa #postosListContainer{display:none}
@@ -306,8 +308,11 @@ body.desktop-mode .postos-form-save:hover{background:#333}
 body.desktop-mode .pst-mapwrap{margin:16px 24px 24px;max-width:1180px;border-radius:18px;overflow:hidden;border:1.5px solid #e4e2dd;background:#fff;min-height:520px}
 body.desktop-mode #screenPostos.pst-modo-mapa .pst-main{padding-bottom:0}
 body.desktop-mode #screenPostos.pst-modo-mapa .pst-filters{padding-bottom:0}
-body.desktop-mode #screenPostos.pst-modo-mapa .pst-hero-stats{display:flex}
-body.desktop-mode #screenPostos.pst-modo-mapa .pst-hero-title{margin-top:4px;font-size:34px}
+body.desktop-mode #screenPostos.pst-modo-mapa .pst-hero-title{display:block;margin-top:4px;font-size:28px}
+body.desktop-mode #screenPostos.pst-modo-mapa .pst-hero-kicker{font-size:11px}
+body.desktop-mode #screenPostos.pst-modo-mapa .pst-hero-kicker::before{content:none}
+body.desktop-mode #screenPostos.pst-modo-mapa .pst-hero{padding:16px 22px}
+body.desktop-mode #screenPostos.pst-modo-mapa .pst-mapwrap{min-height:600px}
 body.desktop-mode .pst-map-side{display:flex;flex-direction:column;gap:8px;width:330px;flex:none;border-right:1.5px solid #e4e2dd;padding:16px;overflow-y:auto;background:#fff}
 .pst-side-head{font:700 13px 'Barlow Condensed',system-ui,sans-serif;letter-spacing:1.2px;color:#6b6a66;margin-bottom:2px}
 .pst-side-it{display:flex;align-items:center;gap:10px;text-align:left;border:1.5px solid #e8e6e1;background:#fff;border-radius:12px;padding:10px 12px;cursor:pointer;font:inherit;color:#1c1c1c}
