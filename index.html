@@ -81,7 +81,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script>
 <link rel="stylesheet" href="app.css?v=24">
-<link rel="stylesheet" href="app-postos.css?v=17">
+<link rel="stylesheet" href="app-postos.css?v=18">
 <link rel="stylesheet" href="app-informativos.css?v=9">
 <link rel="stylesheet" href="app-simulacao.css?v=1">
 </head>
@@ -239,6 +239,10 @@
     <div class="pst-hero-row">
       <button class="pst-hero-back" onclick="bnavGoRotas()" aria-label="Voltar"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
       <div class="pst-hero-kicker">REDE DE ABASTECIMENTO</div>
+      <div class="pst-view" role="group" aria-label="Modo de exibição">
+        <button type="button" class="pst-view-btn" data-modo="lista" aria-pressed="true" onclick="setPostosModo('lista')"><i class="ti ti-list" aria-hidden="true"></i>Lista</button>
+        <button type="button" class="pst-view-btn" data-modo="mapa" aria-pressed="false" onclick="setPostosModo('mapa')"><i class="ti ti-map-2" aria-hidden="true"></i>Mapa</button>
+      </div>
     </div>
     <h1 class="pst-hero-title">Postos</h1>
     <div class="pst-hero-stats" id="postosStats"></div>
@@ -250,6 +254,21 @@
   <div class="pst-main">
     <div class="pst-filters" id="postosFilters"></div>
     <div id="postosListContainer"></div>
+  </div>
+  <div class="pst-mapwrap" id="postosMapWrap" hidden>
+    <aside class="pst-map-side" id="postosMapSide" aria-label="Postos na área visível"></aside>
+    <div class="pst-map-area">
+      <div class="pst-map" id="postosMap" role="application" aria-label="Mapa de postos"></div>
+      <div class="pst-map-legenda" aria-hidden="true"><span><i style="background:#3B82F6"></i>TruckPag</span><span><i style="background:#F59E0B"></i>Shell</span><span><i style="background:#14B8A6"></i>Rede Frota</span><span><i style="background:#8B5CF6"></i>Antecipada</span><span><i style="background:#16A34A"></i>Novo (24h)</span></div>
+      <button type="button" class="pst-map-sem" id="postosMapSem" hidden onclick="showPostosSemLocal()"></button>
+      <div class="pst-map-ctrl">
+        <button type="button" onclick="_pstMinhaLocal()" aria-label="Minha localização" title="Minha localização"><i class="ti ti-current-location" aria-hidden="true"></i></button>
+        <button type="button" onclick="_pstVerTodos()" aria-label="Ver todos os postos" title="Ver todos os postos"><i class="ti ti-maximize" aria-hidden="true"></i></button>
+      </div>
+      <div class="pst-map-msg" id="postosMapMsg" hidden role="status"></div>
+      <div class="pst-map-toast" id="postosMapToast" hidden role="status"></div>
+      <div class="pst-map-sheet" id="postosMapSheet" hidden></div>
+    </div>
   </div>
 </div>
 
@@ -326,20 +345,20 @@
   </button>
 </div>
 
-<script src="app-config.js?v=91"></script>
+<script src="app-config.js?v=92"></script>
 <script src="app-state.js?v=81"></script>
 <script src="app-crypto.js?v=81"></script>
 <script src="app-firebase.js?v=91"></script>
 <script src="app-auth.js?v=90"></script>
 <script src="app-nav.js?v=90"></script>
 <script src="app-render.js?v=81"></script>
-<script src="app-admin.js?v=91"></script>
+<script src="app-admin.js?v=92"></script>
 <script src="app-notifications.js?v=81"></script>
 <script src="app-desktop.js?v=90"></script>
 <script src="app-editor.js?v=81"></script>
 <script src="app-utils.js?v=81"></script>
 <script src="app-pwa.js?v=81"></script>
-<script src="app-postos.js?v=87"></script>
+<script src="app-postos.js?v=92"></script>
 <script src="app-informativos.js?v=84"></script>
 <script src="app-simulacao.js?v=85"></script>
 <script src="app-main.js?v=81"></script>

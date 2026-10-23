@@ -89,6 +89,7 @@ async function _uploadFoto(ref,file){
 // ─── navegação ───
 function showPostos(){
   navPush('screenPostos');
+  _pstAplicarModo();
   renderPostosList();
   updateBottomNav('Postos');
   // Reseta scroll do container interno para garantir que cards com foto (topo da lista) fiquem visíveis
@@ -151,11 +152,9 @@ function _pstUF(cidade){
   return(m&&_UF_NOMES[m[1]])?m[1]:'';
 }
 
-function renderPostosList(){
+// Junta postos das rotas + avulsos (dedup por nome) — usado pela lista e pelo mapa
+function _pstColetar(){
   const norm=s=>(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
-  const queryNorm=norm((document.getElementById('postosSearch')?.value||'').trim());
-  const filtro=_postosFiltro;
-
   // Dedup por NOME — rotas primeiro, avulsos do Firebase sobrescrevem (fotos/dados ricos)
   const dedup={};
   const rotasMap={};
@@ -184,8 +183,14 @@ function renderPostosList(){
     const f=Array.isArray(dedup[k].fotos)?dedup[k].fotos.filter(Boolean):[];
     dedup[k]._fotos=f;
   });
+  return Object.values(dedup);
+}
 
-  const todos=Object.values(dedup);
+function renderPostosList(){
+  const norm=s=>(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+  const queryNorm=norm((document.getElementById('postosSearch')?.value||'').trim());
+  const filtro=_postosFiltro;
+  const todos=_pstColetar();
   const porBusca=todos.filter(p=>!queryNorm||norm(p.nome).includes(queryNorm)||norm(p.cidade).includes(queryNorm)||norm(p._uf).includes(queryNorm)||norm(_UF_NOMES[p._uf]).includes(queryNorm));
   const visiveis=porBusca.filter(p=>filtro==='all'||getCartaoKey(p.cartao)===filtro);
 
@@ -201,12 +206,20 @@ function renderPostosList(){
   // ── chips de cartão (contagem respeita a busca) ──
   const chipsEl=document.getElementById('postosFilters');
   if(chipsEl){
-    const defs=[{id:'all',label:'Todos',dot:'#1c1c1c'}].concat(['truckpag','shell','frota','antecipada'].map(id=>({id,label:_PST_CARTOES[id].label,dot:_PST_CARTOES[id].dot})));
+    const _emMapa=_pstModo==='mapa';
+    const defs=[{id:'all',label:'Todos',dot:'#1c1c1c'}].concat(['truckpag','shell','frota','antecipada'].map(id=>({id,label:_PST_CARTOES[id].label,dot:_emMapa?_PST_PINO[id]:_PST_CARTOES[id].dot})));
     chipsEl.innerHTML=defs.map(c=>{
       const n=porBusca.filter(p=>c.id==='all'||getCartaoKey(p.cartao)===c.id).length;
       const on=c.id===filtro;
       return `<button class="postos-chip pst-chip${on?' active':''}" data-filter="${c.id}" onclick="setPostosFilter(this,'${c.id}')"><span class="pst-chip-dot" style="background:${on&&c.id==='all'?'#fff':c.dot}"></span>${c.label}<span class="pst-chip-n">${n}</span></button>`;
     }).join('');
+  }
+
+  // ── modo mapa: desenha os pinos e não monta a lista (evita carregar fotos à toa) ──
+  if(_pstModo==='mapa'){
+    const el0=document.getElementById('postosListContainer');if(el0)el0.innerHTML='';
+    _pstMapaDesenhar(visiveis,todos);
+    return;
   }
 
   // ── agrupa por estado ──
@@ -435,6 +448,7 @@ async function savePostoAvulso(){
     if(db)await db.ref('postos/'+id).set(posto);
     else{postosAvulsos[id]={...posto,_source:'avulso'};renderPostosList();}
     document.querySelector('.postos-form-ov')?.remove();
+    if(typeof geoAtualizarPosto==='function')geoAtualizarPosto(nome,link);
   }catch(e){
     errEl.textContent='Erro ao salvar. Tente novamente.';errEl.style.display='block';
     if(btn){btn.disabled=false;btn.textContent='Salvar';}
@@ -545,7 +559,430 @@ function deletePostoAvulso(id){
   };
 }
 
+// ═══════════════════════════════════════════════════════════════
+// MAPA DE POSTOS (mockup "Mapa de Postos" + prévia aprovada)
+// Leaflet + fundo Esri World Street Map (sem chave). Carregado só quando
+// alguém abre o mapa, para não pesar no app de quem nunca usa.
+// Coordenadas, por ordem: definida à mão (/postosGeo, fonte manual) →
+// tirada do link longo do Maps → resolvida pela Cloud Function
+// resolverLinkMaps (link curto, gravada em /postosGeo).
+// ═══════════════════════════════════════════════════════════════
+var _pstModo=(function(){try{return localStorage.getItem('rotograma_postos_modo')==='mapa'?'mapa':'lista';}catch(e){return 'lista';}})();
+const _PST_PINO={truckpag:'#3B82F6',shell:'#F59E0B',frota:'#14B8A6',antecipada:'#8B5CF6',outro:'#71717A'};
+const _PST_NOVO_MS=24*60*60*1000;
+var _postosGeo={};
+var _pstGeoOn=false,_pstGeoNegado=false;
+var _pstMapa=null,_pstCluster=null,_pstCamada=null,_pstFundoIdx=0,_pstEu=null;
+var _pstMapaPontos=[],_pstMapaSem=[],_pstSel=null,_pstVistos=null;
+var _pstLeafletP=null,_pstAjustou=false;
+var _pstResolvendo={},_pstFnIndisponivel=false;
 
+function _geoKey(nome){
+  return String(nome||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim()
+    .replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,120)||'sem_nome';
+}
+function _geoOk(lat,lng){
+  return isFinite(lat)&&isFinite(lng)&&Math.abs(lat)<=90&&Math.abs(lng)<=180&&!(lat===0&&lng===0);
+}
+// Extrai lat/lng de link longo do Google Maps ou de "lat, lng" digitado
+function _geoParse(txt){
+  let s=String(txt||'').trim();
+  if(!s)return null;
+  try{s=decodeURIComponent(s);}catch(e){}
+  const N='(-?\\d{1,3}(?:\\.\\d+)?)';
+  const pats=[
+    new RegExp('!3d'+N+'!4d'+N),
+    new RegExp('[?&](?:q|query|ll|sll|destination|daddr|center)=(?:loc:)?'+N+'\\s*,\\s*'+N),
+    new RegExp('/place/'+N+'\\s*,\\s*'+N),
+    new RegExp('@'+N+','+N),
+    new RegExp('^'+N+'\\s*[,;]\\s*'+N+'$')
+  ];
+  const busca=/\/maps\/search\//i.test(s); // link de pesquisa: "@" é só o centro da tela
+  for(const re of pats){
+    if(busca&&re.source.startsWith('@'))continue;
+    const m=s.match(re);
+    if(m){const lat=parseFloat(m[1]),lng=parseFloat(m[2]);if(_geoOk(lat,lng))return{lat,lng};}
+  }
+  return null;
+}
+function _geoLinkCurto(link){
+  return /^https?:\/\/(?:maps\.app\.goo\.gl|goo\.gl|g\.co)\//i.test(String(link||'').trim());
+}
+// Coordenada de um posto (ou null) — veja a ordem no topo da seção
+function _pstCoord(p){
+  const g=_postosGeo[_geoKey(p.nome)];
+  const gOk=g&&!g.falhou&&_geoOk(g.lat,g.lng);
+  if(gOk&&g.fonte==='manual')return{lat:g.lat,lng:g.lng};
+  const c=_geoParse(p.link);
+  if(c)return c;
+  if(gOk)return{lat:g.lat,lng:g.lng};
+  return null;
+}
+function _pstEhNovo(p){
+  const t=p.criadoEm||p.createdAt;
+  return typeof t==='number'&&Date.now()-t<_PST_NOVO_MS;
+}
 
+// ─── alternância Lista | Mapa ───
+function setPostosModo(modo){
+  _pstModo=modo==='mapa'?'mapa':'lista';
+  try{localStorage.setItem('rotograma_postos_modo',_pstModo);}catch(e){}
+  _pstAplicarModo();
+  renderPostosList();
+}
+function _pstAplicarModo(){
+  const scr=document.getElementById('screenPostos');
+  if(scr)scr.classList.toggle('pst-modo-mapa',_pstModo==='mapa');
+  const wrap=document.getElementById('postosMapWrap');
+  if(wrap)wrap.hidden=_pstModo!=='mapa';
+  document.querySelectorAll('#screenPostos .pst-view-btn').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.modo===_pstModo)));
+  if(_pstModo==='mapa'){
+    _pstGeoListener();
+    if(_pstMapa)setTimeout(()=>_pstMapa&&_pstMapa.invalidateSize(),60);
+  }
+}
 
+// ─── /postosGeo (lido só quando o mapa é aberto) ───
+function _pstGeoListener(){
+  if(_pstGeoOn||typeof db==='undefined'||!db)return;
+  _pstGeoOn=true;
+  db.ref('postosGeo').on('value',snap=>{
+    _postosGeo=snap.val()||{};_pstGeoNegado=false;
+    if(_pstModo==='mapa'&&_postosVisivel())renderPostosList();
+  },err=>{
+    console.warn('postosGeo listener:',err&&err.code);
+    _pstGeoOn=false;_pstGeoNegado=true;_postosGeo={};
+    if(_pstModo==='mapa'&&_postosVisivel())renderPostosList();
+  });
+}
 
+// ─── Leaflet sob demanda (cdnjs) ───
+function _pstCarregarLeaflet(){
+  if(window.L&&L.markerClusterGroup)return Promise.resolve();
+  if(_pstLeafletP)return _pstLeafletP;
+  const CDN='https://cdnjs.cloudflare.com/ajax/libs/';
+  const add=(tag,attrs)=>new Promise((res,rej)=>{const e=document.createElement(tag);Object.assign(e,attrs);e.onload=res;e.onerror=()=>rej(new Error('falha ao carregar '+(attrs.src||attrs.href)));document.head.appendChild(e);});
+  add('link',{rel:'stylesheet',href:CDN+'leaflet/1.9.4/leaflet.min.css'}).catch(()=>{});
+  add('link',{rel:'stylesheet',href:CDN+'leaflet.markercluster/1.5.3/MarkerCluster.min.css'}).catch(()=>{});
+  _pstLeafletP=add('script',{src:CDN+'leaflet/1.9.4/leaflet.min.js'})
+    .then(()=>add('script',{src:CDN+'leaflet.markercluster/1.5.3/leaflet.markercluster.min.js'}))
+    .catch(e=>{_pstLeafletP=null;throw e;});
+  return _pstLeafletP;
+}
+
+// Fundos de mapa sem chave: Esri; se falhar, OpenStreetMap
+const _PST_FUNDOS=[
+  {url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',opt:{maxZoom:19,attribution:'&copy; Esri, OpenStreetMap'}},
+  {url:'https://tile.openstreetmap.org/{z}/{x}/{y}.png',opt:{maxZoom:19,attribution:'&copy; OpenStreetMap'}}
+];
+function _pstUsarFundo(i){
+  if(_pstCamada)_pstMapa.removeLayer(_pstCamada);
+  let erros=0,carregou=false;
+  _pstCamada=L.tileLayer(_PST_FUNDOS[i].url,_PST_FUNDOS[i].opt);
+  _pstCamada.on('tileload',()=>{carregou=true;});
+  _pstCamada.on('tileerror',()=>{if(!carregou&&++erros>=4&&i<_PST_FUNDOS.length-1)_pstUsarFundo(_pstFundoIdx=i+1);});
+  _pstCamada.addTo(_pstMapa);
+}
+
+function _pstCriarMapa(){
+  const el=document.getElementById('postosMap');
+  if(!el||_pstMapa)return;
+  const web=typeof IS_DESKTOP==='function'&&IS_DESKTOP();
+  _pstMapa=L.map(el,{zoomControl:false,attributionControl:true,worldCopyJump:true}).setView([-16.7,-49.3],6);
+  if(web)L.control.zoom({position:'topright'}).addTo(_pstMapa);
+  _pstUsarFundo(0);
+  _pstCluster=L.markerClusterGroup({showCoverageOnHover:false,maxClusterRadius:45,spiderfyOnMaxZoom:true,
+    iconCreateFunction:c=>{const n=c.getChildCount();const sz=n<10?34:n<100?40:46;
+      return L.divIcon({className:'pst-clu',html:'<div style="width:'+sz+'px;height:'+sz+'px">'+n+'</div>',iconSize:[sz+6,sz+6]});}});
+  _pstMapa.addLayer(_pstCluster);
+  _pstMapa.on('moveend',_pstListaLateral);
+  _pstMapa.on('click',()=>_pstFecharFicha());
+  if(window.ResizeObserver)new ResizeObserver(()=>_pstMapa&&_pstMapa.invalidateSize()).observe(el);
+}
+
+function _pstIcone(p){
+  const cor=_PST_PINO[getCartaoKey(p.cartao)];
+  if(_pstSel===p._gk){
+    return L.divIcon({className:'pst-pin-sel',iconSize:[34,42],iconAnchor:[17,41],
+      html:'<span class="pst-pin-lbl">'+_pstEsc(p.nome)+'</span><svg width="34" height="42" viewBox="0 0 34 42" aria-hidden="true"><path d="M17 41C17 41 32 25.5 32 16A15 15 0 0 0 2 16C2 25.5 17 41 17 41Z" fill="#DC2626" stroke="#fff" stroke-width="3"/><circle cx="17" cy="16" r="5.5" fill="#fff"/></svg>'});
+  }
+  if(_pstEhNovo(p))return L.divIcon({className:'',iconSize:[24,24],iconAnchor:[12,12],html:'<div class="pst-pin-novo"><span class="p"></span><span class="c"></span></div>'});
+  return L.divIcon({className:'',iconSize:[20,20],iconAnchor:[10,10],html:'<div class="pst-pin" style="background:'+cor+'"></div>'});
+}
+
+// Chamado por renderPostosList no modo mapa
+function _pstMapaDesenhar(visiveis,todos){
+  const wrap=document.getElementById('postosMapWrap');
+  if(!wrap)return;
+  _pstAplicarModo();
+  _pstGeoListener();
+  // separa quem tem coordenada
+  _pstMapaPontos=[];_pstMapaSem=[];
+  visiveis.forEach(p=>{const c=_pstCoord(p);if(c)_pstMapaPontos.push({...p,_gk:_geoKey(p.nome),_lat:c.lat,_lng:c.lng});else _pstMapaSem.push(p);});
+  const semTotal=todos.filter(p=>!_pstCoord(p));
+  _pstAvisoSem(semTotal);
+  if(adminMode)_pstAutoResolver(todos);
+
+  const msg=document.getElementById('postosMapMsg');
+  if(!window.L||!L.markerClusterGroup){
+    if(msg){msg.hidden=false;msg.innerHTML='<i class="ti ti-loader-2 pst-spin" aria-hidden="true"></i><span>Carregando mapa…</span>';}
+    _pstCarregarLeaflet().then(()=>{if(msg)msg.hidden=true;if(_pstModo==='mapa')renderPostosList();})
+      .catch(()=>{if(msg){msg.hidden=false;msg.innerHTML='<i class="ti ti-wifi-off" aria-hidden="true"></i><span>O mapa precisa de internet para carregar. Tente de novo quando tiver sinal.</span><button type="button" onclick="renderPostosList()">Tentar de novo</button>';}});
+    return;
+  }
+  if(msg)msg.hidden=true;
+  _pstCriarMapa();
+  if(!_pstMapa)return;
+  setTimeout(()=>_pstMapa&&_pstMapa.invalidateSize(),30);
+
+  // postos que surgiram com o mapa aberto: pino verde + aviso + voo até ele
+  const chaves=new Set(todos.map(p=>p._key));
+  let chegou=null;
+  if(_pstVistos){
+    // só conta como "chegou agora" cadastro dos últimos 10 min (evita falso aviso quando os dados terminam de baixar)
+    todos.forEach(p=>{const t=p.criadoEm||p.createdAt;if(!_pstVistos.has(p._key)&&typeof t==='number'&&Date.now()-t<600000){const c=_pstCoord(p);if(c&&!chegou)chegou={...p,_lat:c.lat,_lng:c.lng};}});
+  }
+  _pstVistos=chaves;
+
+  _pstCluster.clearLayers();
+  const mk=_pstMapaPontos.map(p=>{
+    const m=L.marker([p._lat,p._lng],{icon:_pstIcone(p),title:p.nome,keyboard:true,zIndexOffset:_pstSel===p._gk?1000:0});
+    m.on('click',ev=>{L.DomEvent.stopPropagation(ev);_pstSelecionar(p._gk,false);});
+    return m;
+  });
+  _pstCluster.addLayers(mk);
+
+  const sel=_pstMapaPontos.find(p=>p._gk===_pstSel);
+  if(sel)_pstFicha(sel);else{_pstSel=null;_pstEsconderFicha();}
+
+  if(!_pstAjustou&&_pstMapaPontos.length){_pstAjustou=true;_pstVerTodos(false);}
+  if(chegou){
+    _pstMapa.flyTo([chegou._lat,chegou._lng],Math.max(_pstMapa.getZoom(),10),{duration:1.1});
+    _pstToast('Posto novo no mapa',chegou.nome+' · '+(chegou.cidade||'')+' — adicionado agora');
+  }
+  _pstListaLateral();
+}
+
+function _pstVerTodos(animar){
+  if(!_pstMapa)return;
+  const pts=_pstMapaPontos.map(p=>[p._lat,p._lng]);
+  if(!pts.length)return;
+  if(pts.length===1)_pstMapa.setView(pts[0],12,{animate:animar!==false});
+  else _pstMapa.fitBounds(L.latLngBounds(pts).pad(0.08),{animate:animar!==false,maxZoom:13});
+}
+function _pstMinhaLocal(){
+  if(!navigator.geolocation){if(typeof showToast==='function')showToast('Localização indisponível neste aparelho');return;}
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const ll=[pos.coords.latitude,pos.coords.longitude];
+    if(!_pstMapa)return;
+    if(_pstEu)_pstMapa.removeLayer(_pstEu);
+    _pstEu=L.marker(ll,{icon:L.divIcon({className:'',iconSize:[18,18],iconAnchor:[9,9],html:'<div class="pst-eu"></div>'}),interactive:false}).addTo(_pstMapa);
+    _pstMapa.flyTo(ll,Math.max(_pstMapa.getZoom(),11),{duration:.9});
+  },()=>{if(typeof showToast==='function')showToast('Não foi possível pegar sua localização','#5a5856');},{enableHighAccuracy:true,timeout:10000,maximumAge:60000});
+}
+
+function _pstSelecionar(key,voar){
+  _pstSel=key;
+  const p=_pstMapaPontos.find(x=>x._gk===key);
+  if(!p)return;
+  // redesenha só os ícones (sem refazer a lista)
+  _pstCluster.eachLayer(m=>{const q=_pstMapaPontos.find(x=>x.nome===m.options.title);if(q){m.setIcon(_pstIcone(q));m.setZIndexOffset(q._gk===key?1000:0);}});
+  if(voar){
+    const m=_pstCluster.getLayers().find(x=>x.options.title===p.nome);
+    if(m)_pstCluster.zoomToShowLayer(m,()=>{});else _pstMapa.flyTo([p._lat,p._lng],Math.max(_pstMapa.getZoom(),12));
+  }
+  _pstFicha(p);
+  _pstListaLateral();
+  // celular: se o pino ficou atrás da ficha, sobe o mapa
+  if(!voar&&!(typeof IS_DESKTOP==='function'&&IS_DESKTOP())){
+    const sh=document.getElementById('postosMapSheet'),hMap=_pstMapa.getSize().y,hSh=sh?sh.offsetHeight:0;
+    const pt=_pstMapa.latLngToContainerPoint([p._lat,p._lng]);
+    const livre=hMap-hSh;
+    if(pt.y>livre-40||pt.y<40)_pstMapa.panBy([0,pt.y-livre/2],{animate:true});
+  }
+}
+
+function _pstFicha(p){
+  const box=document.getElementById('postosMapSheet');
+  if(!box)return;
+  const ck=getCartaoKey(p.cartao),cc=_PST_CARTOES[ck];
+  const lbl=ck==='outro'?getCartaoLabel(p.cartao):cc.label;
+  const fotos=(p._fotos&&p._fotos.length)?p._fotos:getFotosByNome(p.nome).filter(Boolean);
+  const gk='m'+_geoKey(p.nome);
+  if(fotos.length)_postoGaleriaCache[gk]=fotos;
+  const nEnc=encodeURIComponent(p.nome||''),cEnc=encodeURIComponent(p.cidade||'');
+  const href=p.link||('https://www.google.com/maps/dir/?api=1&destination='+p._lat+','+p._lng);
+  const rotas=(p._rotas||[]);
+  const thumb=fotos.length
+    ?'<img class="pst-ms-foto" src="'+_pstEsc(fotos[0])+'" alt="'+_pstEsc(p.nome)+'" loading="lazy" onclick="showPostoGaleria(\''+gk+'\',0)">'
+    :'<div class="pst-ms-foto pst-ms-foto--off"><i class="ti ti-gas-station" aria-hidden="true"></i></div>';
+  box.innerHTML='<span class="pst-ms-alca" aria-hidden="true"></span>'
+    +'<button type="button" class="pst-ms-x" onclick="_pstFecharFicha()" aria-label="Fechar"><i class="ti ti-x" aria-hidden="true"></i></button>'
+    +'<div class="pst-ms-top">'+thumb+'<div class="pst-ms-txt">'
+      +'<div class="pst-ms-nome">'+_pstEsc(p.nome)+'</div>'
+      +'<div class="pst-ms-loc"><i class="ti ti-map-pin" aria-hidden="true"></i>'+_pstEsc(p.cidade||'—')+'</div>'
+      +'<div class="pst-ms-tags"><span class="pst-pill" style="background:'+cc.bg+';color:'+cc.fg+'"><span class="pst-pill-dot" style="background:'+_PST_PINO[ck]+'"></span>'+_pstEsc(lbl)+'</span>'
+      +(rotas.length?'<span class="pst-ms-tag">Em '+rotas.length+(rotas.length===1?' rota':' rotas')+'</span>':'')
+      +(_pstEhNovo(p)?'<span class="pst-ms-tag pst-ms-tag--novo">NOVO</span>':'')+'</div>'
+    +'</div></div>'
+    +(rotas.length?'<div class="pst-ms-rotas"><b>Nas rotas:</b> '+rotas.map(_pstEsc).join(', ')+'</div>':'')
+    +(typeof simPrecoPostoHTML==='function'?simPrecoPostoHTML(p.nome):'')
+    +'<div class="pst-ms-acoes"><a class="pst-go" href="'+_pstEsc(href)+'" target="_blank" rel="noopener"><i class="ti ti-navigation" aria-hidden="true"></i>Como chegar</a>'
+    +(adminMode
+      ?'<button type="button" class="pst-ms-sec" onclick="showEditPostoUnified(\''+nEnc+'\',\''+cEnc+'\')"><i class="ti ti-pencil" aria-hidden="true"></i>Editar</button>'
+      :'<button type="button" class="pst-ms-sec" onclick="_pstVerNaLista(\''+nEnc+'\')"><i class="ti ti-list" aria-hidden="true"></i>Ver detalhes</button>')
+    +'</div>';
+  box.hidden=false;
+  document.getElementById('postosMapWrap')?.classList.add('pst-com-ficha');
+}
+function _pstEsconderFicha(){
+  const box=document.getElementById('postosMapSheet');
+  if(box)box.hidden=true;
+  document.getElementById('postosMapWrap')?.classList.remove('pst-com-ficha');
+}
+function _pstFecharFicha(){
+  _pstEsconderFicha();
+  if(!_pstSel)return;
+  const k=_pstSel;_pstSel=null;
+  if(_pstCluster)_pstCluster.eachLayer(m=>{const q=_pstMapaPontos.find(x=>x.nome===m.options.title);if(q&&q._gk===k){m.setIcon(_pstIcone(q));m.setZIndexOffset(0);}});
+  _pstListaLateral();
+}
+function _pstVerNaLista(nEnc){
+  const s=document.getElementById('postosSearch');
+  if(s)s.value=decodeURIComponent(nEnc);
+  _pstSel=null;
+  setPostosModo('lista');
+}
+
+// Lista lateral da versão web: postos na área visível do mapa
+function _pstListaLateral(){
+  const side=document.getElementById('postosMapSide');
+  if(!side||!_pstMapa)return;
+  const web=typeof IS_DESKTOP==='function'&&IS_DESKTOP();
+  if(!web){side.innerHTML='';return;}
+  const b=_pstMapa.getBounds();
+  const vis=_pstMapaPontos.filter(p=>b.contains([p._lat,p._lng]))
+    .sort((a,c)=>(_pstEhNovo(c)-_pstEhNovo(a))||(a.nome||'').localeCompare(c.nome||'','pt'));
+  const itens=vis.slice(0,200).map(p=>{
+    const ck=getCartaoKey(p.cartao),novo=_pstEhNovo(p);
+    const lbl=ck==='outro'?getCartaoLabel(p.cartao):_PST_CARTOES[ck].label;
+    const r=(p._rotas||[]).length;
+    return '<button type="button" class="pst-side-it'+(p._gk===_pstSel?' sel':'')+(novo?' novo':'')+'" onclick="_pstSelecionar(\''+p._gk+'\',true)">'
+      +'<span class="pst-side-dot" style="background:'+(novo?'#16A34A':_PST_PINO[ck])+'"></span>'
+      +'<span class="pst-side-txt"><span class="pst-side-nome">'+_pstEsc(p.nome)+(novo?' <em>NOVO</em>':'')+'</span>'
+      +'<span class="pst-side-sub">'+_pstEsc(p.cidade||'—')+' · '+_pstEsc(lbl)+(r?' · em '+r+(r===1?' rota':' rotas'):'')+'</span></span></button>';
+  }).join('');
+  side.innerHTML='<div class="pst-side-head">NA ÁREA VISÍVEL · '+vis.length+'</div>'
+    +(itens||'<div class="pst-side-vazio">Nenhum posto nesta parte do mapa. Afaste o zoom ou use “Ver todos”.</div>')
+    +(vis.length>200?'<div class="pst-side-vazio">Mostrando 200 de '+vis.length+'. Aproxime o mapa para ver o resto.</div>':'')
+    +(adminMode&&_pstSemCache.length?'<button type="button" class="pst-side-sem" onclick="showPostosSemLocal()"><b>'+_pstSemCache.length+(_pstSemCache.length===1?' posto sem localização':' postos sem localização')+'</b><span>Não aparecem no mapa até ter link do Maps ou coordenada. Corrigir</span></button>':'');
+}
+
+// Aviso dos postos sem localização (só admin)
+var _pstSemCache=[];
+function _pstAvisoSem(sem){
+  _pstSemCache=sem;
+  const b=document.getElementById('postosMapSem');
+  if(!b)return;
+  const web=typeof IS_DESKTOP==='function'&&IS_DESKTOP();
+  b.hidden=!adminMode||!sem.length||web;
+  b.innerHTML='<i class="ti ti-map-pin-off" aria-hidden="true"></i>'+sem.length+' sem localização';
+}
+
+function _pstToast(titulo,txt){
+  const t=document.getElementById('postosMapToast');
+  if(!t)return;
+  t.innerHTML='<span class="pst-mt-ico"><i class="ti ti-plus" aria-hidden="true"></i></span><span class="pst-mt-txt"><b>'+_pstEsc(titulo)+'</b><span>'+_pstEsc(txt)+'</span></span>';
+  t.hidden=false;
+  clearTimeout(_pstToast._t);_pstToast._t=setTimeout(()=>{t.hidden=true;},4500);
+}
+
+// ─── coordenada de link curto (Cloud Function) ───
+async function _pstResolverLink(nome,link,manual){
+  if(typeof _callFn!=='function')throw new Error('Funções indisponíveis');
+  const r=await _callFn('resolverLinkMaps')({nome,link,manual:!!manual});
+  return r&&r.data;
+}
+// Admin com o mapa aberto: resolve sozinho os links curtos ainda sem coordenada
+function _pstAutoResolver(todos){
+  if(_pstFnIndisponivel||_pstGeoNegado)return;
+  const fila=todos.filter(p=>{
+    if(!p.link||!_geoLinkCurto(p.link)||_geoParse(p.link))return false;
+    const g=_postosGeo[_geoKey(p.nome)];
+    if(g&&(g.fonte==='manual'||g.link===p.link))return false; // já resolvido (ou já tentou esse link)
+    return !_pstResolvendo[_geoKey(p.nome)];
+  });
+  if(!fila.length)return;
+  fila.forEach(p=>{_pstResolvendo[_geoKey(p.nome)]=1;});
+  let i=0;
+  const prox=async()=>{
+    while(i<fila.length&&!_pstFnIndisponivel){
+      const p=fila[i++];
+      try{await _pstResolverLink(p.nome,p.link,false);}
+      catch(e){
+        const c=String(e&&e.code||'');
+        if(/not-found|unavailable|unimplemented|permission-denied|internal/.test(c)){_pstFnIndisponivel=true;console.warn('resolverLinkMaps indisponível:',c);}
+      }
+    }
+  };
+  prox();prox();
+}
+// Chamado depois que o admin salva um posto (cadastro/edição)
+function geoAtualizarPosto(nome,link){
+  if(!nome||!link||_geoParse(link)||!_geoLinkCurto(link))return;
+  _pstResolverLink(nome,link,false).catch(e=>console.warn('resolverLinkMaps:',e&&e.code));
+}
+
+// ─── admin: lista de postos sem localização ───
+function showPostosSemLocal(){
+  document.querySelector('.postos-form-ov')?.remove();
+  const ov=document.createElement('div');
+  ov.className='postos-form-ov';
+  ov.onclick=e=>{if(e.target===ov)ov.remove();};
+  ov.innerHTML='<div class="postos-form-box pst-sem-box"><div class="postos-form-title">Postos sem localização</div>'
+    +'<div class="pst-sem-intro">Estes postos não aparecem no mapa. Cole o link do Google Maps (longo ou curto) ou as coordenadas, por exemplo <b>-16.82, -49.24</b>.</div>'
+    +(_pstGeoNegado?'<div class="postos-form-err" style="display:block">As regras do banco ainda não foram publicadas (nó postosGeo). Rode <b>firebase deploy --only database</b>.</div>':'')
+    +'<div id="pstSemLista"></div>'
+    +'<div class="postos-form-btns"><button class="postos-form-cancel" onclick="this.closest(\'.postos-form-ov\').remove()">Fechar</button></div></div>';
+  document.body.appendChild(ov);
+  _pstSemListaRender();
+}
+function _pstSemListaRender(){
+  const el=document.getElementById('pstSemLista');
+  if(!el)return;
+  const sem=_pstColetar().filter(p=>!_pstCoord(p)).sort((a,b)=>(a.nome||'').localeCompare(b.nome||'','pt'));
+  if(!sem.length){el.innerHTML='<div class="pst-sem-ok"><i class="ti ti-circle-check" aria-hidden="true"></i>Todos os postos têm localização.</div>';return;}
+  el.innerHTML=sem.map(p=>{
+    const k=_geoKey(p.nome),g=_postosGeo[k];
+    const motivo=!p.link?'Sem link do Maps':(g&&g.falhou&&g.link===p.link)?'O link não traz a coordenada (link de pesquisa)':_geoLinkCurto(p.link)?'Link curto aguardando leitura':'O link não traz a coordenada';
+    return '<div class="pst-sem-it" data-k="'+k+'"><div class="pst-sem-nome">'+_pstEsc(p.nome)+'</div><div class="pst-sem-sub">'+_pstEsc(p.cidade||'—')+' · '+motivo+'</div>'
+      +'<div class="pst-sem-row"><input aria-label="Link ou coordenadas de '+_pstEsc(p.nome)+'" placeholder="Link do Maps ou -16.82, -49.24"><button type="button" onclick="_pstSemSalvar(this,\''+encodeURIComponent(p.nome)+'\')">Salvar</button></div>'
+      +'<div class="pst-sem-err" hidden></div></div>';
+  }).join('');
+}
+async function _pstSemSalvar(btn,nEnc){
+  const nome=decodeURIComponent(nEnc);
+  const box=btn.closest('.pst-sem-it'),inp=box.querySelector('input'),err=box.querySelector('.pst-sem-err');
+  const v=(inp.value||'').trim();
+  err.hidden=true;
+  if(!v){err.textContent='Cole um link ou as coordenadas.';err.hidden=false;return;}
+  btn.disabled=true;btn.textContent='Salvando…';
+  try{
+    const c=_geoParse(v);
+    if(c){
+      await db.ref('postosGeo/'+_geoKey(nome)).set({nome,lat:c.lat,lng:c.lng,link:v.slice(0,500),fonte:'manual',data:Date.now()});
+    }else if(_geoLinkCurto(v)){
+      const r=await _pstResolverLink(nome,v,true);
+      if(!r||!_geoOk(r.lat,r.lng))throw new Error('O link não traz a coordenada. Abra o local no Maps, toque no pino e copie o link de novo, ou cole as coordenadas.');
+    }else{
+      throw new Error('Não encontrei coordenada nesse texto. Use um link do Google Maps ou o formato -16.82, -49.24.');
+    }
+    box.remove();
+    if(typeof showToast==='function')showToast('📍 Localização salva');
+    if(!document.querySelector('#pstSemLista .pst-sem-it'))_pstSemListaRender();
+  }catch(e){
+    const pd=/permission/i.test(String(e&&(e.code||e.message)));
+    err.textContent=pd?'Sem permissão: publique as regras do banco (firebase deploy --only database).':(e&&e.message||'Erro ao salvar');
+    err.hidden=false;btn.disabled=false;btn.textContent='Salvar';
+  }
+}

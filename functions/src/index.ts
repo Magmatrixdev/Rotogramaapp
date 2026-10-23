@@ -29,6 +29,7 @@ import * as admin from 'firebase-admin';
 import { cleanCPF, validateCPF } from './helpers/cpf';
 import { computeHmac, hashPin, verifyPin, encryptData, decryptData } from './helpers/crypto';
 import { checkAndIncrementRateLimit, clearRateLimit, WARNING_FROM, RateLimitResult } from './helpers/rateLimit';
+import { geoKey, geoOk, resolveLink, hostPermitido, parseCoords } from './helpers/geo';
 
 admin.initializeApp();
 
@@ -611,5 +612,50 @@ export const onNotificationCreated = onValueCreated(
       invalidos.forEach((p) => { updates[p] = null; });
       await db.ref().update(updates).catch(() => undefined);
     }
+  }
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// resolverLinkMaps
+// Callable: { nome: string, link: string, manual?: boolean }
+// Requer: admin. Lê a coordenada de um link do Google Maps (inclusive link curto
+// maps.app.goo.gl, que o app não consegue abrir sozinho) e grava em
+// /postosGeo/{chave do posto}. Usado pelo Mapa de Postos.
+// Retorna: { lat, lng } ou { lat: null, lng: null } quando o link não traz ponto.
+// ─────────────────────────────────────────────────────────────────────────────
+export const resolverLinkMaps = onCall(
+  { region: 'us-central1', timeoutSeconds: 30, memory: '256MiB' },
+  async (request) => {
+    const tok = request.auth?.token;
+    if (!tok || !(tok['admin'] === true || tok['email'] === 'pedrosgj@gmail.com')) {
+      throw new HttpsError('permission-denied', 'Requer admin.');
+    }
+    const { nome, link, manual } = (request.data || {}) as { nome?: string; link?: string; manual?: boolean };
+    if (!nome || typeof nome !== 'string' || nome.length > 200) {
+      throw new HttpsError('invalid-argument', 'Nome do posto inválido.');
+    }
+    const lk = String(link || '').trim();
+    if (!lk || lk.length > 500 || (!parseCoords(lk) && !hostPermitido(lk))) {
+      throw new HttpsError('invalid-argument', 'Use um link do Google Maps.');
+    }
+
+    let c = null;
+    try { c = await resolveLink(lk); }
+    catch (e) { console.warn('resolverLinkMaps: falha ao seguir link', lk, e); }
+
+    const ref = admin.database().ref(`postosGeo/${geoKey(nome)}`);
+    if (c && geoOk(c.lat, c.lng)) {
+      await ref.set({ nome, lat: c.lat, lng: c.lng, link: lk, fonte: manual ? 'manual' : 'link', data: Date.now() });
+      return { lat: c.lat, lng: c.lng };
+    }
+    // Marca a tentativa para o app não repetir o mesmo link a cada abertura do mapa
+    // (não sobrescreve uma coordenada já definida à mão)
+    if (!manual) {
+      const atual = (await ref.once('value')).val();
+      if (!atual || atual.fonte !== 'manual') {
+        await ref.set({ nome, link: lk, falhou: true, data: Date.now() });
+      }
+    }
+    return { lat: null, lng: null };
   }
 );
