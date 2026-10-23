@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Teste de Mapa — Postos</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<style>
+html,body{height:100%;margin:0;background:#e8e9e4;font-family:'Barlow',system-ui,-apple-system,sans-serif}
+#map{position:absolute;inset:0}
+.top{position:absolute;z-index:1000;left:max(12px,env(safe-area-inset-left));right:max(12px,env(safe-area-inset-right));top:calc(10px + env(safe-area-inset-top,0px));
+  background:#1c1c1c;color:#fff;border-radius:14px;padding:10px 14px;box-shadow:0 4px 16px rgba(0,0,0,.25);font-size:13px;line-height:1.35}
+.top b{font-size:15px;display:block}
+.top small{opacity:.7}
+.bar{position:absolute;z-index:1000;left:0;right:0;bottom:0;padding:10px max(12px,env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left));
+  display:flex;gap:8px;overflow-x:auto;background:linear-gradient(transparent,rgba(0,0,0,.25))}
+.bar button{flex:0 0 auto;border:0;border-radius:999px;padding:10px 14px;font:700 14px system-ui,sans-serif;background:#fff;color:#1c1c1c;box-shadow:0 2px 8px rgba(0,0,0,.25);cursor:pointer}
+.bar button.on{background:#C8102E;color:#fff}
+.pin{width:20px;height:20px;border-radius:50%;border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35);box-sizing:border-box}
+.leaflet-control-attribution{font-size:10px}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div class="top"><b id="nome">—</b><span id="desc"></span><br><small id="dpr"></small></div>
+<div class="bar" id="bar"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@maplibre/maplibre-gl-leaflet@0.1.4/leaflet-maplibre-gl.js"></script>
+<script>
+// Página de TESTE: compara fundos de mapa. Não altera o app.
+const OFM='https://tiles.openfreemap.org/styles/';
+const ATR='&copy; <a href="https://openfreemap.org">OpenFreeMap</a> &copy; OpenStreetMap';
+const FUNDOS=[
+  {id:'atual',nome:'Atual (Esri)',desc:'O fundo de hoje: imagem pronta em baixa resolução, por isso fica borrado em tela de celular.',
+   raster:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',atr:'&copy; Esri, OpenStreetMap'},
+  {id:'liberty',nome:'A · Liberty',desc:'Colorido, parecido com o Google Maps. Desenhado na hora, nítido em qualquer tela.',style:OFM+'liberty'},
+  {id:'positron',nome:'B · Claro limpo',desc:'Cinza claro e discreto: os pinos coloridos dos postos ficam em destaque.',style:OFM+'positron'},
+  {id:'bright',nome:'C · Bright',desc:'Vivo, estradas bem marcadas em amarelo/laranja.',style:OFM+'bright'},
+  {id:'dark',nome:'D · Escuro',desc:'Fundo escuro, combina com o cabeçalho grafite do app.',style:OFM+'dark'}
+];
+const map=L.map('map',{zoomControl:false,worldCopyJump:true}).setView([-12.5,-46],5);
+map.attributionControl.setPrefix(false);
+let camada=null;
+function usar(i){
+  const f=FUNDOS[i];
+  if(camada)map.removeLayer(camada);
+  camada=f.raster?L.tileLayer(f.raster,{maxZoom:19,attribution:f.atr})
+                 :L.maplibreGL({style:f.style,attribution:ATR});
+  camada.addTo(map);
+  document.getElementById('nome').textContent=f.nome;
+  document.getElementById('desc').textContent=f.desc;
+  [...document.querySelectorAll('.bar button')].forEach((b,j)=>b.classList.toggle('on',j===i));
+  try{localStorage.setItem('mapa_teste',f.id)}catch(e){}
+}
+const bar=document.getElementById('bar');
+FUNDOS.forEach((f,i)=>{const b=document.createElement('button');b.textContent=f.nome;b.onclick=()=>usar(i);bar.appendChild(b);});
+document.getElementById('dpr').textContent='Sua tela: densidade '+(window.devicePixelRatio||1).toFixed(1)+'x · aproxime e afaste para comparar';
+
+// Pinos de exemplo (postos do postos-geo.json; cores de cartão só ilustrativas)
+const CORES=['#3B82F6','#F59E0B','#14B8A6','#8B5CF6'];
+fetch('postos-geo.json',{cache:'no-store'}).then(r=>r.json()).then(d=>{
+  Object.values(d).filter(p=>p&&typeof p.lat==='number').forEach((p,k)=>{
+    L.marker([p.lat,p.lng],{icon:L.divIcon({className:'',iconSize:[20,20],iconAnchor:[10,10],
+      html:'<div class="pin" style="background:'+CORES[k%4]+'"></div>'})}).bindPopup('<b>'+p.nome+'</b>').addTo(map);
+  });
+}).catch(()=>{});
+
+let ini=1;try{const s=localStorage.getItem('mapa_teste');const j=FUNDOS.findIndex(f=>f.id===s);if(j>=0)ini=j}catch(e){}
+usar(ini);
+</script>
+</body>
+</html>
