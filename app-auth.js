@@ -278,6 +278,14 @@ function switchAuthTab(tab){
 
 // ═══ ADMIN LOGIN ═══
 function showAdminLogin(){
+  // Já logado como admin (sessão ativa e não ociosa): volta direto ao painel,
+  // sem pedir e-mail/senha de novo.
+  const _u=(typeof firebase!=='undefined'&&firebase.auth)?firebase.auth().currentUser:null;
+  if(adminMode&&_u&&!(typeof _authIsIdle==='function'&&_authIsIdle())){
+    document.querySelector('.login-overlay')?.remove();
+    if(_navStack[_navStack.length-1]!=='screenAdmin')showAdmin();
+    return;
+  }
   document.querySelector('.login-overlay')?.remove();
   const ov=document.createElement('div');ov.className='login-overlay';
   ov.innerHTML=`<div class="login-box" role="dialog" aria-modal="true" aria-labelledby="adlTitle"><div class="adl-hero"><svg class="adl-rings" aria-hidden="true" width="300" height="300" viewBox="0 0 300 300"><circle cx="150" cy="150" r="140" fill="none" stroke="#3a3a3a" stroke-width="1.5"/><circle cx="150" cy="150" r="100" fill="none" stroke="#3a3a3a" stroke-width="1.5"/><circle cx="150" cy="150" r="60" fill="none" stroke="#fe2627" stroke-width="1.5" stroke-dasharray="6 8"/></svg><div class="adl-top"><button type="button" class="adl-back" aria-label="Voltar" onclick="this.closest('.login-overlay').remove()"><i class="ti ti-chevron-left" aria-hidden="true"></i></button><span class="adl-brand">CONFIANÇA</span></div><div class="adl-icon"><i class="ti ti-shield-check" aria-hidden="true"></i></div><div class="adl-kicker">ÁREA RESTRITA</div><div class="login-title" id="adlTitle">Administração</div><div class="login-sub">Rotas, postos, motoristas e informativos.</div></div><div class="adl-body"><div class="login-field"><label for="loginUser">E-mail</label><div class="adl-iwrap"><i class="ti ti-mail" aria-hidden="true"></i><input type="email" id="loginUser" placeholder="nome@empresa.com.br" autocomplete="username"></div></div><div class="login-field"><label for="loginPass">Senha</label><div class="adl-iwrap"><i class="ti ti-lock" aria-hidden="true"></i><input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password"><button type="button" class="adl-eye" aria-label="Mostrar senha" onclick="const i=document.getElementById('loginPass');const s=i.type==='password';i.type=s?'text':'password';this.querySelector('i').className='ti '+(s?'ti-eye-off':'ti-eye');this.setAttribute('aria-label',s?'Ocultar senha':'Mostrar senha')"><i class="ti ti-eye" aria-hidden="true"></i></button></div></div><button type="button" class="login-btn" onclick="doAdminLogin()">ENTRAR</button><div class="login-error" id="loginError" role="alert">Usuário ou senha incorretos</div><div class="adl-note"><i class="ti ti-clock" aria-hidden="true"></i><span>Por segurança, a sessão é encerrada após 30 minutos sem uso.</span></div><button type="button" class="login-cancel" onclick="this.closest('.login-overlay').remove()">Sou motorista — voltar ao login</button></div></div>`;
