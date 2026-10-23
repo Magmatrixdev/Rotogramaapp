@@ -208,11 +208,7 @@ function showHome(){
   try{localStorage.setItem('last_screen','screenHome');}catch(e){}
   isEditing=false;if(window._draftInterval)clearInterval(window._draftInterval);
   requestNotifPermission();
-  if(localStorage.getItem('rotograma_desktop_on')==='1'&&!IS_DESKTOP()&&window.innerWidth>=1024){
-    document.body.classList.add('desktop-mode');
-    var btn=document.getElementById('btnToggleDesktop');
-    if(btn)btn.innerHTML='📱 Versão Mobile';
-  }
+  if(typeof applyViewMode==='function')applyViewMode({keepScreen:false}); // modo web/mobile conforme a regra única
   dUpdateTopbar();
   const homeIdx=_navStack.indexOf('screenHome');
   if(homeIdx>=0){

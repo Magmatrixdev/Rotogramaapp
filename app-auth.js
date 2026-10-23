@@ -343,6 +343,7 @@ async function doAdminLogin(){
         }
       }catch(rErr){console.warn('[admin] reload rotogramas falhou:',rErr);}
     }
+    if(typeof applyViewMode==='function')applyViewMode({keepScreen:false}); // web/mobile conforme a preferência
     renderAdmin();
     // Guard: onAuthStateChanged pode ter feito navPush('screenAdmin') antes desta
     // continuação (race condition com Firebase SDK). Só empurra se ainda não estiver na pilha.

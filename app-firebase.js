@@ -44,6 +44,7 @@ function initFirebase(){
       if(!tok?.claims?.admin&&adminMode){tok=await user.getIdTokenResult(true).catch(()=>tok);}
       if(tok?.claims?.admin){
         adminMode=true; // já setado em doAdminLogin, mas garante aqui
+        if(typeof _restoreDesktopIfNeeded==='function')_restoreDesktopIfNeeded();
         _attachDataListeners(true);
         if(typeof _authActivate==='function')_authActivate();
         if(typeof initPushMessaging==='function')initPushMessaging();
