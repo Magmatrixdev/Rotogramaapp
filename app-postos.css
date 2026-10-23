@@ -149,3 +149,58 @@ body.desktop-mode #bottomNav{display:none!important}
 /* padding-bottom nas telas que usam o bottom nav */
 #screenHome .d-list-col{padding-bottom:76px}
 
+
+/* ═══════════════════════════════════════════════
+   POSTOS WEB (desktop-mode) — mesmo padrão de Rotas Web / Informativos Web
+   ═══════════════════════════════════════════════ */
+body.desktop-mode #screenPostos{background:#f4f3f1}
+/* faixa escura: título + estatísticas à esquerda, busca à direita */
+body.desktop-mode .pst-hero{margin:20px 24px 0;max-width:1180px;box-sizing:border-box;border-radius:20px;background:#111214;padding:20px 22px;
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,360px);grid-template-areas:"row search" "title search" "stats search";column-gap:24px;align-items:start}
+body.desktop-mode .pst-hero-road,
+body.desktop-mode .pst-hero-back{display:none}
+body.desktop-mode .pst-hero-row{grid-area:row}
+body.desktop-mode .pst-hero-kicker{font-size:11px;letter-spacing:1.5px;color:#9ea1a8}
+body.desktop-mode .pst-hero-title{grid-area:title;margin:4px 0 0;font-size:34px;text-transform:uppercase}
+body.desktop-mode .pst-hero-stats{grid-area:stats;margin-top:14px}
+body.desktop-mode .pst-stat{background:#1c1e22;border:0;border-radius:14px;padding:10px 14px;min-width:86px}
+body.desktop-mode .pst-stat-n{font-size:28px}
+body.desktop-mode .pst-stat-l{font-size:11px;color:#9ea1a8}
+body.desktop-mode .pst-search{grid-area:search;align-self:end;margin:0;height:46px;background:#1c1e22;border-color:#2c2e33}
+body.desktop-mode .pst-search:focus-within{border-color:#5a5c62}
+/* área rolável: conteúdo alinhado com a faixa */
+body.desktop-mode .pst-main{padding:0 24px 48px}
+body.desktop-mode .pst-main>*{max-width:1180px}
+body.desktop-mode .pst-filters{flex-wrap:wrap;overflow:visible;padding:16px 0 0}
+body.desktop-mode .pst-chip{border-color:#dad8d3}
+body.desktop-mode .pst-chip:hover{border-color:#9a9894}
+body.desktop-mode .pst-chip.active{background:#111214;border-color:#111214}
+body.desktop-mode .pst-add:hover{background:#d91f26}
+/* grupos por estado em grade de cards */
+body.desktop-mode .pst-group-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;align-items:start}
+body.desktop-mode .pst-card{transition:box-shadow .15s,border-color .15s}
+body.desktop-mode .pst-card:hover{box-shadow:0 8px 24px rgba(40,38,34,.10);border-color:#dad8d3}
+body.desktop-mode .pst-photo{height:170px}
+body.desktop-mode .pst-name{font-size:21px}
+body.desktop-mode .pst-go:hover{background:#155a93}
+body.desktop-mode .pst-go--off:hover{background:#eae8e3}
+body.desktop-mode .pst-ico:hover{background:#f4f4f2}
+body.desktop-mode .pst-ico--del:hover{background:#ffeaea}
+body.desktop-mode .pst-fotos-btn:hover{background:rgba(0,0,0,.78)}
+body.desktop-mode .pst-empty{max-width:1180px}
+@media (max-width:1180px){body.desktop-mode .pst-hero{grid-template-columns:1fr;grid-template-areas:"row" "title" "stats" "search"}body.desktop-mode .pst-search{margin-top:14px}}
+
+/* galeria: setas para navegar com o mouse (só aparecem no desktop) */
+.posto-foto-modal .pst-gal-nav{display:none}
+body.desktop-mode .pst-gal-nav{display:flex;position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:48px;height:48px;border-radius:50%;border:none;background:rgba(255,255,255,.16);color:#fff;font-size:24px;align-items:center;justify-content:center;cursor:pointer}
+body.desktop-mode .pst-gal-nav:hover{background:rgba(255,255,255,.28)}
+body.desktop-mode .pst-gal-prev{left:24px;right:auto}
+body.desktop-mode .pst-gal-next{right:24px;left:auto}
+body.desktop-mode .posto-foto-modal img,body.desktop-mode .pst-gal-slide img{max-width:min(1100px,86vw)}
+
+/* formulários de posto: janela no centro da tela em vez de folha inferior */
+body.desktop-mode .postos-form-ov{align-items:center;justify-content:center;padding:24px}
+body.desktop-mode .postos-form-box{max-width:560px;border-radius:22px;max-height:calc(100vh - 48px);padding:22px 24px 0;box-shadow:0 24px 70px rgba(0,0,0,.35)}
+body.desktop-mode .postos-form-btns{padding-bottom:22px}
+body.desktop-mode .postos-form-cancel:hover{background:#dcdad4}
+body.desktop-mode .postos-form-save:hover{background:#333}

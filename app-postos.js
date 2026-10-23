@@ -306,13 +306,23 @@ function showPostoGaleria(gk,idx){
   ov.className='posto-foto-modal pst-gal';
   ov.innerHTML=`<div class="pst-gal-track">${fotos.map(u=>`<div class="pst-gal-slide"><img src="${_pstEsc(u)}" alt="Foto do posto"></div>`).join('')}</div>
     <div class="pst-gal-count"><span id="pstGalN">${(idx||0)+1}</span> / ${fotos.length}</div>
-    <button aria-label="Fechar"><i class="ti ti-x" aria-hidden="true"></i></button>`;
-  ov.querySelector('button').onclick=()=>ov.remove();
-  ov.addEventListener('click',e=>{if(e.target===ov||e.target.classList.contains('pst-gal-slide'))ov.remove();});
+    <button class="pst-gal-close" aria-label="Fechar"><i class="ti ti-x" aria-hidden="true"></i></button>
+    <button class="pst-gal-nav pst-gal-prev" aria-label="Foto anterior"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
+    <button class="pst-gal-nav pst-gal-next" aria-label="Próxima foto"><i class="ti ti-chevron-right" aria-hidden="true"></i></button>`;
+  // web: setas e teclado (← → Esc) para navegar sem arrastar
+  const onKey=e=>{if(e.key==='Escape')close();else if(e.key==='ArrowLeft')go(-1);else if(e.key==='ArrowRight')go(1);};
+  const close=()=>{ov.remove();document.removeEventListener('keydown',onKey);};
+  ov.querySelector('.pst-gal-close').onclick=close;
+  ov.addEventListener('click',e=>{if(e.target===ov||e.target.classList.contains('pst-gal-slide'))close();});
   document.body.appendChild(ov);
   const tr=ov.querySelector('.pst-gal-track');
+  const cur=()=>Math.round(tr.scrollLeft/tr.clientWidth);
+  const go=d=>{const i=Math.max(0,Math.min(fotos.length-1,cur()+d));tr.scrollTo({left:i*tr.clientWidth,behavior:'smooth'});};
+  ov.querySelector('.pst-gal-prev').onclick=()=>go(-1);
+  ov.querySelector('.pst-gal-next').onclick=()=>go(1);
+  document.addEventListener('keydown',onKey);
   tr.scrollLeft=(idx||0)*tr.clientWidth;
-  tr.addEventListener('scroll',()=>{const n=ov.querySelector('#pstGalN');if(n)n.textContent=Math.round(tr.scrollLeft/tr.clientWidth)+1;},{passive:true});
+  tr.addEventListener('scroll',()=>{const n=ov.querySelector('#pstGalN');if(n)n.textContent=cur()+1;},{passive:true});
 }
 
 // ─── foto viewer fullscreen ───
