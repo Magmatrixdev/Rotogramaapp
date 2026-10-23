@@ -83,6 +83,7 @@
 <link rel="stylesheet" href="app.css?v=23">
 <link rel="stylesheet" href="app-postos.css?v=16">
 <link rel="stylesheet" href="app-informativos.css?v=8">
+<link rel="stylesheet" href="app-simulacao.css?v=1">
 </head>
 <body>
 <!-- Botão alternância desktop/mobile — só visível em telas ≥ 1024px -->
@@ -178,6 +179,7 @@
   <button type="button" class="dsb-item dsb-nav active" data-nav="rotas" onclick="dNavGo('rotas')"><i class="ti ti-map-2" aria-hidden="true"></i>Rotas</button>
   <button type="button" class="dsb-item dsb-nav" data-nav="postos" onclick="dNavGo('postos')"><i class="ti ti-gas-station" aria-hidden="true"></i>Postos de abastecimento</button>
   <button type="button" class="dsb-item dsb-nav" data-nav="informativos" onclick="dNavGo('informativos')"><i class="ti ti-info-circle" aria-hidden="true"></i>Informativos</button>
+  <button type="button" class="dsb-item dsb-nav" id="dsbNavSim" data-nav="simulacao" onclick="dNavGo('simulacao')" style="display:none"><i class="ti ti-calculator" aria-hidden="true"></i>Simulação</button>
   <div class="dsb-section" id="dsbRegSec">Regiões</div>
   <button type="button" class="dsb-item active" data-region="all" onclick="dSidebarFilter(this,'all')"><span class="dsb-dot" aria-hidden="true"></span>Todas as rotas<span class="dsb-count" id="dsbCountAll">—</span></button>
   <button type="button" class="dsb-item" data-region="Centro-Oeste" onclick="dSidebarFilter(this,'Centro-Oeste')"><span class="dsb-dot" aria-hidden="true"></span>Centro-Oeste<span class="dsb-count" id="dsbCountCO">—</span></button>
@@ -293,6 +295,11 @@
 <div class="screen" id="screenInformativos">
   <div id="informativosList"></div>
 </div>
+
+<!-- ═══ SIMULAÇÃO (somente admin — teste) ═══ -->
+<div class="screen" id="screenSimulacao">
+  <div id="simulacaoContent"></div>
+</div>
 </div><!-- /.d-content -->
 </div><!-- /.d-body-row -->
 
@@ -313,23 +320,28 @@
     <i class="ti ti-speakerphone" aria-hidden="true"></i>
     <span>Informativos</span>
   </button>
+  <button class="bnav-item" id="bnavSimulacao" onclick="bnavGoSimulacao()" style="display:none">
+    <i class="ti ti-calculator" aria-hidden="true"></i>
+    <span>Simulação</span>
+  </button>
 </div>
 
-<script src="app-config.js?v=84"></script>
+<script src="app-config.js?v=85"></script>
 <script src="app-state.js?v=81"></script>
 <script src="app-crypto.js?v=81"></script>
-<script src="app-firebase.js?v=81"></script>
+<script src="app-firebase.js?v=85"></script>
 <script src="app-auth.js?v=81"></script>
-<script src="app-nav.js?v=81"></script>
+<script src="app-nav.js?v=85"></script>
 <script src="app-render.js?v=81"></script>
 <script src="app-admin.js?v=81"></script>
 <script src="app-notifications.js?v=81"></script>
-<script src="app-desktop.js?v=84"></script>
+<script src="app-desktop.js?v=85"></script>
 <script src="app-editor.js?v=81"></script>
 <script src="app-utils.js?v=81"></script>
 <script src="app-pwa.js?v=81"></script>
-<script src="app-postos.js?v=81"></script>
+<script src="app-postos.js?v=85"></script>
 <script src="app-informativos.js?v=84"></script>
+<script src="app-simulacao.js?v=85"></script>
 <script src="app-main.js?v=81"></script>
 
 </html>

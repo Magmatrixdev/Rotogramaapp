@@ -104,6 +104,7 @@ function updateBottomNav(active){
   if(!nav)return;
   if(IS_DESKTOP()){nav.style.display='none';return;}
   nav.style.display='flex';
+  if(typeof simSyncNav==='function')simSyncNav();
   document.querySelectorAll('.bnav-item').forEach(b=>b.classList.remove('active'));
   const btn=document.getElementById('bnav'+active);
   if(btn)btn.classList.add('active');
@@ -283,6 +284,7 @@ function buildPostoCard(p){
       ${fotos.length?'':pill}
     </div>
     ${rotas}
+    ${typeof simPrecoPostoHTML==='function'?simPrecoPostoHTML(p.nome):''}
     <div class="pst-actions">${go}${adm}</div>
   </article>`;
 }

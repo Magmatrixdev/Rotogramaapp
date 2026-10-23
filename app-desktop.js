@@ -27,7 +27,7 @@ function toggleDesktopMode(){
 }
 
 function _dActivateHomeLayout(){
-  const overlays=['screenAdmin','screenEditor','screenRoute','screenPostos','screenInformativos','screenDriverLogin','screenDriverReg'];
+  const overlays=['screenAdmin','screenEditor','screenRoute','screenPostos','screenInformativos','screenSimulacao','screenDriverLogin','screenDriverReg'];
   overlays.forEach(id=>{
     const el=document.getElementById(id);
     if(el){el.style.visibility='hidden';el.style.transform='translateX(100%)';el.classList.remove('active','behind');}
@@ -40,6 +40,7 @@ function _dActivateHomeLayout(){
 
 /* ── Topbar desktop ── */
 function dUpdateTopbar(){
+  if(typeof simSyncNav==='function')simSyncNav();
   if(!IS_DESKTOP())return;
   const syncBar=document.getElementById('syncBar');
   const syncEl=document.getElementById('dtbSync');
@@ -92,16 +93,17 @@ function dUpdateSidebar(){
 /* ── Navegação da sidebar (Rotas / Postos / Informativos) ── */
 function dNavGo(t){
   if(!IS_DESKTOP())return;
-  const target={rotas:'screenHome',postos:'screenPostos',informativos:'screenInformativos'}[t];
+  const target={rotas:'screenHome',postos:'screenPostos',informativos:'screenInformativos',simulacao:'screenSimulacao'}[t];
   if(!target||_navStack[_navStack.length-1]===target){_dSyncNav();return;}
   while(_navStack.length>1)navPop();
   if(t==='postos')showPostos();
   else if(t==='informativos'&&typeof showInformativos==='function')showInformativos();
+  else if(t==='simulacao'&&typeof showSimulacao==='function')showSimulacao();
   _dSyncNav();
 }
 function _dSyncNav(){
   const top=_navStack[_navStack.length-1];
-  const cur=top==='screenPostos'?'postos':top==='screenInformativos'?'informativos':top==='screenHome'?'rotas':'';
+  const cur=top==='screenPostos'?'postos':top==='screenInformativos'?'informativos':top==='screenSimulacao'?'simulacao':top==='screenHome'?'rotas':'';
   document.body.classList.toggle('d-inf-on',cur==='informativos'); // troca as regiões da sidebar pelas dos informativos
   document.querySelectorAll('#dSidebar .dsb-nav').forEach(b=>{
     const on=b.dataset.nav===cur;b.classList.toggle('active',on);

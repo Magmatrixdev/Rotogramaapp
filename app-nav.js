@@ -144,7 +144,7 @@ function navPop(setupFn){
 function navReset(id,setupFn){
   if(IS_DESKTOP()&&id==='screenHome'){
     _blur();
-    const overlays=['screenAdmin','screenEditor','screenRoute','screenPostos','screenInformativos','screenDriverLogin','screenDriverReg'];
+    const overlays=['screenAdmin','screenEditor','screenRoute','screenPostos','screenInformativos','screenSimulacao','screenDriverLogin','screenDriverReg'];
     overlays.forEach(sid=>{
       const el=document.getElementById(sid);
       if(el){el.style.cssText='';el.style.visibility='hidden';el.style.transform='translateX(100%)';el.classList.remove('active','behind');}

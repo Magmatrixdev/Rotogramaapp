@@ -349,6 +349,45 @@
       }
     },
 
+    // /precos/{chave do posto} — preço do diesel lançado pelo admin
+    //   • Leitura: qualquer usuário autenticado (futuro plano do motorista)
+    //   • Escrita: apenas admin · data = momento do lançamento
+    // ─────────────────────────────────────────────────────────────
+    "precos": {
+      ".read":  "auth !== null",
+      ".write": "auth !== null && (auth.token.admin === true || auth.token.email === 'pedrosgj@gmail.com')",
+
+      "$postoKey": {
+        ".validate": "newData.hasChildren(['nome', 'valor', 'data'])",
+        "nome":  { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 200" },
+        "valor": { ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() <= 50" },
+        "data":  { ".validate": "newData.isNumber() && newData.val() > 0" },
+        "por":   { ".validate": "newData.isString() && newData.val().length <= 100" },
+        "$outrosCampos": { ".validate": false }
+      }
+    },
+
+    // ─────────────────────────────────────────────────────────────
+    // /simVeiculos/{placa} — placas da simulação (tanque, média, reserva)
+    //   • Leitura e escrita: apenas admin (fase de teste)
+    // ─────────────────────────────────────────────────────────────
+    "simVeiculos": {
+      ".read":  "auth !== null && (auth.token.admin === true || auth.token.email === 'pedrosgj@gmail.com')",
+      ".write": "auth !== null && (auth.token.admin === true || auth.token.email === 'pedrosgj@gmail.com')",
+
+      "$placa": {
+        ".validate": "newData.hasChildren(['placa', 'tanque', 'media'])",
+        "placa":   { ".validate": "newData.isString() && newData.val().length >= 7 && newData.val().length <= 10" },
+        "modelo":  { ".validate": "newData.isString() && newData.val().length <= 80" },
+        "tanque":  { ".validate": "newData.isNumber() && newData.val() >= 50 && newData.val() <= 3000" },
+        "media":   { ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() <= 10" },
+        "reserva": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+        "ts":      { ".validate": "newData.isNumber() && newData.val() > 0" },
+        "$outrosCampos": { ".validate": false }
+      }
+    },
+
+    // ─────────────────────────────────────────────────────────────
     // /fcmTokens — tokens de push por aparelho
     //   • Coleção inteira: fechada (só Cloud Functions via Admin SDK leem)
     //   • Nó do usuário:   próprio uid ou admin

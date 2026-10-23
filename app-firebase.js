@@ -119,6 +119,7 @@ function _detachDataListeners(){
   try{db.ref('notifications').limitToLast(30).off();}catch(e){}
   if(_notifReadUid){try{db.ref('notifRead/'+_notifReadUid).off();}catch(e){}_notifReadUid=null;}
   if(typeof _resetRemoteRead==='function')_resetRemoteRead();
+  if(typeof simDetachListeners==='function')simDetachListeners();
   _dataListenersOn=false;_dataListenersAdmin=false;
 }
 function _attachDataListeners(isAdmin){
@@ -130,7 +131,7 @@ function _attachDataListeners(isAdmin){
   setSyncStatus('off','Sincronizando...');
     db.ref('rotogramas').on('value',snap=>{
       const data=snap.val();
-      if(data&&Array.isArray(data)){routes=data;firebaseReady=true;localStorage.setItem('rotogramas_cache',JSON.stringify(routes));setSyncStatus('on','Sincronizado');if(!isEditing)renderHome();if(typeof renderPostosList==='function'&&document.getElementById('screenPostos')?.classList.contains('active'))renderPostosList();_handleDeepLink();if(typeof _restoreDesktopIfNeeded==='function')_restoreDesktopIfNeeded();}
+      if(data&&Array.isArray(data)){routes=data;firebaseReady=true;localStorage.setItem('rotogramas_cache',JSON.stringify(routes));setSyncStatus('on','Sincronizado');if(!isEditing)renderHome();if(typeof renderPostosList==='function'&&document.getElementById('screenPostos')?.classList.contains('active'))renderPostosList();_handleDeepLink();if(typeof _restoreDesktopIfNeeded==='function')_restoreDesktopIfNeeded();if(typeof simOnData==='function')simOnData();}
       else if(!data&&firebase.auth().currentUser){db.ref('rotogramas').set(DEFAULTS).then(()=>{routes=DEFAULTS;firebaseReady=true;setSyncStatus('on','Sincronizado');renderHome()}).catch(()=>{})}
     },err=>{console.warn('rotogramas listener err:',err);setSyncStatus('err','Erro Firebase — dados locais');loadLocal();_dataListenersOn=false;});
 
@@ -146,6 +147,8 @@ function _attachDataListeners(isAdmin){
       Object.keys(drivers).forEach(k=>{const dr=drivers[k];if(dr&&typeof dr==='object'&&!dr.id)dr.id=k;});
       if(adminMode)renderDriverManager();
     });
+    // Simulação (só admin): preços dos postos e placas
+    if(typeof simAttachListeners==='function')simAttachListeners();
 
     }
     db.ref('postos').on('value',snap=>{postosAvulsos=snap.val()||{};if(typeof renderPostosList==='function'&&(typeof _postosVisivel!=='function'||_postosVisivel()))renderPostosList();});
