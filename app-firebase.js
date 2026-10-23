@@ -152,7 +152,7 @@ function _attachDataListeners(isAdmin){
     if(typeof simAttachListeners==='function')simAttachListeners();
 
     }
-    db.ref('postos').on('value',snap=>{postosAvulsos=snap.val()||{};if(typeof renderPostosList==='function'&&(typeof _postosVisivel!=='function'||_postosVisivel()))renderPostosList();});
+    db.ref('postos').on('value',snap=>{postosAvulsos=snap.val()||{};if(typeof renderPostosList==='function'&&(typeof _postosVisivel!=='function'||_postosVisivel()))renderPostosList();if(adminMode&&typeof renderAdminPostoCards==='function'&&document.getElementById('adminTabPostos')?.classList.contains('active'))renderAdminPostoCards();});
     db.ref('informativos').on('value',snap=>{informativos=snap.val()||{};if(typeof renderInformativos==='function')renderInformativos();if(typeof renderHomeInf==='function')renderHomeInf();});
 
     // ═══ NOTIFICATIONS LISTENER ═══

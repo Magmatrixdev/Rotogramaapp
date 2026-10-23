@@ -294,72 +294,132 @@ async function doResetDriverPINConfirm(id){
   }
 }
 
+// ═══ ADMIN MOTORISTAS v2 — visual igual ao da aba Rotas ═══
+let _driverStatusFilter='all';
+let _driverSort='nome';
+function _amAttr(s){return String(s==null?'':s).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
+function _amNorm(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'')}
+function _amList(){return Object.values(drivers||{}).filter(d=>d&&typeof d==='object'&&d.nome)}
+// Situação: bloqueado > login travado > nunca acessou > ativo
+function _amStatus(d){
+  if(d.bloqueado)return 'blk';
+  if(_driverLockState(d).locked)return 'lock';
+  if(!d.ultimoAcesso)return 'new';
+  return 'ok';
+}
+const _AM_ST={ok:{t:'Ativo',c:'am-st-ok'},blk:{t:'Bloqueado',c:'am-st-blk'},lock:{t:'Login travado',c:'am-st-lock'},new:{t:'Nunca acessou',c:'am-st-new'}};
+function _amRel(ts){
+  if(!ts)return 'PIN inicial ainda não usado';
+  const m=Math.floor((Date.now()-ts)/60000);
+  if(m<1)return 'agora mesmo';
+  if(m<60)return 'há '+m+' min';
+  const h=Math.floor(m/60);if(h<24)return 'há '+h+(h===1?' hora':' horas');
+  const d=Math.floor(h/24);if(d<31)return 'há '+d+(d===1?' dia':' dias');
+  const mo=Math.floor(d/30);return 'há '+mo+(mo===1?' mês':' meses');
+}
+function _amAbs(ts){
+  if(!ts)return 'Nunca';
+  const dt=new Date(ts),hoje=new Date();
+  const hm=dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  const ontem=new Date(hoje);ontem.setDate(hoje.getDate()-1);
+  if(dt.toDateString()===hoje.toDateString())return 'Hoje, '+hm;
+  if(dt.toDateString()===ontem.toDateString())return 'Ontem, '+hm;
+  return dt.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+', '+hm;
+}
+function _amDate(ts){return ts?new Date(ts).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'}):''}
+
 async function renderDriverManager(){
   const el=document.getElementById('adminDriversList');if(!el)return;
-  let h=`<div class="admin-stats-bar" id="adminDriversStats"></div>`;
-  h+=`<div class="admin-toolbar-row"><div class="admin-search"><span class="admin-search-icon">🔍</span><input id="driverSearch" type="text" placeholder="Pesquisar motorista..." value="${esc(_driverFilter)}" oninput="_driverFilter=this.value;renderDriverCards()"><button class="admin-search-clear ${_driverFilter?'visible':''}" onclick="_driverFilter='';document.getElementById('driverSearch').value='';renderDriverCards()">✕</button></div><button class="admin-add" onclick="showAddDriverModal()">＋ CADASTRAR MOTORISTA</button></div>`;
-  h+=`<div id="driverCardsContainer"></div>`;
+  let h=`<div class="ar-head"><div><div class="ar-crumb">Administração / Motoristas</div><h2 class="ar-title">Motoristas cadastrados</h2></div><div class="ar-head-actions"><button class="ar-btn ar-btn-ghost" onclick="exportDriversCSV()"><i class="ti ti-download" aria-hidden="true"></i> Exportar</button><button class="ar-btn ar-btn-primary" onclick="showAddDriverModal()"><i class="ti ti-plus" aria-hidden="true"></i> Cadastrar motorista</button></div></div>`;
+  h+=`<div class="ar-kpis" id="adminDriversStats"></div>`;
+  h+=`<div class="ar-panel"><div class="ar-panel-top"><div class="admin-search ar-search"><i class="ti ti-search admin-search-icon" aria-hidden="true"></i><input id="driverSearch" type="text" aria-label="Pesquisar motorista" placeholder="Buscar por nome do motorista…" value="${esc(_driverFilter)}" oninput="_driverFilter=this.value;renderDriverCards()"><button class="admin-search-clear ${_driverFilter?'visible':''}" aria-label="Limpar busca" onclick="_driverFilter='';document.getElementById('driverSearch').value='';renderDriverCards()">✕</button></div><div class="ar-chips" id="driverStatusChips" role="group" aria-label="Filtrar por situação"></div></div>`
+    +`<div class="am-thead" aria-hidden="true"><span>Motorista</span><span>Situação</span><button type="button" tabindex="-1" class="am-sort" id="amSortAcc" onclick="_driverSetSort()">Último acesso <i class="ti ti-arrows-sort"></i></button><span>Tentativas de PIN</span><span>Ações</span></div>`
+    +`<div id="driverCardsContainer"></div><div class="ar-foot" id="driverFoot"></div></div>`;
   el.innerHTML=h;
   await _loadDriverRateLimits();
-  await renderDriverCards();
+  renderDriverCards();
   renderDriverStats();
 }
 
+function _driverSetStatus(k){_driverStatusFilter=k||'all';renderDriverCards()}
+function _driverSetSort(){_driverSort=_driverSort==='nome'?'acesso':'nome';renderDriverCards()}
+
 function renderDriverStats(){
   const el=document.getElementById('adminDriversStats');if(!el)return;
-  const list=Object.values(drivers);
+  const list=_amList();
   const total=list.length;
   const blocked=list.filter(d=>d.bloqueado).length;
   const active=total-blocked;
-  el.innerHTML=`<div class="admin-stat-card"><div class="admin-stat-val">${total}</div><div class="admin-stat-lbl">Motoristas</div></div><div class="admin-stat-card"><div class="admin-stat-val" style="color:#1f8a3d">${active}</div><div class="admin-stat-lbl">Ativos</div></div><div class="admin-stat-card"><div class="admin-stat-val" style="color:#fe2627">${blocked}</div><div class="admin-stat-lbl">Bloqueados</div></div>`;
+  const semana=list.filter(d=>d.ultimoAcesso&&Date.now()-d.ultimoAcesso<7*864e5).length;
+  const travados=list.filter(d=>!d.bloqueado&&_driverLockState(d).locked).length;
+  el.innerHTML=`<div class="ar-kpi"><div class="ar-kpi-lbl">Motoristas</div><div class="ar-kpi-val">${total}</div><div class="ar-kpi-sub">${semana} acessaram nos últimos 7 dias</div></div>`
+   +`<div class="ar-kpi"><div class="ar-kpi-lbl">Ativos</div><div class="ar-kpi-val am-v-ok">${active}</div><div class="ar-kpi-sub">Podem entrar no app</div></div>`
+   +`<div class="ar-kpi"><div class="ar-kpi-lbl">Bloqueados</div><div class="ar-kpi-val am-v-blk">${blocked}</div><div class="ar-kpi-sub">Bloqueio manual pelo admin</div></div>`
+   +`<div class="ar-kpi ar-kpi-alert am-kpi-lock${travados?'':' ok'}"><div class="ar-kpi-lbl"><i class="ti ${travados?'ti-lock':'ti-circle-check'}" aria-hidden="true"></i> Login travado</div><div class="ar-kpi-val">${travados}</div><div class="ar-kpi-sub">${travados?'Errou o PIN 5 vezes — libere na lista':'Nenhum login travado agora'}</div></div>`;
 }
 
-async function renderDriverCards(){
+function renderDriverCards(){
   const container=document.getElementById('driverCardsContainer');if(!container)return;
-  const norm=s=>(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-  const q=norm(_driverFilter);
+  const q=_amNorm(_driverFilter);
   const clearBtn=document.getElementById('driverSearch')?.parentElement?.querySelector('.admin-search-clear');
   if(clearBtn)clearBtn.className='admin-search-clear'+(q?' visible':'');
-  const driverList=Object.values(drivers).sort((a,b)=>a.nome.localeCompare(b.nome,'pt'));
-  const filtered=q?driverList.filter(d=>norm(d.nome).includes(q)):driverList;
-  if(filtered.length===0){
-    container.innerHTML=`<div style="text-align:center;padding:30px 20px;color:#9a9894;font-family:'Barlow',sans-serif"><span style="font-size:40px">${q?'🔍':'👤'}</span><p style="margin-top:8px">${q?'Nenhum motorista encontrado para "'+esc(_driverFilter)+'"':'Nenhum motorista cadastrado ainda'}</p></div>`;
+  const all=_amList();
+  const counts={all:all.length,ok:0,blk:0,lock:0,new:0};
+  all.forEach(d=>counts[_amStatus(d)]++);
+  const chipsEl=document.getElementById('driverStatusChips');
+  if(chipsEl)chipsEl.innerHTML=[['all','Todos'],['ok','Ativos'],['blk','Bloqueados'],['lock','Login travado'],['new','Nunca acessou']].map(([k,l])=>{const on=_driverStatusFilter===k;return `<button class="ar-chip${on?' on':''}" aria-pressed="${on}" onclick="_driverSetStatus('${k}')">${l}<span class="ar-chip-ct">${counts[k]}</span></button>`}).join('');
+  const sortBtn=document.getElementById('amSortAcc');if(sortBtn)sortBtn.classList.toggle('on',_driverSort==='acesso');
+  let list=all.filter(d=>(_driverStatusFilter==='all'||_amStatus(d)===_driverStatusFilter)&&(!q||_amNorm(d.nome).includes(q)));
+  if(_driverSort==='acesso')list.sort((a,b)=>(b.ultimoAcesso||0)-(a.ultimoAcesso||0));
+  else list.sort((a,b)=>String(a.nome).localeCompare(String(b.nome),'pt'));
+  const foot=document.getElementById('driverFoot');
+  if(foot)foot.innerHTML=`<span>Mostrando ${list.length} de ${all.length} motorista${all.length===1?'':'s'}</span><span>${_driverSort==='acesso'?'Ordenado por último acesso (mais recente primeiro)':'Ordenado por nome'}</span>`;
+  if(list.length===0){
+    container.innerHTML=`<div class="admin-no-results"><i class="ti ${q?'ti-search':'ti-users'}" aria-hidden="true"></i>${q||_driverStatusFilter!=='all'?'Nenhum motorista encontrado para esse filtro.':'Nenhum motorista cadastrado ainda.'}</div>`;
     return;
   }
   let h='';
-  for(const d of filtered){
-    const initials=d.nome.split(' ').slice(0,2).map(n=>n[0]).join('').toUpperCase();
-    const lastAccess=d.ultimoAcesso?new Date(d.ultimoAcesso).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'Nunca';
+  for(const d of list){
+    const id=_amAttr(d.id||d.uid||'');
+    const nome=_amAttr(d.nome);
+    const st=_amStatus(d),S=_AM_ST[st];
     const lock=_driverLockState(d);
-    let statusClass='status-active',statusTxt='Ativo';
-    if(d.bloqueado){statusClass='status-blocked';statusTxt='Bloqueado';}
-    else if(lock.locked){statusClass='status-lockedrate';statusTxt='🔒 Login travado';}
-    let lockMeta='';
-    if(lock.locked){lockMeta=`<div class="driver-card-lockmeta">🔒 Travado por tentativas · libera em ~${lock.waitMin} min (${lock.attemptsUsed}/${_RL_MAX} erros)</div>`;}
-    else if(lock.warning){lockMeta=`<div class="driver-card-lockmeta warn">⚠️ ${lock.attemptsUsed} de ${_RL_MAX} tentativas de PIN usadas · restam ${_RL_MAX-lock.attemptsUsed}</div>`;}
-    const cpfMask='***.***.***-**'; // CPF nunca decifrado no cliente — use botão Ver CPF
-    const driverId=d.id||d.uid||'';
-    h+=`<div class="driver-card ${d.bloqueado?'blocked':''}${lock.locked?' lockedrate':''}">
-      <div class="driver-card-head">
-        <div class="driver-card-avatar">${initials}</div>
-        <div class="driver-card-info">
-          <div class="driver-card-name">${d.nome}</div>
-          <div class="driver-card-cpf">CPF: ${cpfMask}</div>
-        </div>
-        <span class="driver-card-status ${statusClass}"><span class="status-dot" aria-hidden="true"></span>${statusTxt}</span>
-      </div>
-      <div class="driver-card-meta">Último acesso: ${lastAccess}</div>
-      ${lockMeta}
-      <div class="driver-card-actions">
-        <button class="driver-btn driver-btn-edit" onclick="showEditDriverModal('${driverId}')"><i class="ti ti-edit" aria-hidden="true"></i><span class="driver-btn-label"> Editar</span></button>
-        <button class="driver-btn driver-btn-cpf" onclick="viewDriverCPF('${driverId}','${esc(d.nome)}')"><i class="ti ti-eye" aria-hidden="true"></i><span class="driver-btn-label"> Ver CPF</span></button>
-        <button class="driver-btn driver-btn-ratelimit${lock.locked?' pulse':''}" onclick="clearDriverLoginRate('${driverId}','${esc(d.nome)}')"><i class="ti ti-key" aria-hidden="true"></i><span class="driver-btn-label"> Liberar login</span></button>
-        <button class="driver-btn ${d.bloqueado?'driver-btn-unblock':'driver-btn-block'}" onclick="toggleBlockDriver('${driverId}',${!!d.bloqueado})"><i class="ti ti-${d.bloqueado?'lock-open':'lock'}" aria-hidden="true"></i><span class="driver-btn-label"> ${d.bloqueado?'Desbloquear':'Bloquear'}</span></button>
-        <button class="driver-btn driver-btn-del" onclick="deleteDriver('${driverId}')"><i class="ti ti-trash" aria-hidden="true"></i><span class="driver-btn-label"> Excluir</span></button>
+    const t=lock.attemptsUsed||0;
+    const initials=String(d.nome).trim().split(/\s+/).slice(0,2).map(n=>n[0]||'').join('').toUpperCase();
+    let pinTxt='Nenhum erro',pinCls='';
+    if(lock.locked){pinTxt=`Travado · libera em ~${lock.waitMin} min`;pinCls=' am-pin-warn';}
+    else if(lock.warning){pinTxt=`${t} de ${_RL_MAX} erros · restam ${_RL_MAX-t}`;pinCls=' am-pin-warn';}
+    else if(t){pinTxt=`${t} de ${_RL_MAX} erros`;}
+    let dots='';for(let i=0;i<_RL_MAX;i++)dots+=`<span class="${i<t?(lock.locked||lock.warning?'on warn':'on'):''}"></span>`;
+    const blk=!!d.bloqueado;
+    h+=`<div class="am-row${blk?' am-blocked':''}">
+      <div class="am-who"><div class="am-av">${_amAttr(initials)}</div><div class="am-who-txt"><div class="am-name">${nome}</div><div class="am-sub">CPF ***.***.***-**${d.criadoEm?' · cadastrado em '+_amDate(d.criadoEm):''}</div></div><span class="ar-badge ${S.c} am-st-m">${S.t}</span></div>
+      <span class="am-col-st"><span class="ar-badge ${S.c}">${S.t}</span></span>
+      <div class="am-col-acc"><div class="am-acc-abs"><span class="am-acc-lbl">Último acesso: </span>${_amAbs(d.ultimoAcesso)}</div><div class="am-acc-rel">${_amRel(d.ultimoAcesso)}</div></div>
+      <div class="am-col-pin${t?'':' am-pin-zero'}${pinCls}"><div class="am-pins" aria-hidden="true">${dots}</div><div class="am-pin-txt">${pinTxt}</div></div>
+      <div class="am-actions">
+        <button class="ar-icon am-act" title="Editar" aria-label="Editar ${nome}" onclick="showEditDriverModal('${id}')"><i class="ti ti-edit" aria-hidden="true"></i><span>Editar</span></button>
+        <button class="ar-icon am-act" title="Ver CPF" aria-label="Ver CPF de ${nome}" data-id="${id}" onclick="viewDriverCPF(this.dataset.id,(drivers[this.dataset.id]||{}).nome)"><i class="ti ti-eye" aria-hidden="true"></i><span>CPF</span></button>
+        <button class="ar-icon am-act${lock.locked||lock.warning?' am-act-warn':''}" title="Liberar login (zera tentativas de PIN)" aria-label="Liberar login de ${nome}" data-id="${id}" onclick="clearDriverLoginRate(this.dataset.id,(drivers[this.dataset.id]||{}).nome)"><i class="ti ti-key" aria-hidden="true"></i><span>Liberar</span></button>
+        <button class="ar-icon am-act" title="${blk?'Desbloquear':'Bloquear'}" aria-label="${blk?'Desbloquear':'Bloquear'} ${nome}" onclick="toggleBlockDriver('${id}',${blk})"><i class="ti ti-${blk?'lock-open':'lock'}" aria-hidden="true"></i><span>${blk?'Desbloq.':'Bloquear'}</span></button>
+        <button class="ar-icon ar-icon-del am-act am-act-del" title="Excluir" aria-label="Excluir ${nome}" onclick="deleteDriver('${id}')"><i class="ti ti-trash" aria-hidden="true"></i></button>
       </div>
     </div>`;
   }
   container.innerHTML=h;
+}
+
+function exportDriversCSV(){
+  const cell=v=>{let s=String(v??'');if(/^[=+\-@]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"'};
+  const fmt=ts=>ts?new Date(ts).toLocaleString('pt-BR'):'';
+  const rows=[['Nome','Situacao','Ultimo acesso','Cadastrado em','Erros de PIN (janela atual)']];
+  _amList().sort((a,b)=>String(a.nome).localeCompare(String(b.nome),'pt')).forEach(d=>{
+    rows.push([d.nome,_AM_ST[_amStatus(d)].t,fmt(d.ultimoAcesso)||'Nunca',fmt(d.criadoEm),_driverLockState(d).attemptsUsed||0]);
+  });
+  const csv='﻿'+rows.map(x=>x.map(cell).join(';')).join('\r\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download='motoristas-'+new Date().toISOString().slice(0,10)+'.csv';document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);
 }
 
 async function viewDriverCPF(id,nome){
@@ -469,76 +529,132 @@ function switchAdminTab(tab,el){
   else if(tab==='postos'){if(!_postosListenerInit){initPostosListener();_postosListenerInit=true;}renderAdminPostos();}
 }
 
-// ═══ ADMIN POSTOS ═══
+// ═══ ADMIN POSTOS v2 — visual igual ao da aba Rotas ═══
 let _adminPostoFilter='';
+let _adminPostoCard='all';
+let _adminPostoPend=false;
+const _APX_CARD={truckpag:'TruckPag',shell:'Shell Experis',frota:'Rede Frota',antecipada:'Antecipada',outro:'Outros'};
+function _apxEnc(s){return encodeURIComponent(s||'').replace(/'/g,'%27')}
+function _apxUF(cidade){return typeof _pstUF==='function'?_pstUF(cidade):''}
+function _apxUFNome(uf){return (typeof _UF_NOMES!=='undefined'&&_UF_NOMES[uf])||''}
 
-function _adminPostoCard(p,actionsHtml,mapsHtml){
-  const cls=getCartaoClass(p.cartao);const lbl=getCartaoLabel(p.cartao);
-  const isTruck=(p.cartao==='truckpag');
-  const fotos=Array.isArray(p.fotos)?p.fotos.filter(Boolean):[];
-  const allFotos=fotos.length>0?fotos:(typeof getFotosByNome==='function'?getFotosByNome(p.nome).filter(Boolean):[]);
-  let thumbHtml;
-  if(allFotos.length>0){
-    const badge=allFotos.length>1?`<div class="ap-photo-badge"><i class="ti ti-photo" aria-hidden="true"></i>${allFotos.length}</div>`:'';
-    thumbHtml=`<img class="ap-thumb-img" src="${allFotos[0]}" loading="lazy" decoding="async" alt="${esc(p.nome)}">${badge}`;
-  }else{
-    thumbHtml=`<div class="ap-thumb-icon"><i class="ti ti-gas-station" aria-hidden="true"></i></div>`;
-  }
-  const routeTag=p._routeName?`<span class="ap-route-tag">Rota ${esc(p._routeNum)}</span>`:'';
-  const mapsBtn=p.link?`<a href="${p.link}" target="_blank" class="ap-btn ap-btn--maps"><i class="ti ti-map" aria-hidden="true"></i>Maps</a><div class="ap-sep"></div>`:'';
-  return `<div class="ap-card">
-    <div class="ap-thumb${isTruck?' ap-thumb--blue':''}">${thumbHtml}</div>
-    <div class="ap-body">
-      <div class="ap-name">${esc(p.nome||'—')}</div>
-      <div class="ap-meta">
-        <span class="ap-loc"><i class="ti ti-map-pin" aria-hidden="true"></i>${esc(p.cidade||'')}</span>
-        <span class="postos-tag ${cls}" style="font-size:11px;padding:2px 8px;border-radius:10px">${lbl}</span>
-        ${routeTag}
-      </div>
-    </div>
-    <div class="ap-actions">${mapsBtn}${actionsHtml}</div>
-  </div>`;
+// Lista única deduplicada por nome|cidade (avulsos têm prioridade), com as rotas onde aparece
+function _apxBuild(){
+  const n=_amNorm;
+  const dedup={},rotas={};
+  routes.forEach(r=>{(r.paradas||[]).forEach(p=>{
+    if(p.tipo==='origem'||p.tipo==='destino'||!p.nome)return;
+    const k=n(p.nome)+'|'+n(p.cidade);
+    if(!dedup[k])dedup[k]={nome:p.nome,cidade:p.cidade,cartao:p.cartao,link:p.link||''};
+    const lbl='Rota '+(r.numero??'?');
+    (rotas[k]=rotas[k]||[]);if(!rotas[k].includes(lbl))rotas[k].push(lbl);
+  });});
+  Object.values(postosAvulsos||{}).forEach(p=>{if(!p||!p.nome)return;const k=n(p.nome)+'|'+n(p.cidade);dedup[k]={...(dedup[k]||{}),...p};});
+  return Object.keys(dedup).map(k=>{
+    const p=dedup[k];
+    let fotos=Array.isArray(p.fotos)?p.fotos.filter(Boolean):[];
+    if(!fotos.length&&typeof getFotosByNome==='function')fotos=getFotosByNome(p.nome).filter(Boolean);
+    return {...p,_rotas:rotas[k]||[],_fotos:fotos,_uf:_apxUF(p.cidade),_ck:(typeof getCartaoKey==='function'?getCartaoKey(p.cartao):'outro'),_avulso:!!p.id};
+  }).sort((a,b)=>String(a.nome||'').localeCompare(String(b.nome||''),'pt'));
 }
 
 function renderAdminPostos(){
   const el=document.getElementById('adminPostosList');if(!el)return;
-  let h=`<div class="ap-topbar">
-    <div class="ap-search-box">
-      <i class="ti ti-search ap-search-icon" aria-hidden="true"></i>
-      <input id="adminPostoSearch" type="text" class="ap-search-input" placeholder="Pesquisar posto, cidade…" value="${esc(_adminPostoFilter)}" oninput="_adminPostoFilter=this.value;renderAdminPostoCards()">
-      <button class="ap-search-clear${_adminPostoFilter?' visible':''}" onclick="_adminPostoFilter='';document.getElementById('adminPostoSearch').value='';renderAdminPostoCards()">✕</button>
-    </div>
-    <button class="ap-add-btn" onclick="showAddPostoForm()"><i class="ti ti-plus" aria-hidden="true"></i>Novo posto</button>
-  </div>`;
-  h+=`<div id="adminPostoCards" class="ap-list"></div>`;
+  let h=`<div class="ar-head"><div><div class="ar-crumb">Administração / Postos</div><h2 class="ar-title">Postos cadastrados</h2></div><div class="ar-head-actions"><button class="ar-btn ar-btn-ghost" onclick="exportPostosCSV()"><i class="ti ti-download" aria-hidden="true"></i> Exportar</button><button class="ar-btn ar-btn-primary" onclick="showAddPostoForm()"><i class="ti ti-plus" aria-hidden="true"></i> Novo posto</button></div></div>`;
+  h+=`<div class="ar-kpis" id="adminPostosStats"></div>`;
+  h+=`<div class="ar-panel"><div class="ar-panel-top"><div class="admin-search ar-search"><i class="ti ti-search admin-search-icon" aria-hidden="true"></i><input id="adminPostoSearch" type="text" aria-label="Pesquisar posto" placeholder="Buscar posto, cidade ou UF…" value="${esc(_adminPostoFilter)}" oninput="_adminPostoFilter=this.value;renderAdminPostoCards()"><button class="admin-search-clear ${_adminPostoFilter?'visible':''}" aria-label="Limpar busca" onclick="_adminPostoFilter='';document.getElementById('adminPostoSearch').value='';renderAdminPostoCards()">✕</button></div><div class="ar-chips" id="adminPostoChips" role="group" aria-label="Filtrar por cartão"></div></div>`
+    +`<div class="apx-thead" aria-hidden="true"><span>Foto</span><span>Posto</span><span>Cartão</span><span>Nas rotas</span><span>Cadastro</span><span>Ações</span></div>`
+    +`<div id="adminPostoCards"></div><div class="ar-foot" id="adminPostoFoot"></div></div>`;
   el.innerHTML=h;
   renderAdminPostoCards();
 }
 
+function _adminPostoSetCard(k){_adminPostoCard=k||'all';renderAdminPostoCards()}
+function _adminPostoTogglePend(){_adminPostoPend=!_adminPostoPend;renderAdminPostoCards()}
+
+function _renderAdminPostoStats(all){
+  const el=document.getElementById('adminPostosStats');if(!el)return;
+  const total=all.length;
+  const nasRotas=all.filter(p=>p._rotas.length).length;
+  const avulsos=all.filter(p=>p._avulso&&!p._rotas.length).length;
+  const semMaps=all.filter(p=>!p.link).length;
+  const semFoto=all.filter(p=>!p._fotos.length).length;
+  const byCard={};all.forEach(p=>{if(p._ck!=='outro')byCard[p._ck]=(byCard[p._ck]||0)+1});
+  const top=Object.entries(byCard).sort((a,b)=>b[1]-a[1])[0];
+  el.innerHTML=`<div class="ar-kpi"><div class="ar-kpi-lbl">Postos cadastrados</div><div class="ar-kpi-val">${total}</div><div class="ar-kpi-sub">${nasRotas} nas rotas · ${avulsos} avulso${avulsos===1?'':'s'}</div></div>`
+   +`<div class="ar-kpi"><div class="ar-kpi-lbl">Cartão mais usado</div><div class="ar-kpi-val apx-kpi-txt">${top?_APX_CARD[top[0]]:'—'}</div><div class="ar-kpi-sub">${top?top[1]+' posto'+(top[1]===1?'':'s')+' com esse cartão':'Nenhum posto ainda'}</div></div>`
+   +`<div class="ar-kpi"><div class="ar-kpi-lbl">Sem localização</div><div class="ar-kpi-val${semMaps?' am-v-blk':''}">${semMaps}</div><div class="ar-kpi-sub">${semMaps?'Sem link do Maps — motorista não acha':'Todos têm link do Maps'}</div></div>`
+   +`<div class="ar-kpi ar-kpi-alert${semFoto?'':' ok'}"><div class="ar-kpi-lbl"><i class="ti ${semFoto?'ti-photo-off':'ti-circle-check'}" aria-hidden="true"></i> Postos sem foto</div><div class="ar-kpi-val">${semFoto}</div><div class="ar-kpi-sub">${semFoto?'Adicione a foto da fachada':'Todos os postos têm foto'}</div></div>`;
+}
+
 function renderAdminPostoCards(){
   const container=document.getElementById('adminPostoCards');if(!container)return;
-  const normFn=s=>(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-  const q=normFn(_adminPostoFilter);
-  const clearBtn=document.querySelector('.ap-search-clear');
-  if(clearBtn)clearBtn.className='ap-search-clear'+(_adminPostoFilter?' visible':'');
-  // Monta lista única deduplicada por nome|cidade (avulsos têm prioridade)
-  const dedup={};
-  routes.forEach(r=>{(r.paradas||[]).forEach(p=>{if(p.tipo==='origem'||p.tipo==='destino')return;const k=normFn(p.nome)+'|'+normFn(p.cidade);if(!dedup[k])dedup[k]={nome:p.nome,cidade:p.cidade,cartao:p.cartao,link:p.link||''};});});
-  Object.values(postosAvulsos||{}).forEach(p=>{const k=normFn(p.nome)+'|'+normFn(p.cidade);dedup[k]={...p};});
-  let unified=Object.values(dedup).sort((a,b)=>(a.nome||'').localeCompare(b.nome||'','pt'));
-  if(q)unified=unified.filter(p=>normFn((p.nome||'')+' '+(p.cidade||'')).includes(q));
-  let h='';
-  if(unified.length===0){
-    h=`<div style="text-align:center;padding:24px 20px;color:#9a9894;font-family:'Barlow',sans-serif;font-size:13px">${_adminPostoFilter?'Nenhum posto encontrado':'Nenhum posto cadastrado'}</div>`;
-  }else{
-    unified.forEach(p=>{
-      const nEnc=encodeURIComponent(p.nome||'');const cEnc=encodeURIComponent(p.cidade||'');
-      const delBtn=p.id?`<button class="ap-btn ap-btn--danger" onclick="deletePostoAvulso('${p.id}')"><i class="ti ti-trash" aria-hidden="true"></i></button>`:'';
-      const acts=`<button class="ap-btn" onclick="showEditPostoUnified('${nEnc}','${cEnc}')"><i class="ti ti-pencil" aria-hidden="true"></i>Editar</button><button class="ap-btn ap-btn--green" onclick="editPostoFotosByKey('${nEnc}','${cEnc}')"><i class="ti ti-photo" aria-hidden="true"></i>Fotos</button>${delBtn}`;
-      h+=_adminPostoCard(p,acts,'');
-    });
+  const q=_amNorm(_adminPostoFilter);
+  const clearBtn=document.getElementById('adminPostoSearch')?.parentElement?.querySelector('.admin-search-clear');
+  if(clearBtn)clearBtn.className='admin-search-clear'+(q?' visible':'');
+  const all=_apxBuild();
+  _renderAdminPostoStats(all);
+  const counts={all:all.length};all.forEach(p=>{counts[p._ck]=(counts[p._ck]||0)+1});
+  const pendCt=all.filter(p=>!p.link||!p._fotos.length).length;
+  const keys=['all','truckpag','shell','frota','antecipada'].concat(counts.outro?['outro']:[]);
+  if(_adminPostoCard!=='all'&&!counts[_adminPostoCard])_adminPostoCard='all';
+  const chipsEl=document.getElementById('adminPostoChips');
+  if(chipsEl)chipsEl.innerHTML=keys.map(k=>{const on=_adminPostoCard===k;return `<button class="ar-chip${on?' on':''}" aria-pressed="${on}" onclick="_adminPostoSetCard('${k}')">${k==='all'?'':`<span class="apx-dot apx-dot-${k}" aria-hidden="true"></span>`}${k==='all'?'Todos':_APX_CARD[k]}<span class="ar-chip-ct">${counts[k]||0}</span></button>`}).join('')
+    +`<button class="ar-chip apx-chip-pend${_adminPostoPend?' on':''}" aria-pressed="${_adminPostoPend}" onclick="_adminPostoTogglePend()"><i class="ti ti-alert-triangle" aria-hidden="true"></i>Só com pendência<span class="ar-chip-ct">${pendCt}</span></button>`;
+  const list=all.filter(p=>(_adminPostoCard==='all'||p._ck===_adminPostoCard)
+    &&(!_adminPostoPend||!p.link||!p._fotos.length)
+    &&(!q||_amNorm((p.nome||'')+' '+(p.cidade||'')+' '+p._uf+' '+_apxUFNome(p._uf)).includes(q)));
+  const foot=document.getElementById('adminPostoFoot');
+  if(foot)foot.innerHTML=`<span>Mostrando ${list.length} de ${all.length} posto${all.length===1?'':'s'} · agrupados por estado</span><span>Excluir só vale para posto avulso — os das rotas saem editando a rota</span>`;
+  if(list.length===0){
+    container.innerHTML=`<div class="admin-no-results"><i class="ti ${q?'ti-search':'ti-gas-station'}" aria-hidden="true"></i>${all.length?'Nenhum posto encontrado para esse filtro.':'Nenhum posto cadastrado ainda.'}</div>`;
+    return;
   }
+  const grupos={};list.forEach(p=>{const k=p._uf||'__';(grupos[k]=grupos[k]||[]).push(p)});
+  const ordem=Object.keys(grupos).sort((a,b)=>a==='__'?1:b==='__'?-1:_apxUFNome(a).localeCompare(_apxUFNome(b),'pt'));
+  let h='';
+  ordem.forEach(uf=>{
+    const g=grupos[uf];
+    h+=`<div class="apx-group"><span class="apx-uf">${uf==='__'?'—':uf}</span>${uf==='__'?'SEM UF':_apxUFNome(uf).toUpperCase()}<span class="apx-group-ct">· ${g.length} posto${g.length===1?'':'s'}</span></div>`;
+    g.forEach(p=>{h+=_adminPostoRow(p)});
+  });
   container.innerHTML=h;
+}
+
+function _adminPostoRow(p){
+  const nE=_apxEnc(p.nome),cE=_apxEnc(p.cidade);
+  const nome=_amAttr(p.nome||'—');
+  const nf=p._fotos.length;
+  const thumb=nf?`<img src="${_amAttr(p._fotos[0])}" loading="lazy" decoding="async" alt="">${nf>1?`<span class="apx-thumb-ct">${nf}</span>`:''}`:`<i class="ti ti-gas-station" aria-hidden="true"></i>`;
+  const ck=p._ck;
+  const cardBadge=`<span class="ar-badge apx-c-${ck}">${_amAttr(typeof getCartaoLabel==='function'?getCartaoLabel(p.cartao):(p.cartao||'—'))}</span>`;
+  const rts=p._rotas;
+  let rtHtml=rts.slice(0,2).map(r=>`<span class="apx-rt">${_amAttr(r)}</span>`).join('')+(rts.length>2?`<span class="apx-rt" title="${_amAttr(rts.join(', '))}">+${rts.length-2}</span>`:'');
+  if(p._avulso&&!rts.length)rtHtml+=`<span class="apx-rt apx-rt-av">Avulso</span>`;
+  const pend=[!p.link?'Sem localização no Maps':'',!nf?'Sem foto':''].filter(Boolean).join(' · ');
+  const mapsBtn=p.link?`<a class="ar-icon am-act" href="${_amAttr(p.link)}" target="_blank" rel="noopener" title="Abrir no Maps" aria-label="Abrir ${nome} no Maps"><i class="ti ti-map" aria-hidden="true"></i><span>Maps</span></a>`
+    :`<button class="ar-icon am-act apx-off" disabled title="Sem link do Maps" aria-label="${nome} sem link do Maps"><i class="ti ti-map" aria-hidden="true"></i><span>Maps</span></button>`;
+  const delBtn=p._avulso?`<button class="ar-icon ar-icon-del am-act am-act-del" title="Excluir posto avulso" aria-label="Excluir ${nome}" onclick="deletePostoAvulso('${_amAttr(p.id)}')"><i class="ti ti-trash" aria-hidden="true"></i></button>`
+    :`<button class="ar-icon am-act am-act-del apx-off" disabled title="Posto de rota — remova editando a rota" aria-label="${nome} é posto de rota"><i class="ti ti-trash" aria-hidden="true"></i></button>`;
+  return `<div class="apx-row">
+    <button class="apx-thumb${nf?'':' apx-thumb-empty'}" title="Fotos" aria-label="Fotos de ${nome}" onclick="editPostoFotosByKey('${nE}','${cE}')">${thumb}</button>
+    <div class="apx-info"><div class="am-name">${nome}</div><div class="am-sub"><i class="ti ti-map-pin" aria-hidden="true"></i> ${_amAttr(p.cidade||'Cidade não informada')}</div><div class="apx-tags-m">${cardBadge}${rtHtml}</div></div>
+    <span class="apx-col-card">${cardBadge}</span>
+    <div class="apx-col-rt">${rtHtml||'<span class="am-sub">—</span>'}</div>
+    <div class="apx-col-cad"><span class="${p.link?'apx-ok':'apx-bad'}">${p.link?'✓ Localização ok':'Sem localização'}</span><span class="${nf?'apx-muted':'apx-warn'}">${nf?nf+(nf===1?' foto':' fotos'):'Sem foto'}</span></div>
+    ${pend?`<div class="apx-pend-m">${pend}</div>`:''}
+    <div class="am-actions">${mapsBtn}<button class="ar-icon am-act" title="Fotos" aria-label="Fotos de ${nome}" onclick="editPostoFotosByKey('${nE}','${cE}')"><i class="ti ti-photo" aria-hidden="true"></i><span>Fotos</span></button><button class="ar-icon am-act" title="Editar" aria-label="Editar ${nome}" onclick="showEditPostoUnified('${nE}','${cE}')"><i class="ti ti-edit" aria-hidden="true"></i><span>Editar</span></button>${delBtn}</div>
+  </div>`;
+}
+
+function exportPostosCSV(){
+  const cell=v=>{let s=String(v??'');if(/^[=+\-@]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"'};
+  const rows=[['Posto','Cidade','UF','Cartao','Rotas','Tipo','Link Maps','Fotos']];
+  _apxBuild().forEach(p=>rows.push([p.nome,p.cidade||'',p._uf,typeof getCartaoLabel==='function'?getCartaoLabel(p.cartao):(p.cartao||''),p._rotas.join(', '),p._rotas.length?'Rota':'Avulso',p.link||'',p._fotos.length]));
+  const csv='﻿'+rows.map(x=>x.map(cell).join(';')).join('\r\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download='postos-'+new Date().toISOString().slice(0,10)+'.csv';document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);
 }
 
 function _postoRotaFormHTML(p,ri,pi,title,saveFn){
