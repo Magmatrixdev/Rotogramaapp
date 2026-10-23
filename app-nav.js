@@ -241,6 +241,7 @@ function showAdmin(){
   isEditing=false;if(window._draftInterval)clearInterval(window._draftInterval);
   try{localStorage.setItem('last_screen','screenAdmin');}catch(e){}
   renderAdmin();
+  if(typeof hideBottomNav==='function')hideBottomNav(); // a barra volta sozinha no showHome()
   navPush('screenAdmin');
 }
 
