@@ -745,7 +745,7 @@ function _pstCriarMapa(){
   const el=document.getElementById('postosMap');
   if(!el||_pstMapa)return;
   const web=typeof IS_DESKTOP==='function'&&IS_DESKTOP();
-  _pstMapa=L.map(el,{zoomControl:false,attributionControl:true,worldCopyJump:true}).setView([-16.7,-49.3],6);
+  _pstMapa=L.map(el,{zoomControl:false,attributionControl:true,worldCopyJump:true,minZoom:3,maxZoom:19}).setView([-16.7,-49.3],6);
   _pstMapa.attributionControl.setPrefix(false);
   if(web)L.control.zoom({position:'topright'}).addTo(_pstMapa);
   _pstUsarFundo(0);
