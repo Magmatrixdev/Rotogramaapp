@@ -229,8 +229,8 @@ body.desktop-mode .postos-form-save:hover{background:#333}
 
 .pst-mapwrap{flex:1;min-height:0;display:flex;position:relative;margin-bottom:calc(66px + env(safe-area-inset-bottom,0px))}
 .pst-map-side{display:none}
-.pst-map-area{position:relative;flex:1;min-width:0;isolation:isolate;background:#e8e9e4}
-.pst-map{position:absolute;inset:0;background:#e8e9e4}
+.pst-map-area{position:relative;flex:1;min-width:0;isolation:isolate;background:#f8f4f0}
+.pst-map{position:absolute;inset:0;background:#f8f4f0}
 .pst-map .leaflet-control-attribution{font-size:10px}
 
 /* pinos */

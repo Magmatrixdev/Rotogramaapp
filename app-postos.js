@@ -679,21 +679,54 @@ function _pstCarregarLeaflet(){
   add('link',{rel:'stylesheet',href:CDN+'leaflet.markercluster/1.5.3/MarkerCluster.min.css'}).catch(()=>{});
   _pstLeafletP=add('script',{src:CDN+'leaflet/1.9.4/leaflet.min.js'})
     .then(()=>add('script',{src:CDN+'leaflet.markercluster/1.5.3/leaflet.markercluster.min.js'}))
+    .then(()=>_pstCarregarVetor())
     .catch(e=>{_pstLeafletP=null;throw e;});
   return _pstLeafletP;
 }
 
-// Fundos de mapa sem chave: Esri; se falhar, OpenStreetMap
+// Mapa vetorial (OpenFreeMap, estilo Bright): desenhado no aparelho, nítido em tela de celular.
+// Opcional: se não carregar, o mapa segue com os fundos de imagem abaixo.
+function _pstCarregarVetor(){
+  const NPM='https://cdn.jsdelivr.net/npm/';
+  const add=(tag,attrs)=>new Promise((res,rej)=>{const e=document.createElement(tag);Object.assign(e,attrs);e.onload=res;e.onerror=rej;document.head.appendChild(e);});
+  add('link',{rel:'stylesheet',href:NPM+'maplibre-gl@4.7.1/dist/maplibre-gl.css'}).catch(()=>{});
+  return add('script',{src:NPM+'maplibre-gl@4.7.1/dist/maplibre-gl.js'})
+    .then(()=>add('script',{src:NPM+'@maplibre/maplibre-gl-leaflet@0.1.4/leaflet-maplibre-gl.js'}))
+    .catch(()=>{});
+}
+function _pstTemWebGL(){
+  try{const c=document.createElement('canvas');return !!(window.WebGLRenderingContext&&(c.getContext('webgl')||c.getContext('experimental-webgl')));}catch(e){return false;}
+}
+
+// Fundos: 1º vetorial Bright; se falhar, Esri; depois OpenStreetMap
 const _PST_FUNDOS=[
+  {vetor:'https://tiles.openfreemap.org/styles/bright',opt:{attribution:'&copy; <a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> &copy; OpenStreetMap'}},
   {url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',opt:{maxZoom:19,attribution:'&copy; Esri, OpenStreetMap'}},
   {url:'https://tile.openstreetmap.org/{z}/{x}/{y}.png',opt:{maxZoom:19,attribution:'&copy; OpenStreetMap'}}
 ];
 function _pstUsarFundo(i){
   if(_pstCamada)_pstMapa.removeLayer(_pstCamada);
+  _pstCamada=null;
+  const f=_PST_FUNDOS[i];
+  const proximo=()=>{if(i<_PST_FUNDOS.length-1&&_pstFundoIdx===i)_pstUsarFundo(_pstFundoIdx=i+1);};
+  if(f.vetor){
+    if(!(L.maplibreGL&&window.maplibregl&&_pstTemWebGL())){proximo();return;}
+    let carregou=false;
+    try{
+      _pstCamada=L.maplibreGL({style:f.vetor,attribution:f.opt.attribution}).addTo(_pstMapa);
+      const gl=_pstCamada.getMaplibreMap&&_pstCamada.getMaplibreMap();
+      if(gl){
+        gl.on('load',()=>{carregou=true;});
+        gl.on('error',()=>{if(!carregou)proximo();});
+      }
+      setTimeout(()=>{if(!carregou)proximo();},12000);
+    }catch(e){proximo();}
+    return;
+  }
   let erros=0,carregou=false;
-  _pstCamada=L.tileLayer(_PST_FUNDOS[i].url,_PST_FUNDOS[i].opt);
+  _pstCamada=L.tileLayer(f.url,f.opt);
   _pstCamada.on('tileload',()=>{carregou=true;});
-  _pstCamada.on('tileerror',()=>{if(!carregou&&++erros>=4&&i<_PST_FUNDOS.length-1)_pstUsarFundo(_pstFundoIdx=i+1);});
+  _pstCamada.on('tileerror',()=>{if(!carregou&&++erros>=4)proximo();});
   _pstCamada.addTo(_pstMapa);
 }
 
