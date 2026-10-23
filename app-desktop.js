@@ -64,7 +64,7 @@ function dUpdateTopbar(){
     }else if(adminMode){
       driverEl.innerHTML='<div class="dtb-driver-avatar">AD</div><span>Admin</span>';
       if(logoutBtn){logoutBtn.style.display='flex';logoutBtn.onclick=promptLogoutAdmin;}
-      if(adminBtn)adminBtn.style.display='none';
+      if(adminBtn)adminBtn.style.display='flex'; // admin logado: botão leva de volta ao painel
     }else{
       driverEl.innerHTML='';
       if(logoutBtn)logoutBtn.style.display='none';
