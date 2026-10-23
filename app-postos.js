@@ -674,25 +674,32 @@ function _pstCarregarLeaflet(){
   if(window.L&&L.markerClusterGroup)return Promise.resolve();
   if(_pstLeafletP)return _pstLeafletP;
   const CDN='https://cdnjs.cloudflare.com/ajax/libs/';
-  const add=(tag,attrs)=>new Promise((res,rej)=>{const e=document.createElement(tag);Object.assign(e,attrs);e.onload=res;e.onerror=()=>rej(new Error('falha ao carregar '+(attrs.src||attrs.href)));document.head.appendChild(e);});
+  const add=(tag,attrs)=>new Promise((res,rej)=>{const e=document.createElement(tag);Object.assign(e,attrs);e.onload=res;e.onerror=()=>rej(new Error('falha ao carregar '+(attrs.src||attrs.href)));document.head.appendChild(e);
+    setTimeout(()=>rej(new Error('tempo esgotado '+(attrs.src||attrs.href))),25000);});
+  _pstCarregarVetor(); // em paralelo, não segura o mapa
   add('link',{rel:'stylesheet',href:CDN+'leaflet/1.9.4/leaflet.min.css'}).catch(()=>{});
   add('link',{rel:'stylesheet',href:CDN+'leaflet.markercluster/1.5.3/MarkerCluster.min.css'}).catch(()=>{});
   _pstLeafletP=add('script',{src:CDN+'leaflet/1.9.4/leaflet.min.js'})
     .then(()=>add('script',{src:CDN+'leaflet.markercluster/1.5.3/leaflet.markercluster.min.js'}))
-    .then(()=>_pstCarregarVetor())
     .catch(e=>{_pstLeafletP=null;throw e;});
   return _pstLeafletP;
 }
 
 // Mapa vetorial (OpenFreeMap, estilo Bright): desenhado no aparelho, nítido em tela de celular.
 // Opcional: se não carregar, o mapa segue com os fundos de imagem abaixo.
+var _pstVetorP=null;
 function _pstCarregarVetor(){
+  if(window.maplibregl&&window.L&&L.maplibreGL)return Promise.resolve(true);
+  if(_pstVetorP)return _pstVetorP;
   const NPM='https://cdn.jsdelivr.net/npm/';
   const add=(tag,attrs)=>new Promise((res,rej)=>{const e=document.createElement(tag);Object.assign(e,attrs);e.onload=res;e.onerror=rej;document.head.appendChild(e);});
   add('link',{rel:'stylesheet',href:NPM+'maplibre-gl@4.7.1/dist/maplibre-gl.css'}).catch(()=>{});
-  return add('script',{src:NPM+'maplibre-gl@4.7.1/dist/maplibre-gl.js'})
+  const scripts=add('script',{src:NPM+'maplibre-gl@4.7.1/dist/maplibre-gl.js'})
+    .then(()=>new Promise(r=>{const t=setInterval(()=>{if(window.L){clearInterval(t);r();}},100);}))
     .then(()=>add('script',{src:NPM+'@maplibre/maplibre-gl-leaflet@0.1.4/leaflet-maplibre-gl.js'}))
-    .catch(()=>{});
+    .then(()=>!!(window.L&&L.maplibreGL),()=>false);
+  _pstVetorP=Promise.race([scripts,new Promise(r=>setTimeout(()=>r(false),15000))]);
+  return _pstVetorP;
 }
 function _pstTemWebGL(){
   try{const c=document.createElement('canvas');return !!(window.WebGLRenderingContext&&(c.getContext('webgl')||c.getContext('experimental-webgl')));}catch(e){return false;}
@@ -710,7 +717,11 @@ function _pstUsarFundo(i){
   const f=_PST_FUNDOS[i];
   const proximo=()=>{if(i<_PST_FUNDOS.length-1&&_pstFundoIdx===i)_pstUsarFundo(_pstFundoIdx=i+1);};
   if(f.vetor){
-    if(!(L.maplibreGL&&window.maplibregl&&_pstTemWebGL())){proximo();return;}
+    if(!_pstTemWebGL()){proximo();return;}
+    if(!(L.maplibreGL&&window.maplibregl)){
+      _pstCarregarVetor().then(ok=>{if(_pstFundoIdx!==i||!_pstMapa)return;if(ok)_pstUsarFundo(i);else proximo();});
+      return;
+    }
     let carregou=false;
     try{
       _pstCamada=L.maplibreGL({style:f.vetor,attribution:f.opt.attribution}).addTo(_pstMapa);
@@ -719,7 +730,7 @@ function _pstUsarFundo(i){
         gl.on('load',()=>{carregou=true;});
         gl.on('error',()=>{if(!carregou)proximo();});
       }
-      setTimeout(()=>{if(!carregou)proximo();},12000);
+      setTimeout(()=>{if(!carregou)proximo();},20000);
     }catch(e){proximo();}
     return;
   }
