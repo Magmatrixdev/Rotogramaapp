@@ -56,6 +56,7 @@ function simAttachListeners(){
   db.ref('precos').on('value',snap=>{
     simPrecos=snap.val()||{};
     simOnData();
+    if(typeof _aprOnData==='function')_aprOnData();
     if(typeof renderPostosList==='function'&&typeof _postosVisivel==='function'&&_postosVisivel())renderPostosList();
   },err=>{console.warn('precos listener err:',err);_simListenersOn=false;});
   db.ref('simVeiculos').on('value',snap=>{simVeiculos=snap.val()||{};simOnData();},err=>{console.warn('simVeiculos listener err:',err);});
@@ -497,4 +498,132 @@ function simDeleteVeiculo(k){
 async function simConfirmDeleteVeiculo(k){
   try{await db.ref('simVeiculos/'+k).remove();if(_simCfg.placa===k){delete _simCfg.placa;_simSaveCfg();}simShowVeiculos();}
   catch(e){_simErr(_simWriteErr(e));}
+}
+
+// ═══ ADMIN — PREÇOS (edição rápida em lista) ═══
+// Lista todos os postos (rotas + avulsos) com o preço editável na própria linha.
+// Grava em /precos/{simPostoKey(nome)} — mesmo nó usado pela Simulação e pela tela de Postos.
+var _aprFiltro = '';
+var _aprModo = 'all';     // 'all' | 'sem' | 'old'
+var _aprDirty = {};       // { chave: 'texto digitado' }
+var _aprPendingRender = false;
+
+function _aprPostos(){
+  const base=typeof _apxBuild==='function'?_apxBuild():(typeof getAllKnownPostos==='function'?getAllKnownPostos():[]);
+  const map={};
+  base.forEach(p=>{
+    if(!p||!p.nome)return;
+    const k=simPostoKey(p.nome);
+    if(!map[k])map[k]={k,nome:p.nome,cidades:[],cartao:p.cartao||'',uf:p._uf||''};
+    if(p.cidade&&!map[k].cidades.includes(p.cidade))map[k].cidades.push(p.cidade);
+  });
+  return Object.values(map).sort((a,b)=>String(a.nome).localeCompare(String(b.nome),'pt'));
+}
+function _aprStatus(k){
+  const pr=simPrecos[k];
+  if(!pr||isNaN(_simNum(pr.valor)))return 'sem';
+  return _simDias(pr.data)>_SIM_STALE_DIAS?'old':'ok';
+}
+
+function renderAdminPrecos(){
+  const el=document.getElementById('adminPrecosList');if(!el)return;
+  if(typeof simAttachListeners==='function')simAttachListeners();
+  el.innerHTML=`<div class="ar-head"><div><div class="ar-crumb">Administração / Preços</div><h2 class="ar-title">Preços do diesel</h2></div></div>
+    <div class="ar-panel">
+      <div class="ar-panel-top"><div class="admin-search ar-search"><i class="ti ti-search admin-search-icon" aria-hidden="true"></i><input id="aprSearch" type="text" aria-label="Pesquisar posto" placeholder="Buscar posto ou cidade…" value="${_simE(_aprFiltro)}" oninput="_aprFiltro=this.value;_aprRenderRows()"></div><div class="ar-chips" id="aprChips" role="group" aria-label="Filtrar"></div></div>
+      <div class="apr-thead" aria-hidden="true"><span>Posto</span><span>Preço (R$/L)</span><span>Última atualização</span></div>
+      <div id="aprRows"></div>
+      <div class="ar-foot"><span>Digite o preço e aperte Enter para ir ao próximo posto. Apague o valor para remover o preço.</span></div>
+    </div>
+    <div class="apr-bar" id="aprBar"></div>`;
+  _aprRenderRows();
+}
+
+function _aprRenderRows(){
+  const box=document.getElementById('aprRows');if(!box)return;
+  _aprPendingRender=false;
+  const all=_aprPostos();
+  const ct={all:all.length,sem:0,old:0};
+  all.forEach(p=>{const s=_aprStatus(p.k);if(s!=='ok')ct[s]++;});
+  const chips=document.getElementById('aprChips');
+  if(chips)chips.innerHTML=[['all','Todos'],['sem','Sem preço'],['old','Desatualizado']].map(([k,l])=>`<button class="ar-chip${_aprModo===k?' on':''}" aria-pressed="${_aprModo===k}" onclick="_aprModo='${k}';_aprRenderRows()">${l}<span class="ar-chip-ct">${ct[k]}</span></button>`).join('');
+  const q=_simNorm(_aprFiltro);
+  const list=all.filter(p=>(_aprModo==='all'||_aprStatus(p.k)===_aprModo)&&(!q||_simNorm(p.nome+' '+p.cidades.join(' ')+' '+p.uf).includes(q)));
+  if(!list.length){box.innerHTML=`<div class="admin-no-results"><i class="ti ti-gas-station" aria-hidden="true"></i>${all.length?'Nenhum posto para esse filtro.':'Nenhum posto cadastrado ainda.'}</div>`;_aprUpdateBar();return;}
+  box.innerHTML=list.map(p=>{
+    const pr=simPrecos[p.k];
+    const st=_aprStatus(p.k);
+    const salvo=st==='sem'?'':String(_simNum(pr.valor)).replace('.',',');
+    const val=_aprDirty.hasOwnProperty(p.k)?_aprDirty[p.k]:salvo;
+    const dirty=_aprDirty.hasOwnProperty(p.k);
+    const quando=st==='sem'?'<span class="apr-when apr-when--none">Sem preço</span>'
+      :`<span class="apr-when${st==='old'?' apr-when--old':''}">${_simE(_simFmtData(pr.data))}${st==='old'?' · '+_simDias(pr.data)+' dias':''}</span>`;
+    const card=typeof getCartaoLabel==='function'&&p.cartao?getCartaoLabel(p.cartao):'';
+    return `<div class="apr-row${dirty?' apr-row--dirty':''}" data-k="${_simE(p.k)}">
+      <div class="apr-posto"><div class="apr-nome">${_simE(p.nome)}</div><div class="apr-sub">${_simE(p.cidades.join(' · ')||'—')}${card?' · '+_simE(card):''}</div></div>
+      <div class="apr-val"><span>R$</span><input type="text" inputmode="decimal" autocomplete="off" placeholder="0,00" value="${_simE(val)}" data-k="${_simE(p.k)}" data-nome="${_simE(p.nome)}" data-salvo="${_simE(salvo)}" aria-label="Preço de ${_simE(p.nome)}" oninput="_aprInput(this)" onkeydown="_aprKey(event,this)" onblur="_aprBlur()"></div>
+      <div class="apr-meta">${quando}</div>
+    </div>`;
+  }).join('');
+  _aprUpdateBar();
+}
+
+function _aprInput(inp){
+  const k=inp.dataset.k;
+  if(inp.value.trim()===inp.dataset.salvo)delete _aprDirty[k];else _aprDirty[k]=inp.value;
+  const row=inp.closest('.apr-row');if(row)row.classList.toggle('apr-row--dirty',_aprDirty.hasOwnProperty(k));
+  _aprUpdateBar();
+}
+function _aprKey(e,inp){
+  if(e.key==='Enter'){
+    e.preventDefault();
+    const all=[...document.querySelectorAll('#aprRows .apr-val input')];
+    const nx=all[all.indexOf(inp)+1];
+    if(nx){nx.focus();nx.select();}else{inp.blur();if(Object.keys(_aprDirty).length)aprSalvarTodos();}
+  }else if(e.key==='Escape'){
+    inp.value=inp.dataset.salvo;_aprInput(inp);
+  }
+}
+function _aprBlur(){
+  setTimeout(()=>{if(_aprPendingRender&&!document.activeElement?.closest?.('#aprRows'))_aprRenderRows();},150);
+}
+function _aprUpdateBar(){
+  const bar=document.getElementById('aprBar');if(!bar)return;
+  const n=Object.keys(_aprDirty).length;
+  bar.classList.toggle('show',n>0);
+  bar.innerHTML=n?`<span>${n} preço${n>1?'s':''} alterado${n>1?'s':''}</span><button class="ar-btn ar-btn-ghost" onclick="aprDescartar()">Descartar</button><button class="ar-btn ar-btn-primary" id="aprSaveBtn" onclick="aprSalvarTodos()"><i class="ti ti-device-floppy" aria-hidden="true"></i> Salvar ${n} preço${n>1?'s':''}</button>`:'';
+}
+function aprDescartar(){_aprDirty={};_aprRenderRows();}
+
+async function aprSalvarTodos(){
+  if(!_simIsAdmin()||!db)return;
+  const keys=Object.keys(_aprDirty);if(!keys.length)return;
+  const nomes={};document.querySelectorAll('#aprRows .apr-val input').forEach(i=>{nomes[i.dataset.k]=i.dataset.nome;});
+  const u=firebase.auth().currentUser,por=String(u&&u.email||'admin').slice(0,100),agora=Date.now();
+  const upd={},ruins=[];
+  keys.forEach(k=>{
+    const txt=String(_aprDirty[k]||'').trim();
+    const nome=nomes[k]||(simPrecos[k]&&simPrecos[k].nome)||k;
+    if(!txt){upd[k]=null;return;}
+    const v=_simNum(txt);
+    if(isNaN(v)||v<=0||v>50){ruins.push(nome);return;}
+    upd[k]={nome:String(nome).slice(0,200),valor:Math.round(v*1000)/1000,data:agora,por};
+  });
+  if(ruins.length){showToast('⚠️ Preço inválido em: '+ruins.slice(0,3).join(', ')+(ruins.length>3?'…':''),'#b4141c');return;}
+  const btn=document.getElementById('aprSaveBtn');if(btn){btn.disabled=true;btn.textContent='Salvando…';}
+  try{
+    await db.ref('precos').update(upd);
+    _aprDirty={};
+    showToast('✅ '+keys.length+' preço'+(keys.length>1?'s':'')+' salvo'+(keys.length>1?'s':''),'#1f8a3d');
+    _aprRenderRows();
+  }catch(e){
+    showToast('❌ '+_simWriteErr(e),'#b4141c');
+    _aprUpdateBar();
+  }
+}
+// Chamado quando /precos ou /postos mudam
+function _aprOnData(){
+  if(!document.getElementById('adminTabPrecos')?.classList.contains('active'))return;
+  if(document.activeElement?.closest?.('#aprRows')){_aprPendingRender=true;return;}
+  _aprRenderRows();
 }

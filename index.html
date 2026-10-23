@@ -83,7 +83,7 @@
 <link rel="stylesheet" href="app.css?v=24">
 <link rel="stylesheet" href="app-postos.css?v=20">
 <link rel="stylesheet" href="app-informativos.css?v=9">
-<link rel="stylesheet" href="app-simulacao.css?v=1">
+<link rel="stylesheet" href="app-simulacao.css?v=2">
 </head>
 <body>
 <!-- Botão alternância desktop/mobile — só visível em telas ≥ 1024px -->
@@ -285,6 +285,7 @@
     <button class="admin-tab-btn active" onclick="switchAdminTab('routes',this)"><i class="ti ti-route" aria-hidden="true"></i> Rotas<span class="admin-tab-count" id="adminTabRoutesCount"></span></button>
     <button class="admin-tab-btn" onclick="switchAdminTab('drivers',this)"><i class="ti ti-users" aria-hidden="true"></i> Motoristas</button>
     <button class="admin-tab-btn" onclick="switchAdminTab('postos',this)"><i class="ti ti-gas-station" aria-hidden="true"></i> Postos</button>
+    <button class="admin-tab-btn" onclick="switchAdminTab('precos',this)"><i class="ti ti-currency-real" aria-hidden="true"></i> Preços</button>
     <button class="admin-tab-btn" onclick="switchAdminTab('informativos',this)"><i class="ti ti-speakerphone" aria-hidden="true"></i> Informativos</button>
   </div>
   <div class="admin-tab-content">
@@ -296,6 +297,9 @@
     </div>
     <div id="adminTabPostos" class="admin-tab-pane">
       <div class="admin-scroll" id="adminPostosList"></div>
+    </div>
+    <div id="adminTabPrecos" class="admin-tab-pane">
+      <div class="admin-scroll" id="adminPrecosList"></div>
     </div>
     <div id="adminTabInformativos" class="admin-tab-pane">
       <div class="admin-scroll" id="adminInformativosList"></div>
@@ -345,14 +349,14 @@
   </button>
 </div>
 
-<script src="app-config.js?v=96"></script>
+<script src="app-config.js?v=97"></script>
 <script src="app-state.js?v=81"></script>
 <script src="app-crypto.js?v=81"></script>
-<script src="app-firebase.js?v=91"></script>
+<script src="app-firebase.js?v=97"></script>
 <script src="app-auth.js?v=90"></script>
 <script src="app-nav.js?v=90"></script>
 <script src="app-render.js?v=81"></script>
-<script src="app-admin.js?v=92"></script>
+<script src="app-admin.js?v=97"></script>
 <script src="app-notifications.js?v=81"></script>
 <script src="app-desktop.js?v=90"></script>
 <script src="app-editor.js?v=81"></script>
@@ -360,7 +364,7 @@
 <script src="app-pwa.js?v=81"></script>
 <script src="app-postos.js?v=96"></script>
 <script src="app-informativos.js?v=84"></script>
-<script src="app-simulacao.js?v=85"></script>
+<script src="app-simulacao.js?v=97"></script>
 <script src="app-main.js?v=81"></script>
 
 </html>

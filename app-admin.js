@@ -509,7 +509,7 @@ function switchAdminTab(tab,el){
   document.querySelectorAll('.admin-tab-btn').forEach(b=>b.classList.remove('active'));
   el.classList.add('active');
   document.querySelectorAll('.admin-tab-pane').forEach(p=>p.classList.remove('active'));
-  const paneMap={routes:'adminTabRoutes',drivers:'adminTabDrivers',postos:'adminTabPostos',informativos:'adminTabInformativos'};
+  const paneMap={routes:'adminTabRoutes',drivers:'adminTabDrivers',postos:'adminTabPostos',informativos:'adminTabInformativos',precos:'adminTabPrecos'};
   const pane=document.getElementById(paneMap[tab]);if(pane)pane.classList.add('active');
   if(tab==='routes')renderAdmin();
   else if(tab==='drivers'){
@@ -525,6 +525,7 @@ function switchAdminTab(tab,el){
       renderDriverManager();
     }
   }
+  else if(tab==='precos'){if(typeof renderAdminPrecos==='function')renderAdminPrecos();}
   else if(tab==='informativos'){if(typeof renderAdminInformativos==='function')renderAdminInformativos();}
   else if(tab==='postos'){if(!_postosListenerInit){initPostosListener();_postosListenerInit=true;}renderAdminPostos();}
 }
