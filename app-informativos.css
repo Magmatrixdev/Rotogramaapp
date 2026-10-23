@@ -1,5 +1,5 @@
 /* ═══ INFORMATIVOS — layout aprovado (mockup "Avisos — Senhas") ═══ */
-#screenInformativos{background:#f4f4f2}
+#screenInformativos{background:#f4f4f2;overflow:hidden} /* só a .inf-main rola (evita rolagem aninhada que trava no iPhone/PWA) */
 #informativosList{flex:1;min-height:0;display:flex;flex-direction:column;font-family:'Barlow',system-ui,sans-serif;color:#1c1c1c}
 #informativosList button,#informativosList input{font:inherit}
 .inf-hero-kicker,.inf-hero-title,.inf-stat-n,.inf-stat-l,.inf-sec-label,.inf-add span,.inf-chip,.inf-region,.inf-posto,
@@ -19,7 +19,7 @@
 .inf-stat-l{font-size:10px;letter-spacing:1px;color:#9a9894;font-weight:700}
 
 /* área rolável */
-.inf-main{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 16px calc(90px + env(safe-area-inset-bottom, 0px))}
+.inf-main{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;padding:0 16px calc(90px + env(safe-area-inset-bottom, 0px))}
 .inf-sec-head{display:flex;align-items:center;justify-content:space-between;margin:18px 2px 10px;min-height:40px}
 .inf-sec-label{font-size:13px;font-weight:700;letter-spacing:1.2px;color:#8a8886}
 .inf-sec-gap{margin:22px 2px 10px}
