@@ -378,13 +378,17 @@ function saveInformativo(){
   btn.disabled=true;btn.textContent='PUBLICANDO...';
   const editId=_infEditId;
   const prevTs=editId&&informativos[editId]?informativos[editId].ts:0;
+  const prevRec=editId&&informativos[editId]?{...informativos[editId]}:null;
   const rec={regiao,posto,formaPagamento,descricao,ts:prevTs||Date.now()};
   if(localizacao)rec.localizacao=localizacao; // só grava se preenchido
   const op=editId?db.ref('informativos/'+editId).set(rec):db.ref('informativos').push(rec);
   op
     .then(()=>{
       closeInfSheet();
-      if(editId){if(typeof showToast==='function')showToast('Informativo atualizado','#1a7f37');}
+      if(editId){
+        if(typeof showToast==='function')showToast('Informativo atualizado','#1a7f37');
+        _infNotify(rec,'edit',prevRec);
+      }
       else{_infFilter='Todas';_infNotify(rec);}
       _infEditId=null;
     })
@@ -398,13 +402,30 @@ function saveInformativo(){
 // ─── aviso + push para os motoristas ───
 // Grava em /notifications via pushNotification(); a Cloud Function
 // onNotificationCreated dispara o push FCM (chega mesmo com o app fechado).
-function _infNotify(rec){
-  if(typeof pushNotification!=='function')return;
+// modo: 'new' (padrão) | 'edit' (prev = registro antes da edição) | 'rem'
+function _infNotify(rec,modo,prev){
+  if(typeof pushNotification!=='function'||!rec)return;
   try{
+    modo=modo||'new';
     const desc=String(rec.descricao||'').replace(/\s+/g,' ').trim();
-    const parts=[rec.posto,rec.formaPagamento,desc.length>140?desc.slice(0,137)+'...':desc].filter(Boolean);
+    const curta=desc.length>140?desc.slice(0,137)+'...':desc;
     const titulo=('Informativo · '+(rec.regiao||'')).slice(0,100);
-    pushNotification('info',titulo,('Novo informativo: '+parts.join(' · ')).slice(0,480));
+    let msg;
+    if(modo==='rem'){
+      msg='Informativo removido: '+[rec.posto,rec.formaPagamento].filter(Boolean).join(' · ');
+    }else if(modo==='edit'){
+      if(prev){
+        const campos={regiao:'região',posto:'posto',formaPagamento:'pagamento',descricao:'descrição',localizacao:'localização'};
+        const mud=Object.keys(campos).filter(k=>String(prev[k]||'').trim()!==String(rec[k]||'').trim()).map(k=>campos[k]);
+        if(!mud.length)return; // salvou sem mudar nada — não gera aviso
+        msg='Informativo atualizado: '+[rec.posto,'alterado: '+mud.join(', '),curta].filter(Boolean).join(' · ');
+      }else{
+        msg='Informativo atualizado: '+[rec.posto,rec.formaPagamento,curta].filter(Boolean).join(' · ');
+      }
+    }else{
+      msg='Novo informativo: '+[rec.posto,rec.formaPagamento,curta].filter(Boolean).join(' · ');
+    }
+    pushNotification('info',titulo,msg.slice(0,480));
   }catch(e){}
 }
 
@@ -424,7 +445,12 @@ function deleteInformativo(id){
   if(!_infIsAdmin()||!id)return;
   if(!confirm('Excluir este informativo? Esta ação não pode ser desfeita.'))return;
   if(!db)return;
+  const prevRec=informativos&&informativos[id]?{...informativos[id]}:null;
   db.ref('informativos/'+id).remove()
+    .then(()=>{
+      if(typeof showToast==='function')showToast('Informativo excluído','#1a7f37');
+      if(prevRec)_infNotify(prevRec,'rem');
+    })
     .catch(e=>{alert('Erro ao excluir: '+((e&&e.message)||e));});
 }
 

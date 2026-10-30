@@ -132,7 +132,7 @@ function _notifParts(n){
   const detail=i>0?msg.slice(i+1).trim().replace(/\s+-\s+/g,' · '):'';
   const a=action.toLowerCase();
   let kind='edit';
-  if(n.type==='info'||a.startsWith('novo informativo'))kind='info';
+  if(n.type==='info'||a.startsWith('novo informativo')||a.startsWith('informativo '))kind='info';
   else if(a.startsWith('posto adicionado'))kind='add';
   else if(a.startsWith('posto removido'))kind='rem';
   else if(n.type==='new'||a.startsWith('nova rota'))kind='route';
